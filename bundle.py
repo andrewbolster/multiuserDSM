@@ -36,13 +36,17 @@ class Bundle(object):
 		
 	def calc_channel_matrix(self):
 		for K in range(self.K):
-			for i in range(self.N):
-				for j in range(self.N):
+			for i,li in enumerate(self.lines):
+				for j,lj in enumerate(self.lines):
 					if i == j:
-						pass
+						li.transfer_fn(freq_on_tone(K))
+						
 		
-	def transfer_fn(self,line_id,freq):
-		pass
+	def freq_on_tone(self,K):
+		"""
+		Assume ADSL downstream for now
+		"""
+		return K * 4312.5 + 140156.25;
 	
 	def calc_fext_xtalk_gain(self,v,x,freq,dir):
 		pass

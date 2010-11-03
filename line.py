@@ -16,3 +16,7 @@ class Line(object):
 		s += "-" * ((self.lt-self.nt) / 250)
 		s += "|"
 		return s
+	
+	def transfer_fn(self,freq):
+		pass
+		
