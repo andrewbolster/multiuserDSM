@@ -6,9 +6,10 @@ import sys
 from line import Line
 
 class Bundle(object):
-	def __init__(self,network_file):
-
+	def __init__(self,network_file,K):
+		self.K = K			# the number of DMT channels
 		self.lines = [] 	# the DSL line objects
+		
 
 		"""
 		Try to open and parse the network configuration file
@@ -25,5 +26,12 @@ class Bundle(object):
 			sys.exit(1)
 
 
-		for line in self.lines:
-			print line
+		"""
+		Calculate the channel matrix
+		"""
+		self.channel_matrix = self.calc_channel_matrix()
+		
+		
+	def calc_channel_matrix(self):
+		pass
+		
