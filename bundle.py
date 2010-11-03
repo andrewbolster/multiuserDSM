@@ -35,3 +35,9 @@ class Bundle(object):
 	def calc_channel_matrix(self):
 		pass
 		
+	def transfer_fn(self,line_id,freq):
+		pass
+	
+	def calc_fext_xtalk_gain(self,v,x,freq,dir):
+		pass
+	
