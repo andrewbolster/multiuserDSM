@@ -21,11 +21,13 @@ class Bundle(object):
 					nt,lt = line.split(",")
 					self.lines.append(Line(nt,lt))
 					
+			self.N = len(self.lines)
+					
 		except IOError:
 			print "Cannot open the network file",network_file
 			sys.exit(1)
 
-
+		
 		"""
 		Calculate the channel matrix
 		"""
@@ -33,5 +35,9 @@ class Bundle(object):
 		
 		
 	def calc_channel_matrix(self):
-		pass
+		for K in range(self.K):
+			for i in range(self.N):
+				for j in range(self.N):
+					if i == j:
+						pass
 		
