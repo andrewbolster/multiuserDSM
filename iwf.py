@@ -1,7 +1,6 @@
 """
 Iterative Water Filling Algorithm Module
 """
-from wx.py.buffer import Buffer
 
 class IWF(algorithm):
 	def __init__(self, bundle):
