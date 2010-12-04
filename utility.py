@@ -25,6 +25,12 @@ material={
         "g_e"	:1.033
         }
 
+"""
+Let the transfer function default to type 2;
+    Allows for easy default change later
+    Allows for easy 'case-based' changes
+"""
+
 def do_transfer_function(length,freq,type=2):#TODO Where on earth to Zs/Zl come from? They do nothing!
     """
     Z=impedance/l, Y=admittance/l
@@ -83,6 +89,21 @@ def _C(freq):
 
 def _G(freq):
     return material["g_0"]*math.pow(freq,material["g_e"])
+
+"""
+Mathematical Utilities
+"""
+def dbmhz_to_watts(psd):
+    return UndB(psd)*1e-3
+
+def UndB(input):
+    return math.pow(10,input)
+
+def watts_to_dbmhz(psd):
+    return TodB(psd*1e3)
+
+def TodB(input):
+    return 10*log10(input)
 
 if __name__ == "__main__":
 
