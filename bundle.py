@@ -4,6 +4,7 @@ Class that describes the DSL bundle object
 
 import sys
 from math import all
+from utility import all
 import cmath
 from line import Line
 
@@ -191,24 +192,32 @@ class Bundle(object):
             return 0
     
     """
-    Calculate snr statistits for all lines in bundle
+    Calculate snr statistics for all lines in bundle
     """
     def calculate_snr(self):
         for line in self.lines:
-            line.sanity() #TODO
+            line.sanity()
             
-            noise = line.calc_fext_noise(k) + line.alien_xtalk(k) + dbmhz_to_watts(line.noise) #TODO
+            noise = line.calc_fext_noise(k) + line.alien_xtalk(k) + dbmhz_to_watts(line.noise) #TODO alien
             
-            line.cnr = map(line.gain/noise,range(self.K))
-            line.snr = map(dbmhz_to_watts(line.psd)*line.cnr, xrange(self.K))
-            line.gamma_m = map(10*math.log10(line.snr/math.pow(2,line.b-1)))
-            line.symerr = map(line.calcsymerr(line.snr,line.b)) #TODO symerr.c
+            line.cnr = [ line.gain[x]/noise for x in range(self.K)]
+            line.snr = [ dbmhz_to_watts(line.psd[x])*line.cnr[x] for x in range(self.K)]
+            line.gamma_m = [ 10*math.log10(line.snr[x]/math.pow(2,line.b[x]-1)) for x in range(self.K)]
+            line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in range(self.lines) ] #TODO symerr.c
             
-            line.p_total = reduce(lambda x,y: x+y, map(dbmhz_to_watts(line.psd)))
-            line.b_total = reduce(lambda x,y: x+y, line.b)
-            line.rate[line.service] = "sum pf line.b[k]" #TODO How to vectorise this? Where Does Service Come From?
+            line.p_total = sum(map(dbmhz_to_watts(line.psd)))
+            line.b_total = sum(line.b)
+            line.rate[line.service] = "sum of line.b[k]" #TODO How to vectorise this? Where Does Service Come From?
             if line.is_frac():
                 line.rate[line.service] =  "sum of line._b[k]"
-            
-
+            """
+            With This whole Fractional thing; 
+            Are b/_b ever different? If its a fractional line is b[k] ever needed?
+            """
+    """
+    Calculate Symbol Error Rate between two lines
+    THERE MUST BE A CLEARER WAY!
+    """
+    def _calc_sym_err(self,xtalker): #TODO
+        return 0
             

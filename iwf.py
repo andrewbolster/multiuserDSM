@@ -8,13 +8,16 @@ class IWF(Algorithm):
     """
     
     def __init__(self, bundle):
-        super(Algorithm,self).preamble
+        self.name = "IWF"
+        self.preamble
         
         assert bundle is Bundle, "You dun goofed the Bundle!"
         if bundle.type == "ADSL_DOWNSTREAM":
         	p_initial=0.111
         else:
         	p_initial=0.02818
+            
+        self.MAXBITSPERTONE = 15
         
         # @type bundle Bundle
         self.bundle=bundle
@@ -26,8 +29,8 @@ class IWF(Algorithm):
         while iterations < 30 and rate_iterations < 10:
             while bundle.check_all_margins(2):
                 for i,line in enumerate(bundle.lines):
-                    if line.rate_target == None:
-                        self.am_load_ra(line)
+                    if line.rate_target == None:    #TODO Where does line.rate_target[] get set?
+                        self.am_load_ra(line)       #am_load_X functions in parent class
                     else:
                         self.am_load_fm(line)
                     bundle.calculate_snr()
@@ -49,15 +52,5 @@ class IWF(Algorithm):
             print "Convergence Failure after "+iterations+" iterations, "+rate_iterations+" rate iterations"
             return -1
         
-        super(Algorithm,self).postscript
-        return
-    """
-    def am_load_ra(self,line):
-        line.b = zeroes(bundle.K)
-        tone_full = zeroes(bundle.K)
-        gamma_hat = pow(10,(gamma+margin-c_g))
-        
-        for tone in bundle.K:
-            if tone_full[tone] != 0:
-                delta_p[tone] = (pow(2,(line.b[tone]+1))-1) *  
-    """
+        self.postscript
+        return   

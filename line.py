@@ -1,6 +1,4 @@
 
-import utility
-
 class Line(Bundle):
     def __init__(self,nt,lt):
         # nt and lt are network termination (CO or RT) and line termination (CPE)
@@ -20,6 +18,9 @@ class Line(Bundle):
         self.cnr = []
         self.gamma_m = []
         self.b = []
+        
+        #Shortcut to parent cus I'm lazy
+        self.parent = super(Bundle,self)
         
 
     def __str__(self):
@@ -41,12 +42,18 @@ class Line(Bundle):
         return utility.do_transfer_fn(type = self.type, length=self.length/1000, freq )
     
     def sanity(self):
-        for t in range(super(Bundle,K)):
+        for t in range(self.parent.K):
             assert self.b[t] >= 0, "Tone "+t+" less than zero:"+self.b[t]
             assert self.gain[t] >= 0, "Gain "+t+" less than zero"+self.gain[t]
         
         assert self.background_noise >=0, "Background noise is not set on line "+self.id
         return
     
-        
-        
+    def calc_fext_noise(self,channel):
+        for xtalker in self.parent.lines:
+            noise += dbmhz_to_watts(line.psd[channel])*self.parent.xtalk_gain(self.id,xtalker,channel)
+        return noise
+    
+    def alien_xtalk(self,channel): #TODO
+        return 0
+    
