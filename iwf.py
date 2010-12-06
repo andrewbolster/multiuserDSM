@@ -2,26 +2,26 @@
 Algorithm Modules
 """
 
+import bundle
+
 class IWF(Algorithm):
     """
     Iterative Water Filling
     """
     
-    def __init__(self, bundle):
+    def __init__(self):
         self.name = "IWF"
         self.preamble
         
         assert bundle is Bundle, "You dun goofed the Bundle!"
         if bundle.type == "ADSL_DOWNSTREAM":
-        	p_initial=0.111
+            p_initial=0.111
         else:
-        	p_initial=0.02818
+            p_initial=0.02818
             
         self.MAXBITSPERTONE = 15
-        
-        # @type bundle Bundle
-        self.bundle=bundle
-        self.p = tile(p_initial, bundle.K) 		#size bundle.K
+      
+        self.p = numpy.tile(p_initial, bundle.K) 		#size bundle.K
         bundle.calculate_snr()
         
         #TODO start timer system here

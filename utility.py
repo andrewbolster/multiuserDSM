@@ -3,7 +3,7 @@
 __author__="bolster"
 __date__ ="$02-Dec-2010 18:48:38$"
 
-import math, cmath
+import math, cmath, numpy
 
 material={
         "r_0c"	:179,
@@ -31,7 +31,7 @@ Let the transfer function default to type 2;
     Allows for easy 'case-based' changes
 """
 
-def do_transfer_function(length,freq,type=2):#TODO Where on earth to Zs/Zl come from? They do nothing!
+def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth to Zs/Zl come from? They do nothing!
     """
     Z=impedance/l, Y=admittance/l
     Z=R+jwL, Y=G+jwC
@@ -39,9 +39,13 @@ def do_transfer_function(length,freq,type=2):#TODO Where on earth to Zs/Zl come 
     Z0=sqrt(Z/Y), gamma=sqrt(Z*Y)
     Should Use PyGSL, but start off with cmath
     """
-
+    
+    if measure == "m":
+        length /= 1000
+    
     w = 2 * math.pi * freq
 
+    print("Freq=",freq,"Len=",length)
     Z = complex(_R(freq),w*_L(freq))
     Y = complex(_G(freq),w*_C(freq))
 
@@ -54,7 +58,7 @@ def do_transfer_function(length,freq,type=2):#TODO Where on earth to Zs/Zl come 
     Zl = complex(100,0)
     print("w",w)
     print("R",_R(freq),"L",_L(freq),"G",_G(freq),"C",_C(freq))
-    print("Z",Z,"Y",Y,"Gamma",gamma,"Gammad",gammad)
+    print("Z","Y",Y,"Z0",Z0,"Gamma",gamma,"Gammad",gammad)
     upper = Z0 * ( 1/cmath.cosh(gammad)) #sech=1/cosh
     lower = Zs * ( (Z0/Zl) + cmath.tanh(gammad) ) + Z0 * ( 1+ (Z0/Zl)*cmath.tanh(gammad) )
 
@@ -65,7 +69,7 @@ def _R(freq):
     """
     Return R Parameter for transfer function
     """
-    c_partial = math.pow(material["a_c"]*math.pow(freq,2)+math.pow(material["r_0c"],4),(0.25))
+    c_partial = math.pow(material["a_c"]*freq*freq+math.pow(material["r_0c"],4),(0.25))
 
     if material["r_0s"] > 0:
         s_partial = math.pow(material["a_s"]*math.pow(freq,2)+math.pow(material["r_0s"],4),(0.25))
@@ -79,10 +83,7 @@ def _L(freq):
     """
     Return L Parameter for transfer function
     """
-    return (material["l_0"]+material["l_inf"]*math.pow(_L_partial(freq),material["b"]))/(1+_L_partial(freq))
-
-def _L_partial(freq):
-    return freq*1e-3/material["f_m"]
+    return (material["l_0"]+material["l_inf"]*math.pow(freq*1e-3/material["f_m"],material["b"]))/(1+freq*1e-3/material["f_m"])
 
 def _C(freq):
     return material["c_inf"]+material["c_0"]*math.pow(freq,-material["c_e"])
@@ -103,8 +104,14 @@ def watts_to_dbmhz(psd):
     return TodB(psd*1e3)
 
 def TodB(input):
-    return 10*log10(input)
+    return 10*math.log10(input)
+
+def freq_on_tone(K): #TODO
+        """
+        Assume ADSL downstream for now
+        """
+        return K * 4312.5 + 140156.25;
 
 if __name__ == "__main__":
 
-    print do_transfer_function(1000,8.5e4)
+    print do_transfer_function(2,8.5e4)

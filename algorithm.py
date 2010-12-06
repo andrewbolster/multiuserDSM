@@ -3,23 +3,27 @@ Algorithm Parent module
 """
 
 import sys
+import numpy
 
 class Algorithm(object):
-    def __init__(self):
+    def __init__(self,bundle):
         self.name="Default Algorithm Name; You should never see this!"
+        self.bundle=bundle
         pass
     
     def am_load_ra(self,line):
-        line.b = zeroes(bundle.K)
-        tone_full = tile(False,bundle.K)
+        line.b = numpy.zeros(bundle.K)
+        tone_full = numpy.tile(False,bundle.K)
         gamma_hat = pow(10,(gamma+margin-c_g)/10)
         p = zeroes(bundle.K)
         p_total=0
         b_total=0
+        delta_p = []
         
         self._calc_delta_p()
         
-        while (0 <= (tone = min(delta_p))): #TODO I know this doesn't work, Don't understand the breaking state see am_load.c find_min()
+        while (0 <= min(delta_p)): #TODO I know this doesn't work, Don't understand the breaking state see am_load.c find_min()
+            tone = min(delta_p)
             line.b[tone]+=1
             p_total += delta_p[tone]
             p[tone] += delta_p[tone]

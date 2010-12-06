@@ -3,16 +3,20 @@ Class that describes the DSL bundle object
 """
 
 import sys
-from math import all
-from utility import all
+from math import *
+from utility import *
 import cmath
+import numpy
+
 from line import Line
 
 class Bundle(object):
     def __init__(self,network_file,K):
-        self.K = K                # the number of DMT channels
+        self.K = int(K)                # the number of DMT channels
+        print type(self.K)
+        self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
-        self.xtalk_gain = None    # XT Matrix (NB Must be FULLY instantiated before operating)
+        self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
 
         #Assuming that each bundle is going to be one medium
         """
@@ -43,12 +47,13 @@ class Bundle(object):
         """
         try:
             with open(network_file,"r") as nf:
-                for line in nf:
+                for n,line in enumerate(nf):
                     # nt and lt are network termination (CO or RT) and line termination (CPE)
                     nt,lt = line.split(",")
-                    self.lines.append(Line(nt,lt))
+                    self.lines.append(Line(nt,lt,n,self))
 
             self.N = len(self.lines)
+            print "Read ",self.N," Lines"
 
         except IOError:
             print "Cannot open the network file",network_file
@@ -58,31 +63,28 @@ class Bundle(object):
         """
         Calculate the channel matrix
         """
-        self.xtalk_gain = zeroes(self.N,self.N,self.K)
+        self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
+        print "Hope that worked..."
+
         self.channel_matrix = self.calc_channel_matrix()
+        print self.xtalk_gain
+        print "Hope that worked..."
+        #self.check_normalised_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
+        
 
 
     def calc_channel_matrix(self): #TODO
-        for K in range(self.K):
-            for i,li in enumerate(self.lines):
+        for k in range(self.K):                         #For Each Tone
+            for i,li in enumerate(self.lines):          #Between Every Line
                 for j,lj in enumerate(self.lines):
-                    if i == j:
-                        """
-                        TODO:
-                        Could the li.gain assignment be moved inside the object?
-                        """
-                        li.gain = self.xtalk_gain[i,j,k] = li.transfer_fn(freq_on_tone(K))
-                    else:
-                        self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,K,DOWN) #This makes more sense in passing line objects instead of id's
+                    if i == j:                          #If you're talking to yourself, do lazy transfer_fn
+                        print i,j,k
+                        li.gain[k] = self.xtalk_gain[i,j,k] = li.transfer_fn(freq_on_tone(k))
+                    else:                               #Otherwise look at XT
+                        self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
 
-
-
-    def freq_on_tone(self,K): #TODO
-        """
-        Assume ADSL downstream for now
-        """
-        return K * 4312.5 + 140156.25;
-
+    def get_xtalk_gain(self,line1,line2,channel):
+        return self.xtalk_gain(line1.id, line2.id,channel)
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
         """
         Calculate Far End XT Gain
@@ -155,25 +157,12 @@ class Bundle(object):
         Calculate FEXT for given Freq and Length
         Uses:
             UndB
+        Model from BT's simulation parameters document cp38-2 http://www.niccstandards.org.uk/files/current/NICC%20ND%201513%20(2010-01).pdf
         """
-        
-        """
-        Constants taken from
-            “Transmission and Multiplexing (TM); Access transmission systems on metallic
-            access cables; Very high speed Digital Subscriber Line (VDSL); Part 1: Functional
-            requirements,”
-        """
-        K_xn=0.0032 #NOTUSED
-        K_xf=0.0056 #NOTUSED
-        
-        """
-        Model from BT's simulation parameters document cp38-2
-        """
-        x=-55
-        n=(lines-1)/(max_bundle_size-1) #n disturbers REFACTOR lines max_bundle_size
+        x=-55   #This is different from the NICC Model  #FUDGE
         x+= 20*log10(freq/90e3)         #f in Hz
-        x+= 6*log10(n)                  #shared length in km
-        x+= 10*log10(length)
+        x+= 6*log10(len(self.lines)-1)/(49) #n disturbers 
+        x+= 10*log10(length)            #shared length in km
         
         try:
             return UndB(x)
@@ -181,13 +170,13 @@ class Bundle(object):
             return 0
         
         
-    """
-    insertion loss makes more sense in the bundle as most of the time,
-    it is looking at a common length between two lines
-    """
     def insertion_loss(self,length,freq): #TODO: Reintroduce factor removed from C version?
+        """
+        insertion loss makes more sense in the bundle as most of the time,
+        it is looking at a common length between two lines
+        """
         if length > 0:
-            return utility.do_transfer_fn(length,freq )
+            return do_transfer_function(length,freq )
         else: 
             return 0
     
@@ -198,12 +187,12 @@ class Bundle(object):
         for line in self.lines:
             line.sanity()
             
-            noise = line.calc_fext_noise(k) + line.alien_xtalk(k) + dbmhz_to_watts(line.noise) #TODO alien
+            noise = [ line.calc_fext_noise(k) + line.alien_xtalk(k) + dbmhz_to_watts(line.noise) for k in range(self.K)] #TODO alien
             
-            line.cnr = [ line.gain[x]/noise for x in range(self.K)]
-            line.snr = [ dbmhz_to_watts(line.psd[x])*line.cnr[x] for x in range(self.K)]
-            line.gamma_m = [ 10*math.log10(line.snr[x]/math.pow(2,line.b[x]-1)) for x in range(self.K)]
-            line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in range(self.lines) ] #TODO symerr.c
+            line.cnr = [ line.gain[k]/noise[k] for k in range(self.K)]
+            line.snr = [ dbmhz_to_watts(line.psd[k])*line.cnr[k] for k in range(self.K)]
+            line.gamma_m = [ 10*math.log10(line.snr[k]/math.pow(2,line.b[k]-1)) for x in range(self.K)]
+            line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in range(self.lines) ] #TODO _calc_sym_err
             
             line.p_total = sum(map(dbmhz_to_watts(line.psd)))
             line.b_total = sum(line.b)

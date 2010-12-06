@@ -1,12 +1,15 @@
+from utility import *
+import numpy
 
-class Line(Bundle):
-    def __init__(self,nt,lt):
+class Line(object):
+    def __init__(self,nt,lt,id,bundle):
         # nt and lt are network termination (CO or RT) and line termination (CPE)
+        self.bundle = bundle
         self.nt = int(nt)
         self.lt = int(lt)
         self.length = self.nt - self.lt
-        self.gain = None
-        self.id = none #could this be removed as an array of lines?
+        self.gain = numpy.zeros(bundle.K)
+        self.id = id #could this be removed as an array of lines?
         self.type = 2   #I'm assuming this declares the material of the line
                         #so in theory it can be removed from transfer_fn
 
@@ -19,8 +22,7 @@ class Line(Bundle):
         self.gamma_m = []
         self.b = []
         
-        #Shortcut to parent cus I'm lazy
-        self.parent = super(Bundle,self)
+        
         
 
     def __str__(self):
@@ -34,12 +36,12 @@ class Line(Bundle):
         s += "|"
         return s
 
-    def transfer_fn(self, freq): #TODO
+    def transfer_fn(self, freq):
         """
         Return the RLCG Parameterised Transfer Function
         """
         #C Version uses bundle as a linked list of lines so most of this function is redundant.
-        return utility.do_transfer_fn(type = self.type, length=self.length/1000, freq )
+        return do_transfer_function(abs(self.length), freq ,type=self.type)
     
     def sanity(self):
         for t in range(self.parent.K):
@@ -50,8 +52,11 @@ class Line(Bundle):
         return
     
     def calc_fext_noise(self,channel):
-        for xtalker in self.parent.lines:
-            noise += dbmhz_to_watts(line.psd[channel])*self.parent.xtalk_gain(self.id,xtalker,channel)
+        noise=0
+        for xtalker in self.bundle.lines:
+            if xtalker == self : continue   #stop hitting yourself!
+            else:
+                noise += dbmhz_to_watts(self.psd[channel])*self.bundle.get_xtalk_gain(xtalker,self,channel)
         return noise
     
     def alien_xtalk(self,channel): #TODO
