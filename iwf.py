@@ -3,6 +3,7 @@ Algorithm Modules
 """
 
 import bundle
+import algorithm
 
 class IWF(Algorithm):
     """
