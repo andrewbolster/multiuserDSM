@@ -7,13 +7,19 @@ from math import *
 from utility import *
 import cmath
 import numpy
+import pydot
+import pyparsing
+import scipy.special as ss
+import pylab
+
+
+
 
 from line import Line
 
 class Bundle(object):
-    def __init__(self,network_file,K):
+    def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
         self.K = int(K)                # the number of DMT channels
-        print type(self.K)
         self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
@@ -53,10 +59,11 @@ class Bundle(object):
                     self.lines.append(Line(nt,lt,n,self))
 
             self.N = len(self.lines)
-            print "Read ",self.N," Lines"
+            log.info("Read %d Lines",self.N)
+            
 
         except IOError:
-            print "Cannot open the network file",network_file
+            log.error("Cannot open the network file: %s",network_file)
             sys.exit(1)
 
 
@@ -64,27 +71,47 @@ class Bundle(object):
         Calculate the channel matrix
         """
         self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
-        print "Hope that worked..."
 
-        self.channel_matrix = self.calc_channel_matrix()
+        self.calc_channel_matrix()
+        log.info("Printing xtalk_gain")
         print self.xtalk_gain
-        print "Hope that worked..."
-        #self.check_normalised_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
+        #self.graph_channel_matrix()
+        log.info("Running self check:")
+        print self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
         
 
 
     def calc_channel_matrix(self): #TODO
         for k in range(self.K):                         #For Each Tone
-            for i,li in enumerate(self.lines):          #Between Every Line
-                for j,lj in enumerate(self.lines):
+            for i,li in enumerate(self.lines):          #Between Every Victim
+                for j,lj in enumerate(self.lines):      # and every xtalker
                     if i == j:                          #If you're talking to yourself, do lazy transfer_fn
-                        print i,j,k
                         li.gain[k] = self.xtalk_gain[i,j,k] = li.transfer_fn(freq_on_tone(k))
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
+                    log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
+    
+    def check_xtalk_gains(self):
+        yeses=0
+        """ Original Way to do it
+        for k in self.K:            #tone
+            for x,lineX in enumerate(self.lines):    #xtalker
+                for v,lineV in enumerate(self.lines):#victim
+                    if x==v: continue
+                    if self.xtalk_gain[x,v,k]/lineV.gain[k] > 0.5:
+                        yeses+=1
+        """
+        
+        """Lets turn this on its head"""
+        for v,victim in enumerate(self.lines):
+            #listcomprehension for x,v,k on xtalk_gains and gain[k]
+            gainratio=[self.xtalk_gain[x,v,k]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
+            yeses+=len([1 for i in gainratio if i>0.5])
+        return yeses       
 
     def get_xtalk_gain(self,line1,line2,channel):
         return self.xtalk_gain(line1.id, line2.id,channel)
+    
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
         """
         Calculate Far End XT Gain
@@ -147,9 +174,9 @@ class Bundle(object):
         H = h1*h2*h3
         
         gain = H * self.fext(freq, max(vnt,dnt)-max(vlt,dlt))
-        return gain
-    
-    
+        log.debug("Returned xtalk_gain: %g",gain)
+
+        return gain  
     
     
     def fext(self,freq,length):
@@ -178,7 +205,7 @@ class Bundle(object):
         if length > 0:
             return do_transfer_function(length,freq )
         else: 
-            return 0
+            return 1 #Leads straight into multiplication; so ends up x*0=0 otherwise
     
     """
     Calculate snr statistics for all lines in bundle
@@ -193,7 +220,7 @@ class Bundle(object):
             line.snr = [ dbmhz_to_watts(line.psd[k])*line.cnr[k] for k in range(self.K)]
             line.gamma_m = [ 10*math.log10(line.snr[k]/math.pow(2,line.b[k]-1)) for x in range(self.K)]
             line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in range(self.lines) ] #TODO _calc_sym_err
-            
+            print line.symerr
             line.p_total = sum(map(dbmhz_to_watts(line.psd)))
             line.b_total = sum(line.b)
             line.rate[line.service] = "sum of line.b[k]" #TODO How to vectorise this? Where Does Service Come From?
@@ -204,9 +231,17 @@ class Bundle(object):
             Are b/_b ever different? If its a fractional line is b[k] ever needed?
             """
     """
-    Calculate Symbol Error Rate between two lines
-    THERE MUST BE A CLEARER WAY!
+    Calculate Symbol Error Rate on line
     """
-    def _calc_sym_err(self,xtalker): #TODO
-        return 0
+    def _calc_sym_err(self,line,k): #TODO
+        
+        M=math.pow(2,line.b[k])
+               
+        return 1 - (1 - (1 - 1/math.sqrt(M))*ss.erf(math.sqrt((3*line.snr[k])/(2*(M-1)))))
+    
+    def graph_channel_matrix(self):
+        pylab.contourf(self.xtalk_gain[...,0])
+        pylab.figure()
+        pylab.show
+
             

@@ -17,6 +17,7 @@ class Line(object):
         self.b_total = 0    #ditto
         
         self.rate = []
+        self.pow = []
         self.snr = []
         self.cnr = []
         self.gamma_m = []

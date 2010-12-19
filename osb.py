@@ -2,12 +2,17 @@
 Algorithm Modules
 """
 
-import bundle
+#Global Imports
+import numpy
 import math
+
+#Local Imports
+from bundle import Bundle
+from algorithm import Algorithm
 
 class OSB(Algorithm):
     """
-    Iterative Water Filling
+    Optimum Spectrum Balancing
     """
     
     def __init__(self):
