@@ -1,0 +1,2 @@
+^\s*(unsigned|signed)?\s+(void|int|char|short|long|float|double)\s+(\w+)\s*\([^)]*\)\s*;
+

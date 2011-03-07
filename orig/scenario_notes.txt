@@ -1,0 +1,3 @@
+4lines5a osb_bb_frac 0.1 bit increments
+converges
+Approx running time = 5613.501725 seconds on ashby dell

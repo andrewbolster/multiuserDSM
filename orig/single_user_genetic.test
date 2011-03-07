@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "multiuser_load.h"
+
+struct solution{
+
+	int b[DMTCHANNELS];
+	double fitness;
+	double power;
+	int rate;
+};
+
+
+struct single_user_genetic_params{
+	
+	struct solution solution[8];
+
+};
+
+
+void create_population(struct single_user_genetic_params *p);
+void create_random_solution(struct solution *s);
+void print_solutions(struct single_user_genetic_params *p);
+
+void single_user_genetic()
+{
+
+	struct single_user_genetic_params *p;
+
+	p=malloc(sizeof(struct single_user_genetic_params));
+
+	srand((unsigned int)time(NULL));
+
+	if (p==NULL) {
+		printf("malloc sucks ass\n");
+		exit(1);
+	}
+
+	create_population(p);
+	
+	evaluate_fitness(p);
+
+	//print_solutions(p);
+
+}
+
+
+void create_population(struct single_user_genetic_params *p)
+{
+	int i;
+
+	for (i=0;i<8;i++) 
+		create_random_solution(&p->solution[i]);
+
+
+}
+
+void create_random_solution(struct solution *s)
+{	
+	int i,val;
+
+	for (i=0;i<DMTCHANNELS;i++) {
+		val=rand()%MAXBITSPERTONE;
+		//printf("val = %d\n",val);
+		//getchar();
+		(*s).b[i] = val;
+		//printf("%d\n",s.b[i]);
+		//getchar();	
+	}
+
+}
+
+void print_solutions(struct single_user_genetic_params *p)
+{
+
+	int i,j;
+
+	for (j=0;j<8;j++) {
+		printf("solution %d\n",j);
+
+		for (i=0;i<DMTCHANNELS;i++) {
+			printf("%d ",p->solution[j].b[i]);
+		}
+ 
+		printf("\n");
+	}
+
+	
+
+}
+
