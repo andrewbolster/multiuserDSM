@@ -70,9 +70,11 @@ class Bundle(object):
         """
         Calculate the channel matrix
         """
+        #Clear the gains to be tidy
         self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
-
+        #The real work begins
         self.calc_channel_matrix()
+        
         log.info("Printing xtalk_gain")
         print self.xtalk_gain
         #self.graph_channel_matrix()
@@ -81,6 +83,10 @@ class Bundle(object):
         
 
 
+    """
+    Calculates the bundle channel gain matrix
+    :from channel_matrix.c
+    """
     def calc_channel_matrix(self): #TODO
         for k in range(self.K):                         #For Each Tone
             for i,li in enumerate(self.lines):          #Between Every Victim
@@ -91,6 +97,10 @@ class Bundle(object):
                         self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                     log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
     
+    """
+    Check Normalised XT Gains
+    :from channel_matrix.c
+    """
     def check_xtalk_gains(self):
         yeses=0
         """ Original Way to do it
@@ -108,52 +118,52 @@ class Bundle(object):
             gainratio=[self.xtalk_gain[x,v,k]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
             yeses+=len([1 for i in gainratio if i>0.5])
         return yeses       
-
+    
+    """
+    Get XT Gain for line objects
+    """
     def get_xtalk_gain(self,line1,line2,channel):
         return self.xtalk_gain(line1.id, line2.id,channel)
     
+    """
+    Calculate Far End XT Gain
+    :from channel_matrix.c 
+    Uses:
+        transfer_func
+        insertion_loss
+        fext
+    (Upstream/Downstream) Cases:
+        victim and xtalker == lt
+            victim length < xtalker length (4/8)
+            victim length > xtalker length (6/2)
+            victim and xtalker == length (5)
+        victim lt < xtalker lt
+            victim nt < xtalker nt (1/9)
+            victim nt < xtalker nt (3)
+        victim lt > xtalker lt
+            victim nt > xtalker nt (9/1)
+            victim nt < xtalker nt (7)
+        victim and xtalker == nt
+            victim length < xtalker length (8/4)
+            victim length > xtalker length (2/6)
+        victim nt <= xtalker lt (0)
+        victim lt >= xtalker nt (0)
+    
+    What do the cases mean?
+    http://www.nordstrom.nu/tomas/publications/BalEtAl_2003_ETSITM6_033w07.pdf
+    "Proposed Method on Crosstalk Calculations in a Distributed Environment"
+    In Section 2: Top line is 'victim', A->B is nt->lt
+    
+    
+    4 bundle segment types for 2 lines (xtalker and victim);
+    H1:xtalker before victim (1,4,7)
+    H2:xtalker and victim (all)
+    H3:victim after xtalker(1,2,3)
+    H4:victim before xtalker(3,6)
+    
+    """
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
-        """
-        Calculate Far End XT Gain
-        
-        TODO: Look into "Impact of Crosstalk Channel Estimation on the DSM
-        Performance for DSL Networks" for an alternative
-        
-        Uses:
-            transfer_func
-            insertion_loss
-            fext
-        (Upstream/Downstream) Cases:
-            victim and xtalker == lt
-                victim length < xtalker length (4/8)
-                victim length > xtalker length (6/2)
-                victim and xtalker == length (5)
-            victim lt < xtalker lt
-                victim nt < xtalker nt (1/9)
-                victim nt < xtalker nt (3)
-            victim lt > xtalker lt
-                victim nt > xtalker nt (9/1)
-                victim nt < xtalker nt (7)
-            victim and xtalker == nt
-                victim length < xtalker length (8/4)
-                victim length > xtalker length (2/6)
-            victim nt <= xtalker lt (0)
-            victim lt >= xtalker nt (0)
-        
-        What do the cases mean?
-        http://www.nordstrom.nu/tomas/publications/BalEtAl_2003_ETSITM6_033w07.pdf
-        "Proposed Method on Crosstalk Calculations in a Distributed Environment"
-        In Section 2: Top line is 'victim', A->B is nt->lt
-        
-        
-        4 bundle segment types for 2 lines (xtalker and victim);
-        H1:xtalker before victim (1,4,7)
-        H2:xtalker and victim (all)
-        H3:victim after xtalker(1,2,3)
-        H4:victim before xtalker(3,6)
-        
-        """
-        
+               
         if dir == "DOWNSTREAM":                 #If DOWNSTREAM, swap nt/lt's
             (dnt,dlt)=(xtalker.lt,xtalker.nt)
             (vnt,vlt)=(victim.lt,victim.nt)
@@ -178,14 +188,15 @@ class Bundle(object):
 
         return gain  
     
-    
+    """
+    Calculate FEXT for given Freq and Length
+    Uses:
+        UndB
+    Model from BT's simulation parameters document cp38-2 http://www.niccstandards.org.uk/files/current/NICC%20ND%201513%20(2010-01).pdf
+    :from channel_matrix.c
+    """
     def fext(self,freq,length):
-        """
-        Calculate FEXT for given Freq and Length
-        Uses:
-            UndB
-        Model from BT's simulation parameters document cp38-2 http://www.niccstandards.org.uk/files/current/NICC%20ND%201513%20(2010-01).pdf
-        """
+       
         x=-55   #This is different from the NICC Model  #FUDGE
         x+= 20*log10(freq/90e3)         #f in Hz
         x+= 6*log10(len(self.lines)-1)/(49) #n disturbers 
@@ -196,7 +207,10 @@ class Bundle(object):
         except ZeroDivisionError:
             return 0
         
-        
+    """
+    Calculate Insertion Loss
+    :from transfer_fn.c
+    """    
     def insertion_loss(self,length,freq): #TODO: Reintroduce factor removed from C version?
         """
         insertion loss makes more sense in the bundle as most of the time,
@@ -209,6 +223,7 @@ class Bundle(object):
     
     """
     Calculate snr statistics for all lines in bundle
+    :from snr.c
     """
     def calculate_snr(self):
         for line in self.lines:
@@ -232,6 +247,7 @@ class Bundle(object):
             """
     """
     Calculate Symbol Error Rate on line
+    :from symerr.c
     """
     def _calc_sym_err(self,line,k): #TODO
         
@@ -239,6 +255,19 @@ class Bundle(object):
                
         return 1 - (1 - (1 - 1/math.sqrt(M))*ss.erf(math.sqrt((3*line.snr[k])/(2*(M-1)))))
     
+    """
+    Checks inter-service margins
+    :from snr.c
+    #I suspect this can be ignored
+    """
+    def check_all_margins(self,gap):
+        for line in self.lines:
+            
+    
+    """
+    Pretty Print channel Matrix
+    #TODO
+    """
     def graph_channel_matrix(self):
         pylab.contourf(self.xtalk_gain[...,0])
         pylab.figure()

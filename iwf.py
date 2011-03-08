@@ -9,6 +9,7 @@ import math
 #Local Imports
 from bundle import Bundle
 from algorithm import Algorithm
+import utility
 
 class IWF(Algorithm):
     """
@@ -17,7 +18,6 @@ class IWF(Algorithm):
     
     def __init__(self):
         self.name = "IWF"
-        self.preamble
         
         assert self.bundle is Bundle # "You dun goofed the Bundle!"
         
@@ -29,13 +29,14 @@ class IWF(Algorithm):
         else:
             p_initial = 0.02818
         
-              
         self.p = numpy.tile(p_initial, self.bundle.K) 		#size bundle.K
         self.bundle.calculate_snr()
         
         self.rate_targets = numpy.tile()
         
         #TODO start timer system here
+        self.preamble
+
         iterations = rate_iterations = 0
         while iterations < 30 and rate_iterations < 10:
             while self.bundle.check_all_margins(2):
@@ -56,11 +57,14 @@ class IWF(Algorithm):
                 if line.rate < line.rate_target:
                     targets_met=False
             
-            if targets_met:
+            if targets_met: #we're done here
+                utility.log.info("Rate Targets satisfied after %d rate iterations"%rate_iterations)
                 break
             
+            rate_iterations+=1 #start a new attempt
+            
         else: #will only run after 30 failed iterations or 10 failed 
-            print "Convergence Failure after "+iterations+" iterations, "+rate_iterations+" rate iterations"
+            utility.log.warning("Convergence Failure after "+iterations+" iterations, "+rate_iterations+" rate iterations")
             return -1
         
         self.postscript

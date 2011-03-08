@@ -8,7 +8,8 @@ class Line(object):
         self.nt = int(nt)
         self.lt = int(lt)
         self.length = self.nt - self.lt
-        self.gain = numpy.zeros(bundle.K)
+        self.gain = numpy.zeros(bundle.K) 
+        self.p = numpy.zeros(bundle.K) #PSD of this line
         self.id = id #could this be removed as an array of lines?
         self.type = 2   #I'm assuming this declares the material of the line
                         #so in theory it can be removed from transfer_fn
@@ -16,8 +17,9 @@ class Line(object):
         self.p_total = 0    #configured in bundle.calculate_snr
         self.b_total = 0    #ditto
         
+        self.p_max = 1 #P=Total AFE power / delta_Freq #TODO
+        
         self.rate = []
-        self.pow = []
         self.snr = []
         self.cnr = []
         self.gamma_m = []
@@ -62,4 +64,7 @@ class Line(object):
     
     def alien_xtalk(self,channel): #TODO
         return 0
+    
+    def sum(self):
+        
     

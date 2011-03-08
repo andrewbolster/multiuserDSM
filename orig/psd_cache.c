@@ -6,36 +6,26 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 #include <float.h>
-
-
 //#include <mkl_lapack.h>
-
 #include <Eigen/Core>
 #include <Eigen/LU>
 USING_PART_OF_NAMESPACE_EIGEN
-
 #define inv 1
 #define F(g,b) pow(10,(g+3)/10)*(pow(2,b)-1)
-
 #define TONE_CACHE_SIZE 80000
-
-
 enum {
 	CACHE_HIT,
 	CACHE_MISS,
 	CACHE_COLLISION
 };
-
 psd_cache::psd_cache()
 {
-
 	_cache_hits=0;
 	_cache_misses=0;
 	_total_cache_size=0;
 	_calls=0;
 	_compares=0;
 	_collisions=0;
-
 	_cache_head = new struct cache_ent *[DMTCHANNELS];
 	_cache_tail = new struct cache_ent *[DMTCHANNELS];
 	_cache_size = new double [DMTCHANNELS];
@@ -43,28 +33,21 @@ psd_cache::psd_cache()
 		_cache_size[tone]=0;
 		_cache_head[tone]=new struct cache_ent [TONE_CACHE_SIZE];	
 	}
-
 	_line_array = new struct line *[lines];
-
 	for (int user=0;user<lines;user++) {
 		_line_array[user]=get_line(user);
 	} 	
-
 	_tone_locks = new pthread_mutex_t[DMTCHANNELS];
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		pthread_mutex_init(&(_tone_locks[tone]),NULL);
 	}
-
 }
-
 psd_cache::~psd_cache()
 {
 	/*
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		struct cache_ent *current=_cache_head[tone];
 		struct cache_ent *next;
-		
 		while(current !=NULL) {
 			next=current->next;
 			delete[] current->p_vec;
@@ -72,7 +55,6 @@ psd_cache::~psd_cache()
 			current=next;	
 		}
 	}
-
 	delete[] _cache_head;
 	delete[] _cache_tail;
 	*/
@@ -80,28 +62,21 @@ psd_cache::~psd_cache()
 	printf("calls = %d\n",_calls);
 	printf("total cache size = %.0lf entries\n",_total_cache_size);
 	printf("total cache in bytes = %lf kbytes\n",_total_cache_size*(double)sizeof(cache_ent)/1024);
-
 	/*
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		printf("Cache size on channel %d is %.0lf\n",tone,_cache_size[tone]);
 	}
 	*/
-
 	//printf("total compares = %lf\n",_compares);
 	//printf("total collisions = %lf\n",_collisions);
-	
 }
-
 int psd_cache::check(int *b,double *gamma,int channel,double *p)
 {
 	//struct cache_entry* cache=_cache_head[channel];
 	//bool debug=false;
 	//double scale_fac = pow(2,-15);
-
 	//pthread_mutex_lock(&_lock);
-
 	//pthread_mutex_lock(&(_tone_locks[channel]));
-
 	unsigned int hash=0;
 	/*
 	if (b[0] == 15 && b[1] == 12 && channel == 0) {
@@ -113,11 +88,9 @@ int psd_cache::check(int *b,double *gamma,int channel,double *p)
 	//hash = murmurhash((unsigned char *)b,lines*sizeof(int),hash);
 	//
 	int b_hash[lines];
-
         for (int user=0;user<lines;user++) {
                 b_hash[user] = (int)b[user];
         }
-
 	hash = murmurhash2((void *)b_hash,lines*sizeof(int),hash);
 //		int index = (int)((double)hash*scale_fac);
 	int index = hash % TONE_CACHE_SIZE;
@@ -150,7 +123,6 @@ int psd_cache::check(int *b,double *gamma,int channel,double *p)
 			//pthread_mutex_unlock(&(_tone_locks[channel]));
 			return CACHE_COLLISION;
 		}
-
 		for (int user=0;user<lines;user++) {
 			if (b[user] != _cache_head[channel][index].b_vec[user]) { // proper hash collision 
 				// eg (8 8 8 8 12 0 0 0) == (6 7 9 8 13 7 13 13) 
@@ -163,7 +135,6 @@ int psd_cache::check(int *b,double *gamma,int channel,double *p)
 				return CACHE_COLLISION;
 			}
 		}
-			
 		//memcpy(p,_cache_head[channel][index].p_vec,sizeof(double)*lines);
 		_cache_hits++;
 		for (int user=0;user<lines;user++) {
@@ -173,15 +144,11 @@ int psd_cache::check(int *b,double *gamma,int channel,double *p)
 		//pthread_mutex_unlock(&(_tone_locks[channel]));
 		return CACHE_HIT;
 	}
-
-
-
 /*
 	if (debug) {
 		printf("hash = %u\n",hash);
 	}
 */
-
 	/*	
 	if (_caching_on) {
 		while (cache != NULL) {			// right now, assume gammas are all the same!	
@@ -196,23 +163,19 @@ int psd_cache::check(int *b,double *gamma,int channel,double *p)
 	}
 	psd_cache::calculate_psd_cache(b,gamma,channel,p);
 	_calls++;
-	
 	if (_caching_on) {
 		insert_cache_entry(b,channel,p,hash);		// thats right! assuming gamma is the same for all entries!
 		_cache_misses++;
 	}	
-	
 	return 0;
 	*/
 }
-
 int psd_cache::insert_cache_entry(int *b,int channel,double *p)
 {
 	int b_hash[lines];
         for (int user=0;user<lines;user++) {
                 b_hash[user] = (int)b[user];
         }
-
 	unsigned int hash = 0;
 	hash = murmurhash2((void *)b,lines*sizeof(int),hash);
 	int index = hash % TONE_CACHE_SIZE;
@@ -224,24 +187,18 @@ int psd_cache::insert_cache_entry(int *b,int channel,double *p)
 	_cache_head[channel][index].hash=hash;
 	//memcpy(_cache_head[channel][index].p_vec,p,sizeof(float)*lines);
 	//memcpy(_cache_head[channel][index].b_vec,b,sizeof(char)*lines);
-
 	for (int user=0;user<lines;user++) {
                 _cache_head[channel][index].p_vec[user] = (float)p[user];
                 _cache_head[channel][index].b_vec[user] = (char)b[user];
         }
-
-
 	return 0;
-
 }
-
 int psd_cache::replace_cache_entry(int *b,int channel,double *p)
 {
 	int b_hash[lines];
         for (int user=0;user<lines;user++) {
                 b_hash[user] = (int)b[user];
         }
-
 	unsigned int hash = 0;
 	hash = murmurhash2((void *)b,lines*sizeof(int),hash);
 	int index = hash % TONE_CACHE_SIZE;
@@ -253,34 +210,25 @@ int psd_cache::replace_cache_entry(int *b,int channel,double *p)
 	_cache_head[channel][index].hash=hash;
 	//memcpy(_cache_head[channel][index].p_vec,p,sizeof(float)*lines);
 	//memcpy(_cache_head[channel][index].b_vec,b,sizeof(char)*lines);
-
 	for (int user=0;user<lines;user++) {
                 _cache_head[channel][index].p_vec[user] = (float)p[user];
                 _cache_head[channel][index].b_vec[user] = (char)b[user];
         }
-
-
 	return 0;
-
 }
-
 unsigned int psd_cache::murmurhash(const unsigned char *data,int len,unsigned int h)
 {
 	const unsigned int m = 0x7fd652ad;
 	const int r = 16;
-
 	h += 0xdeadbeef;
-
 	while(len >= 4)
 	{
 		h += *(unsigned int *)data;
 		h *= m;
 		h ^= h >> r;
-
 		data += 4;
 		len -= 4;
 	}
-
 	switch(len)
 	{
 	case 3:
@@ -292,52 +240,34 @@ unsigned int psd_cache::murmurhash(const unsigned char *data,int len,unsigned in
 		h *= m;
 		h ^= h >> r;
 	};
-
 	h *= m;
 	h ^= h >> 10;
 	h *= m;
 	h ^= h >> 17;
-
 	return h;
-
-
 }
-
-
-
 unsigned int psd_cache::murmurhash2( const void * key, int len, unsigned int seed )
 {
 	// 'm' and 'r' are mixing constants generated offline.
 	// They're not really 'magic', they just happen to work well.
-
 	const unsigned int m = 0x5bd1e995;
 	const int r = 24;
-
 	// Initialize the hash to a 'random' value
-
 	unsigned int h = seed ^ len;
-
 	// Mix 4 bytes at a time into the hash
-
 	const unsigned char * data = (const unsigned char *)key;
-
 	while(len >= 4)
 	{
 		unsigned int k = *(unsigned int *)data;
-
 		k *= m; 
 		k ^= k >> r; 
 		k *= m; 
-		
 		h *= m; 
 		h ^= k;
-
 		data += 4;
 		len -= 4;
 	}
-	
 	// Handle the last few bytes of the input array
-
 	switch(len)
 	{
 	case 3: h ^= data[2] << 16;
@@ -345,30 +275,22 @@ unsigned int psd_cache::murmurhash2( const void * key, int len, unsigned int see
 	case 1: h ^= data[0];
 	        h *= m;
 	};
-
 	// Do a few final mixes of the hash to ensure the last few
 	// bytes are well-incorporated.
-
 	h ^= h >> 13;
 	h *= m;
 	h ^= h >> 15;
-
 	return h;
 }
-
 int calculate_psd_vector(int *b,double *gamma,int channel,double *_p,psd_cache *cache)
 {
-
 	if (cache == NULL) {
 		calculate_psd_vector(b,gamma,channel,_p);
 		return 0;
 	}
-
 	pthread_mutex_lock(&(cache->_tone_locks[channel]));
 	int ret = cache->check(b,gamma,channel,_p);
-	
 	switch(ret) {
-
 		case CACHE_HIT:
 			pthread_mutex_unlock(&(cache->_tone_locks[channel]));
 			return CACHE_HIT;
@@ -379,13 +301,11 @@ int calculate_psd_vector(int *b,double *gamma,int channel,double *_p,psd_cache *
 			/*
 			int i,j,sig;
 			struct line* current;
-
 			gsl_matrix *A = gsl_matrix_calloc(lines,lines);
 			gsl_vector *B = gsl_vector_calloc(lines);
 			gsl_vector *X = gsl_vector_calloc(lines);
 			gsl_matrix *invA = gsl_matrix_calloc(lines,lines);
 			gsl_permutation *p = gsl_permutation_calloc(lines);
-
 			for (i=0;i<lines;i++) {
 				for (j=0;j<lines;j++) {
 					if (i==j)
@@ -393,41 +313,32 @@ int calculate_psd_vector(int *b,double *gamma,int channel,double *_p,psd_cache *
 					else {
 						gsl_matrix_set(A,i,j,-1*F(gamma[i],b[i])*get_xtalk_gain(j,i,channel)/get_xtalk_gain(i,i,channel));		
 					}
-					
 				}
 			}
-
 			for(i=0;i<lines;i++) {
 				//gsl_vector_set(B,i,F(gamma[i],b[i])*(dbmhz_to_watts(-140)+alien_xtalk(i,channel))/get_xtalk_gain(i,i,channel));
 				// forget about alien_xtalk for now!!
 				//gsl_vector_set(B,i,F(gamma[i],b[i])*(dbmhz_to_watts(-140)+alien_xtalk(i,channel))/get_xtalk_gain(i,i,channel));
 				gsl_vector_set(B,i,F(gamma[i],b[i])*(dbmhz_to_watts(-140))/get_xtalk_gain(i,i,channel));
 			}
-
 		#ifdef QR
 			gsl_linalg_QR_decomp(A,tau);
-
 			gsl_linalg_QR_solve(A,tau,B,X);
 		#endif
-
 		#ifdef inv
 			if (gsl_linalg_LU_decomp(A,p,&sig)) {
 				printf("LU decomp failed!");
 				exit(1);
 			}
-
 			if (gsl_linalg_LU_invert(A,p,invA)) {
 				printf("LU invert failed");
 				exit(1);
 			}
-
 			if (gsl_blas_dgemv(CblasNoTrans,1.0,invA,B,0.0,X)) {           // ans = inv(D)*y
 				printf("failed!");
 				exit(1);
 			}
-
 		#endif
-
 			for (i=0;i<lines;i++) {
 				_p[i]=gsl_vector_get(X,i);
 				if (_p[i] > 0 && _p[i] < 4.31e-14)
@@ -435,7 +346,6 @@ int calculate_psd_vector(int *b,double *gamma,int channel,double *_p,psd_cache *
 				if (_p[i] < 0 && _p[i] > -4.31e-14)
 					_p[i]=0;
 			}
-
 			gsl_matrix_free(A);
 			gsl_matrix_free(invA);
 			gsl_vector_free(X);
@@ -444,7 +354,6 @@ int calculate_psd_vector(int *b,double *gamma,int channel,double *_p,psd_cache *
 			*/
 			break;
 	}
-
 	if (ret == CACHE_MISS) {
 		cache->insert_cache_entry(b,channel,_p);
 		pthread_mutex_unlock(&(cache->_tone_locks[channel]));
@@ -455,6 +364,4 @@ int calculate_psd_vector(int *b,double *gamma,int channel,double *_p,psd_cache *
 		pthread_mutex_unlock(&(cache->_tone_locks[channel]));
 		return CACHE_COLLISION;
 	}
-
 }
-

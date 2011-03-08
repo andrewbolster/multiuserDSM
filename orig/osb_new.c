@@ -2,28 +2,20 @@
 #include "util.h"
 #include "osb_new.h"
 #include <cfloat>
-
 static double min_step=1000;
 double min_w_step=1e-4;
-
-
 osb::osb()
 {
 	/*for (int user=0;user<lines;user++) 
 		l[user]=0;
 	*/
-
 	s_w=min_w_step;
-
 	mask=dbmhz_to_watts(-36.5);
 	p_tol=0.005;
 }
-
 int osb::run()
 {
-
 	s_l=min_step;
-
 	double prev_p_distance = DBL_MAX;
 	//double min_p_distance = DBL_MAX;
 	double p_distance = DBL_MAX;
@@ -35,22 +27,18 @@ int osb::run()
 	//bool first_run=true;
 	bool reset_l=true;
 	bool reset_w=true;
-
 	while ( !(converged()) ) {		
 		//psd->print_cache_size();		
 		prev_p_distance = p_distance;	
 		prev_w_distance = w_distance;
-		
 		if (reset_l) {
 			prev_p_distance=DBL_MAX;
 		}
 		reset_l=false;
-	
 		if (reset_w) {
 			prev_w_distance=DBL_MAX;
 		}
 		reset_w=false;
-
 		for (int user=0;user<lines;user++) {
 			last_rate[user]=current_rate[user];
 			last_pow[user]=current_pow[user];
@@ -60,9 +48,7 @@ int osb::run()
 			current_rate[user]=rate(user);
 			current_pow[user]=tot_pow(user);
 		}
-
 		p_distance = calc_p_distance();
-	
 		printf("previous l distance was %lf\n",prev_p_distance);
 		printf("current l distance is %lf\n",p_distance);
 		printf("current  lstep is %lf\n",s_l);
@@ -88,14 +74,11 @@ int osb::run()
 			continue;
 		}
 */
-
 /*
 		w_distance = calc_w_distance();
-	
 		printf("previous distance was %lf\n",prev_w_distance);
 		printf("current distance is %lf\n",w_distance);
 		printf("current step is %lf\n",s_w);
-	
 		if (w_distance <= prev_w_distance) {
 			if (w_distance <= min_w_distance) {
 				min_w_distance=w_distance;	
@@ -115,10 +98,6 @@ int osb::run()
 			reset_w=true;
 		}
 */
-
-
-
-
 		/*
 		if (!first_run) {
 			int osc=0;
@@ -135,41 +114,28 @@ int osb::run()
 			}
 		}
 		*/
-
 		//update_l();
 		//update_w();
 		//
 		//getchar();
 		//first_run=false;
 	}
-
 	init_lines();
-
 	calculate_snr();
-
 	return 0;
-
 }
-
 double osb::calc_w_distance()
 {
-
 	double sum=0.0;
-
 	for (int user=1;user<lines;user++) {
 		sum += pow((rate_target[user] - current_rate[user]),2);
 	}
-
 	return sqrt(sum);
-
 }
-
 void osb::update_w()
 {
-
 	for (int user=1;user<lines;user++) {
 		double update = s_w*(rate_target[user]-current_rate[user]);
-		
 		/*if ( is_oscillating(user) && abs(current_rate[user] - rate_target[user]) > e) {
 			printf("looks like w%d is oscillating\n",user);
 			s_w[user] /= 2;
@@ -179,32 +145,21 @@ void osb::update_w()
 			w[user] = w[user];
 		else
 			w[user] = w[user] + update;
-			
 	}
-
-	
-
-
 }
-
 void osb::optimise_p()
 {
 	double lk,lk_max;
 	int * b_max = new int [lines];
 	int * b_vec = new int [lines];
 	double * p = new double [lines];
-
 	print_vector(l,"l");
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		lk=0.0;
 		lk_max=-DBL_MAX;	
-		
 		vector_next(b_vec,lines,MAXBITSPERTONE,true);	// reset b_vec
-
 		//printf("Starting per tone op\n");
 		while(vector_next(b_vec,lines,MAXBITSPERTONE,false)) {
-				
 			lk = osb_lk(b_vec,tone);
 			if (lk > lk_max) {
 				lk_max=lk;
@@ -212,40 +167,26 @@ void osb::optimise_p()
 					b_max[user] = b_vec[user];
 				}
 			}	
-
 		}
 		//printf("Finished one tone\n");
-		
         	psd->calc(b_max,g,tone,p);
-
 		for (int user=0;user<lines;user++) {
 			b[tone][user] = b_max[user];	
 			_p[tone][user] = p[user];		
 		}
 	}
-
 	delete[] b_max;
 	delete[] b_vec;
 	delete[] p;
-
 }
-
-
-
-
 double osb::osb_lk(int *b,int tone)
 {
-
         double b_sum=0,p_sum=0;
         double *p = new double [lines];
-
         for (int user=0;user<lines;user++) {
                 b_sum+=b[user]*w[user];
         }
-
-
         psd->calc(b,g,tone,p);
-
         for (int user=0;user<lines;user++) {
                 if (p[user] < 0 && b[user] > 0 || p[user] > mask) {
 			delete[] p;
@@ -254,40 +195,19 @@ double osb::osb_lk(int *b,int tone)
                 p_sum+=l[user]*p[user];
                 last_psd[user]=p[user];
         }
-
         delete[] p;
-
         return b_sum-p_sum;
-
 }
-
 void osb::init_lines()
 {
-
         struct line *current;
-
         for (int user=0;user<lines;user++) {
                 current=get_line(user);
                 current->is_dual=0;
                 strcpy(current->loading_algo,"OSB");
-
                 for (int tone=0;tone<DMTCHANNELS;tone++) {
                         current->b[tone] = b[tone][user];
                         current->psd[tone] = watts_to_dbmhz(_p[tone][user]);
                 }
         }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

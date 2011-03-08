@@ -7,14 +7,11 @@
 #include <cfloat>
 #include <cassert>
 #include "multiuser_load.h"
-
 #include <boost/threadpool.hpp>
 #include <boost/bind.hpp>
 #include <boost/mem_fn.hpp>
 #include <boost/bind/mem_fn.hpp>
-
 using namespace boost::threadpool;
-
 struct mipb_delta_p_thread_args {
 	mipb *m;
 	int tone;
@@ -22,16 +19,10 @@ struct mipb_delta_p_thread_args {
 	int upper;
 	int thread_id;
 };
-
 void *delta_p_thread(void *p);
-
-
-
 mipb::mipb(const int t)
 {
-
 	_num_threads=t;
-
 	_delta_p = new double**[DMTCHANNELS];
 	_mask = new double**[DMTCHANNELS];
 	_cost = new double*[DMTCHANNELS];
@@ -44,7 +35,6 @@ mipb::mipb(const int t)
 	_p = new double*[DMTCHANNELS];
 	_p_last = new double*[DMTCHANNELS];
 	_F = new int*[DMTCHANNELS];
-
 	_wp = new double[lines];
 	_w = new double[lines];
 	_best_w = new double[lines];
@@ -60,11 +50,8 @@ mipb::mipb(const int t)
 	_ref_psd = new double[lines];
 	_init_p_budget = new double[lines];
 	_active_channels = new int[lines];
-
 	_behind = new bool[lines];
-
 	_bit_mask = new int[lines];
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		_delta_p[tone] = new double*[lines];
 		_mask[tone] = new double*[lines];
@@ -79,7 +66,6 @@ mipb::mipb(const int t)
 		_p_last[tone] = new double[lines];
 		_F[tone] = new int[lines];
 	}
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		for (int user=0;user<lines;user++) {
 			_delta_p[tone][user] = new double[lines];
@@ -94,10 +80,7 @@ mipb::mipb(const int t)
 			_p[tone][user]=0;
 		}
 	}
-
-
 	for (int user=0;user<lines;user++) {
-
 		_wp[user]=1;
 		_w[user]=1;
 		_w_min[user]=0;
@@ -108,37 +91,27 @@ mipb::mipb(const int t)
 		_rate_targets[user]=NOT_SET;
 	}
 	//_threads=1;	// default
-
 	/*	
 	_psd = new psd_vector*[_num_threads];
-
 	for (int i=0;i<_num_threads;i++) {
 		_psd[i] = new psd_vector;
 	}
 	*/
-	
 	_p_ave=0.0;
-
 	_spectral_mask_on=true;
 	_spectral_mask=dbmhz_to_watts(-30);
-
 	_graph_loading=true;
-
 	_rate_tol=10;
-
 	_min_sw=1e-4;
 	_sw=_min_sw;
 	_sw1=1e-5;
-
 	_bit_mask[0]=0;		
 	_bit_mask[1]=0;		
 	_bit_mask[2]=0;		
-	
 	/*_w[0]=1;
 	_w[1]=1;
 	_w[2]=1e-6;
 	*/
-
 	for (int user=0;user<lines;user++) {
 		_ref_psd[user] = line_array[user]->waterfill_level;
 		_init_p_budget[user] = 0;
@@ -150,7 +123,6 @@ mipb::mipb(const int t)
 	_init_p_budget[2]=0.02818;
 	*/
 	_greedy=true;
-	
 	/*
 	_w[0]=1;
 	_w[1]=1;
@@ -164,33 +136,21 @@ mipb::mipb(const int t)
 	_simple_search=false;
 	_search1=false;
 	_search2=true;
-
 	_cost_list_head=NULL;
 	_cost_list_tail=NULL;
-
 	_old=false;
-
 	_show_solution=false;
-	
 	_is_frac=false;
-
 	_bit_inc=1;
-
 	_p_lead[1]=-0.011;
-
 	_num_greedys=0;
-
 	//_num_threads=1;
-
 	//_tp->size_controller().resize(_num_threads);
 	//
 	_rate_search_type=ADAPTIVE_GRAD;
-
 	_tp = new pool(_num_threads);
-
 	_zeta=1.1;
 }
-
 mipb::~mipb()
 {
 	/*
@@ -200,10 +160,8 @@ mipb::~mipb()
 	delete _psd;
 	*/
 }
-
 void mipb::reset_data()
 {
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		for (int user=0;user<lines;user++) {
 			for (int user1=0;user1<lines;user1++) {
@@ -216,7 +174,6 @@ void mipb::reset_data()
 			_p[tone][user]=0;
 		}
 	}
-
 	for (int user=0;user<lines;user++) {
 		_b_total[user]=0;
 		_p_used[user]=0;
@@ -226,45 +183,33 @@ void mipb::reset_data()
 	_total_bits=0;
 	//p_ave=0;
 	//_L.clear();
-	
 	if (_search2) {
 		cost_list_del();
 		_cost_list_head=_cost_list_tail=NULL;
 	}
 }
-
 double mipb::rate_spring(int user)
 {
 	double x = (double)(_rate_targets[user]-_b_total[user])/(double)(_rate_targets[user]); // percentage distance
-
 	if(_rate_targets[user] == NOT_SET) 
 		return 1;
-
 	double spring = exp(-500*x)+1;
-
 	//if (spring > 10)
 	//	printf("Rate spring returned %6.4g on line %d\n",spring,user);
-	
 	return spring;
 }
-
-
 int mipb::run()
 {
-
 	int min_tone,min_user;
 	int last;
-	
 	if (_is_frac) {
 		_bit_inc=0.1;
 	}	
-
 	if (!_greedy) {
 		_simple_search=true;
 		_search1=false;
 		_search2=false;
 	}
-
 	bool target=false;
 	for (int user=0;user<lines;user++) {
 		if (_rate_targets[user] != NOT_SET) {
@@ -272,7 +217,6 @@ int mipb::run()
 			_graph_loading=false;
 		}
 	}
-
 	if (target) {
 		double *b_total_last = new double[lines];
 		double *w_last = new double[lines];
@@ -283,7 +227,6 @@ int mipb::run()
 		do {
 			//bisect_w();
 			print_vector(_w,"w before loading");
-	
 			switch(_rate_search_type) {
 			case BISECTION:
 				bisect_w();
@@ -298,7 +241,6 @@ int mipb::run()
 				break;
 			case ADAPTIVE_GRAD:
 				load();
-
 				if (first_run) {
 					first_run=false;
 					memcpy(b_total_last,_b_total,sizeof(double)*lines);
@@ -342,15 +284,11 @@ int mipb::run()
 						memcpy(w_last,_w,sizeof(double)*lines);
 					}
 				}
-			
 				update_w();
 				break;
-	
 			}		
-
 			//load();
 			//old_rate_algo();
-			
 			int diff[lines];
 			for (int user=0;user<lines;user++) {
 				diff[user] = _b_total[user] - _rate_targets[user];
@@ -360,9 +298,7 @@ int mipb::run()
 			print_vector(diff,"rate delta");
 			//getchar();	
 			//update_sw();
-
 			//update_w();	
-
 				/*_p_budget[user]=0.02818;
 				double max = _p_budget[user];
 				double min = 0;
@@ -392,51 +328,34 @@ int mipb::run()
 						copy_b_and_p_to_last();
 						break;
 					}
-					
 					_init_p_budget[user]=(max+min)/2;
-					
 				}*/
-
-				
 		}while (!rates_converged());
-
 	}
 	else
 		load();
-
-
 	if (_show_solution) {		
 		dump_matrix(_b,"b");
 		system("../scripts/graph-dump-matrix.sh /tmp/mipb-b.txt");
-		
 		//dump_matrix(_p,"p");
 		//system("../scripts/graph-dump-matrix.sh /tmp/mipb-p.txt");
 		getchar();
 		system("killall gnuplot_x11");
 	}	
-
 	//dump_matrix(_ref_bits,"ref_bits");
 	//dump_matrix(_no_fext_bits,"no_fext_bits");
 	//dump_int_matrix(_init_b,"init_b");
-	
 	init_lines();
-	
 	calculate_snr();
-
 	if (_graph_loading) {
 		write_stats_totals();
 	}
-
 	printf("number of greedy evalulations = %d\n",_num_greedys);
-
-
 }
-
 void mipb::dispatch_delta_p_threads(int tone)
 {
 	pthread_t th[_threads];
 	struct mipb_delta_p_thread_args args[_threads];
-
 	for (int t=0;t<_threads;t++) {
 		args[t].m = this;
 		args[t].tone = tone;
@@ -455,34 +374,26 @@ void mipb::dispatch_delta_p_threads(int tone)
 		*/
 		pthread_create(&(th[t]),NULL,delta_p_thread,(void *)&(args[t]));
 	}
-
 	for (int t=0;t<_threads;t++) {
 		pthread_join(th[t],NULL);
 	}
 }
-
 void *delta_p_thread(void *p)
 {
 	struct mipb_delta_p_thread_args *th = static_cast<mipb_delta_p_thread_args *>(p);
 	mipb *m = static_cast<mipb *>(th->m);
-
 	//printf("Hello from thread %d!\n",th->thread_id);
-
 	for (int user=th->lower;user<=th->upper;user++) {
 		m->calc_delta_p(th->tone,user,th->thread_id);	
 	}
 	return (void *)NULL;
 }
-
-
 void mipb::update_sw(void)
 {
 	static double prev_r_distance=DBL_MAX;
 	static double min_r_distance=DBL_MAX;
 	double r_distance;
-
 	r_distance = calc_r_distance();
-	
 	if (r_distance <= prev_r_distance) {
 		if (r_distance <= min_r_distance) {
 			min_r_distance = r_distance;
@@ -498,38 +409,28 @@ void mipb::update_sw(void)
 		for (int user=0;user<lines;user++) {
                 	_w[user] = _best_w[user];
                 }
-
 		_sw=_min_sw;
 		prev_r_distance=DBL_MAX;
 	}
-
 	prev_r_distance = r_distance;
 	return;
-
 }
-
 double mipb::calc_r_distance(void)
 {
 	double sum=0.0;
-		
 	for (int user=0;user<lines;user++) {	
 		if (_rate_targets[user] == NOT_SET)
 			continue;
 		sum+= pow((_rate_targets[user]-_b_total[user]),2);
 	}
-	
 	return sqrt(sum);
-	
 	/*
 	for (int user=0;user<lines;user++) {
 		sum+=abs(_rate_targets[user]-_b_total[user]);
 	}
-
 	return sum;
 	*/
-	
 }
-
 void mipb::old_rate_algo(void)
 {
 	for (int user=0;user<lines;user++) {
@@ -547,25 +448,17 @@ void mipb::old_rate_algo(void)
 			//printf("Increasing w\n");
 			_w[user]*=_zeta;	
 		}
-		
 	}
-
-
 }
-
-
 void mipb::bisect_w(void)
 {
 	for (int user=0;user<lines;user++) {
 		if (_rate_targets[user] == NOT_SET)
 				continue;
 			printf("Searching on line %d\n",user);
-					
 			double max;
 			double min;
 			bool converged_early=false;
-
-
 			load();
 			print_vector(_b_total,"b_total");
 			if (_b_total[user] < _rate_targets[user]) {		// found max, now find min
@@ -591,7 +484,6 @@ void mipb::bisect_w(void)
 						break;
 					}
 				}
-				
 			}
 			else if (_b_total[user] > _rate_targets[user]) { 	// found min, now find max
 				printf("Initial value of w[%d] = %lf was min, now finding max\n",user,_w[user]);
@@ -624,12 +516,9 @@ void mipb::bisect_w(void)
 				converged_early=true;
 				continue;
 			}
-		
 			if (converged_early)
 				continue;
-	
 			printf("About to start bisection with w[%d]max = %lf w[%d]min = %lf\n",user,max,user,min);
-
 			_w[user] = (max+min)/2;
 			while(1) {
 				//reset_data();
@@ -648,7 +537,6 @@ void mipb::bisect_w(void)
 					break;
 				}
 				_w[user] = (max+min)/2;
-
 				if (_w[user]<1e-20) {
 					printf("Cannot achieve rate on line %d\n",user);
 					exit(0);
@@ -658,18 +546,14 @@ void mipb::bisect_w(void)
 					exit(0);
 				}
 			}
-
 			if (rates_converged())
 				return;
-
 	}
 }
-
 void mipb::bisect_p_budget(int user)
 {
 	double max=_p_budget[user];
 	double min=0;
-
 	while(1) {
 		reset_data();
 		load();
@@ -683,11 +567,9 @@ void mipb::bisect_p_budget(int user)
 			printf("Jeanst\n");
 			break;
 		}
-		
 		_p_budget[user]=(max+min)/2;
 	}
 }
-
 void mipb::copy_b_and_p_to_last(void)
 {
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
@@ -696,9 +578,7 @@ void mipb::copy_b_and_p_to_last(void)
 			_p_last[tone][user] = _p[tone][user];
 		}
 	}
-
 }
-
 void mipb::bisect_w(int user,int rate_user)
 {
 	_w_min[user]=0;
@@ -709,7 +589,6 @@ void mipb::bisect_w(int user,int rate_user)
 		reset_data();
 		//init_cost_matrix();
 		load();				
-
 		print_vector(_w,"_w");
 		print_vector(_b_total,"_b_total");
 		//getchar();
@@ -727,7 +606,6 @@ void mipb::bisect_w(int user,int rate_user)
 				//printf("_b_total[%d] = %d\n",user,_b_total[user]);
 				//printf("_rate_targets[%d] = %d\n",user,_rate_targets[user]);
 			}
-
 			if (abs(_b_total[user] - _rate_targets[user]) < _rate_tol) {
 				printf("Converged on line %d\n",user);
 				break;
@@ -747,37 +625,27 @@ void mipb::bisect_w(int user,int rate_user)
 				//printf("_b_total[%d] = %d\n",user,_b_total[user]);
 				//printf("_rate_targets[%d] = %d\n",user,_rate_targets[user]);
 			}
-
 			if (abs(_b_total[rate_user] - _rate_targets[rate_user]) < _rate_tol) {
 				printf("Converged on line %d\n",user);
 				break;
 			}
 		}
-	
 		/*if (_w[user] == last) {
 			printf("Converged on line %d but rate target not met\n",user);
 			break;
 			//getchar();
 		}*/
-
 		last=_w[user];
 		_w[user] = (_w_max[user]+_w_min[user])/2;
 		printf("changing weight vector to\n");	
 		print_vector(_w,"_w");
 		print_vector(_b_total,"_b_total");
-
 	}
-
-
-
 }
-
 void mipb::update_w_single(int user)
 {
-
 	if (_rate_targets[user] == NOT_SET)
 		return;
-
 	if (_w[user] == 0 && _b_total[user] > _rate_targets[user]) {
 		printf("Need to give bits to other lines\n");
 		for (int other_user=0;other_user<lines;other_user++) {
@@ -795,8 +663,6 @@ void mipb::update_w_single(int user)
                  	_w[user] = 0;
 	}
 }
-
-
 void mipb::update_w()
 {
 	for (int user=0;user<lines;user++) {
@@ -823,17 +689,14 @@ void mipb::update_w()
 		printf("After w[%d] = %lf\n",user,_w[user]);
 	}
 }
-
 void mipb::load()
 {
 	int min_tone,min_user;
 	int min_tone2,min_user2;
 	//init_ref_bits();
 	reset_data();
-
 	//pool tp(_num_threads);
 	_num_greedys++;	
-	
 	//init_no_fext_bits();
 	/*
 	for (int tone=0;tone<DMTCHANNELS;tone++) {	// preeoading based on ref bits done here
@@ -844,14 +707,11 @@ void mipb::load()
 				_F[tone][user]=1;
 		}
 	}
-	
 	init_power();	
 	*/
-	
 	init_cost_matrix(&min_tone,&min_user);
 	_all_tones_full=false;
 	while(1) {
-	
 		if (_greedy) {	
 			if (_simple_search)
 				min_cost(&min_tone,&min_user);	
@@ -860,10 +720,8 @@ void mipb::load()
 			else if (_search2) 
 				get_min_in_list(min_tone,min_user);
 		}
-			
 		//printf("min tone = %d\tmin user =%d\n",min_tone,min_user);
 		//printf("min tone2 = %d\tmin user2 =%d\n",min_tone2,min_user2);
-
 		if (_all_tones_full) {
 			//printf("All tones full\n");
 			if (_graph_loading) {
@@ -874,28 +732,21 @@ void mipb::load()
 		_b[min_tone][min_user]+=_bit_inc;        // add bit to min cos tone
 		_b_total[min_user]+=_bit_inc;
 		_total_bits+=_bit_inc;
-
 		/*if (_b[min_tone][min_user] > MAXBITSPERTONE) {
 			printf("b = %6.4lf\n",_b[min_tone][min_user]);
 		}*/
 		//assert(_b[min_tone][min_user] <= MAXBITSPERTONE);
-
 		update_power(min_tone,min_user);
-
 		if (_b[min_tone][min_user] >= MAXBITSPERTONE) {
 			_F[min_tone][min_user] = 1;
 		}
-
 		if (!_greedy)
 			update_wp();
-
 		if (_total_bits % 50 == 0) {
 			if (_graph_loading) {
 				write_current_stats(min_tone,min_user);
 			}
 		}
-		
-
 		for (int user=0;user<lines;user++) {
 			//tp.schedule(boost::bind<int>(boost::mem_fn(&mipb::calc_delta_p),_3,min_tone,user,0));
 			//tp.schedule(boost::bind(&mipb::calc_delta_p,_3,min_tone,user,0));
@@ -905,8 +756,6 @@ void mipb::load()
 		}
 		_tp->wait();
 		//dispatch_delta_p_threads(min_tone);
-
-		
 		if (!_greedy) {
 			//recalc_all_costs_and_find_min(min_tone,min_user,tp);
 		}
@@ -919,10 +768,8 @@ void mipb::load()
 				recalc_and_sort_costs(min_tone);
 				insert_new_min_cost(min_tone);
 			}
-				
 		}
 		//printf("Min tone2 = %d\tMin user = %d\n",min_tone2,min_user2);
-
 	}
 	/*
 	for (int victim=0;victim<lines;victim++) {
@@ -933,61 +780,46 @@ void mipb::load()
 		}
 	}
 	*/
-
 	if (_show_solution) {		
 		dump_matrix(_b,"b");
 		system("../scripts/graph-dump-matrix.sh /tmp/mipb-b.txt");
-		
 		//dump_matrix(_p,"p");
 		//system("../scripts/graph-dump-matrix.sh /tmp/mipb-p.txt");
 		getchar();
 		system("killall gnuplot_x11");
 	}
-	
 	//print_vector(_b_total,"b_total");
 	//print_vector(_init_p_budget,"init_p_budget");
-
 	/*	
 	dump_matrix(_ref_bits,"ref_bits");
 	dump_int_matrix(_init_b,"init_b");
 	dump_int_matrix(_b,"b");
-
 	system("../scripts/graph-dump-matrix.sh /tmp/mipb-ref_bits.txt");
 	system("../scripts/graph-dump-matrix.sh /tmp/mipb-init_b.txt");
 	system("../scripts/graph-dump-matrix.sh /tmp/mipb-b.txt");
 	system("../scripts/graph-dump-vector.sh /tmp/vector-ref_noise_line_0.txt");
 	system("../scripts/graph-dump-vector.sh /tmp/vector-ref_noise_line_1.txt");
 	system("../scripts/graph-dump-vector.sh /tmp/vector-ref_noise_line_2.txt");
-
 	getchar();
-
 	system("killall gnuplot_x11");
 	*/
 }
-
-
 void mipb::greedy_load()
 {
 	int min_tone,min_user;
 	int min_tone2,min_user2;
 	reset_data();
-
 	assert(_greedy==true);
-	
 	_all_tones_full=false;
 	init_cost_matrix(&min_tone,&min_user);
 	while(1) {
-	
 		if (_simple_search)
 			min_cost(&min_tone,&min_user);	
 		else if(_search1)
 			find_min_sorted_per_tone_costs(min_tone,min_user);	
 		else if (_search2) 
 			get_min_in_list(min_tone,min_user);
-			
-
 		//printf("min tone = %d min_user = %d\n",min_tone,min_user);
-
 		if (_all_tones_full) {
 			//printf("All tones full\n");
 			if (_graph_loading) {
@@ -998,17 +830,13 @@ void mipb::greedy_load()
 		_b[min_tone][min_user]+=_bit_inc;        // add bit to min cos tone
 		_b_total[min_user]+=_bit_inc;
 		_total_bits+=_bit_inc;
-
 		update_power(min_tone,min_user);
-
 		if (_b[min_tone][min_user] >= MAXBITSPERTONE) {
 			_F[min_tone][min_user] = 1;
 		}
-
 		for (int user=0;user<lines;user++) {
 			calc_delta_p(min_tone,user,0);
 		}
-
 		if (_simple_search) {
 			recalc_costs(min_tone);
 		}
@@ -1019,53 +847,36 @@ void mipb::greedy_load()
 			recalc_and_sort_costs(min_tone);
 			insert_new_min_cost(min_tone);
 		}
-				
-
 	}
-
 	if (_show_solution) {		
 		dump_matrix(_b,"b");
 		system("../scripts/graph-dump-matrix.sh /tmp/mipb-b.txt");
-		
 		//dump_matrix(_p,"p");
 		//system("../scripts/graph-dump-matrix.sh /tmp/mipb-p.txt");
 		getchar();
 		system("killall gnuplot_x11");
 	}
-	
 	//print_vector(_b_total,"b_total");
 	//print_vector(_w,"w");
 	//print_vector(_init_p_budget,"init_p_budget");
-
 	/*	
 	dump_matrix(_ref_bits,"ref_bits");
 	dump_int_matrix(_init_b,"init_b");
 	dump_int_matrix(_b,"b");
-
 	system("../scripts/graph-dump-matrix.sh /tmp/mipb-ref_bits.txt");
 	system("../scripts/graph-dump-matrix.sh /tmp/mipb-init_b.txt");
 	system("../scripts/graph-dump-matrix.sh /tmp/mipb-b.txt");
 	system("../scripts/graph-dump-vector.sh /tmp/vector-ref_noise_line_0.txt");
 	system("../scripts/graph-dump-vector.sh /tmp/vector-ref_noise_line_1.txt");
 	system("../scripts/graph-dump-vector.sh /tmp/vector-ref_noise_line_2.txt");
-
 	getchar();
-
 	system("killall gnuplot_x11");
 	*/
 }
-
-
-
-
-
 void mipb::recalc_all_costs_and_find_min(int &min_tone,int &min_user,pool &tp)
 {
-
-		
 	double min=DBL_MAX;
 	_all_tones_full=true;
-
 	/*	
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		for (int user=0;user<lines;user++) {
@@ -1082,24 +893,18 @@ void mipb::recalc_all_costs_and_find_min(int &min_tone,int &min_user,pool &tp)
 			//}
 		}
 	}
-	
 	printf("min found at tone %d user %d = %6.4g\n",min_tone,min_user,_cost[min_tone][min_user]);
 	*/
-	
 	//_tp->resize(_num_threads);
 	//_tp = fifo_pool::create_pool(_num_threads);
 	struct cost_entry per_thread_costs[_num_threads];
-
 	for (int t=0;t<_num_threads;t++) {
 		int lower = t * (DMTCHANNELS/_num_threads);
 		int upper = (t+1) * (DMTCHANNELS/_num_threads);
 		tp.schedule(boost::bind(boost::mem_fn(&mipb::threaded_recalc_and_find_min),this,&per_thread_costs[t],lower,upper));
 	}
-
 	tp.wait();
-
 	min=DBL_MAX;
-
 	for (int t=0;t<_num_threads;t++) {
 		//cout << per_thread_costs[t];
 		if (per_thread_costs[t].cost < min) {
@@ -1109,19 +914,13 @@ void mipb::recalc_all_costs_and_find_min(int &min_tone,int &min_user,pool &tp)
 			_all_tones_full=false;
 		}
 	}
-
-	
 	//printf("min found at tone %d user %d = %6.4g\n",min_tone,min_user,_cost[min_tone][min_user]);
-	
 	//getchar();
 }
-
-
 void mipb::threaded_recalc_and_find_min(struct cost_entry* cost, int lower_tone,int upper_tone)
 {
 	//printf("Scheduled lower = %d upper = %d\n",lower_tone,upper_tone);
 	double min=DBL_MAX;
-	
 	for (int tone=lower_tone;tone<upper_tone;tone++) {
 		for (int user=0;user<lines;user++) {
 			_cost[tone][user] = cf(tone,user);
@@ -1134,37 +933,27 @@ void mipb::threaded_recalc_and_find_min(struct cost_entry* cost, int lower_tone,
 			}
 		}
 	}
-
 	//cout << "min cost found \n" << *cost;
-
 }
-
-
 void mipb::get_min_in_list(int& min_tone,int& min_user)
 {
-	
 	while (1) {
 		/*
 		std::list<struct cost_entry>::iterator i;
 		i=_L.begin();
-
 		if ((*i).cost ==DBL_MAX) {
 			_all_tones_full=true;
 			return;
 		}
-	
 		min_tone=(*i).tone;
 		min_user=(*i).user;
 		*/
-
 		if (_cost_list_head->cost == DBL_MAX) {
 			_all_tones_full=true;
 			return;
 		}
-
 		min_tone=_cost_list_head->tone;
 		min_user=_cost_list_head->user;
-
 		if (total_power_constraint_broken(min_tone,min_user) || spectral_mask_constraint_broken(min_tone,min_user)) {	// this cost is no longer valid
 			//cout << "entry = " << *_cost_list_head;
 			//cout << "Does not work" << endl;
@@ -1180,15 +969,12 @@ void mipb::get_min_in_list(int& min_tone,int& min_user)
 			remove_cost_list_head();
 			break;
 		}
-
 	}
 }
-
 void mipb::insert_new_min_cost(int tone)
 {
 	struct cost_entry c;
 	c = _sorted_costs[tone][0];
-
 	//cout << "cost to insert " << c << endl;
 	/*
 	//std::list<struct cost_entry>::iterator i;
@@ -1205,16 +991,11 @@ void mipb::insert_new_min_cost(int tone)
 		}	
 	}	
 	*/
-
-
-
 	if (c.cost == DBL_MAX) {
 		//cout << "Adding at tail" << endl;
 		add_to_cost_list_after(&c,_cost_list_tail);
 		return;
 	}
-
-		
 	struct cost_entry *current=_cost_list_tail;
 	int i=DMTCHANNELS-1;
 	while (current!=NULL) {
@@ -1233,11 +1014,9 @@ void mipb::insert_new_min_cost(int tone)
 		current=current->prev;
 		i--;
 	}
-	
 	//cout << "Adding to front" << endl;	
 	add_to_front(&c);
 	return;
-
 	/*	
 	struct cost_entry *current=_cost_list_head;
 	int i=0;
@@ -1258,17 +1037,13 @@ void mipb::insert_new_min_cost(int tone)
 		current=current->next;
 		i++;
 	}
-
 	//cout << "Adding to end" << endl;
 	add_to_cost_list_after(&c,_cost_list_tail);
 	return;
 	*/
-
 }
-
 void mipb::recalc_and_sort_costs(int tone)
 {
-
 	double min_cost=DBL_MAX;
 	int min_user;
 	for (int user=0;user<lines;user++) {
@@ -1283,19 +1058,15 @@ void mipb::recalc_and_sort_costs(int tone)
 	_sorted_costs[tone][0].cost=min_cost;
 	_sorted_costs[tone][0].user=min_user;
 	//std::sort(_sorted_costs[tone],_sorted_costs[tone]+lines);	// sort so minimum cost is in element zero
-
 }
-
 void mipb::recalc_costs(int tone)
 {
 	for (int user=0;user<lines;user++) {
                 _cost[tone][user] = cf(tone,user);
         }
 }
-
 void mipb::find_min_sorted_per_tone_costs(int& min_tone,int& min_user)
 { 
-
 	_all_tones_full=false;	
 	double min=DBL_MAX;
 	for (int tone=0;tone<DMTCHANNELS;tone++) {	// search all tones, min cost is the first element
@@ -1312,19 +1083,14 @@ void mipb::find_min_sorted_per_tone_costs(int& min_tone,int& min_user)
 			min=_sorted_costs[tone][0].cost;
 		}
 	}
-		
 	if (min == DBL_MAX)
 		_all_tones_full=true;
-
 }
-
-
 void mipb::calc_lost_bits(int victim, int xtalker)
 {
 	double p[lines];
 	double b[lines];
 	double total_lost_bits=0.0;	
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		memcpy(p,_p[tone],sizeof(double)*lines);
 		//print_vector(p,"p_before");
@@ -1335,15 +1101,11 @@ void mipb::calc_lost_bits(int victim, int xtalker)
 		//print_vector(b,"b");
 		total_lost_bits+=b[victim]-_b[tone][victim];
 	}
-
 	printf("Total bits lost on line %d due to line %d = %lf\n",victim,xtalker,total_lost_bits);
 }
-
 void mipb::init_cost_matrix(int *min_tone,int *min_user)
 {
-
 	cost_entry temp_c[DMTCHANNELS];
-
 	double min=DBL_MAX;
         for (int tone=0;tone<DMTCHANNELS;tone++) {
                 for(int user=0;user<lines;user++) {
@@ -1364,10 +1126,8 @@ void mipb::init_cost_matrix(int *min_tone,int *min_user)
 		if (_search2) {
 			temp_c[tone] = _sorted_costs[tone][0];
 			//_L.push_back(_sorted_costs[tone][0]);
-
 		}
         }
-
 	if(_search2) {
 		//_L.sort();
 		std::sort(temp_c,temp_c+DMTCHANNELS);
@@ -1380,12 +1140,9 @@ void mipb::init_cost_matrix(int *min_tone,int *min_user)
 	//print_cost_list();
 	//exit(0);
 }
-
 void mipb::calc_mask(int tone,int user)
 {
-
 	double ref_psd = minus_36_5_dbmhz_watts;
-
 	for (int victim=0;victim<lines;victim++) {
 		if (victim == user)
 			;
@@ -1415,10 +1172,7 @@ void mipb::calc_mask(int tone,int user)
 			}
 		}
 	}
-
 }
-
-
 bool mipb::rates_converged()
 {
 	for (int user=0;user<lines;user++) {
@@ -1428,24 +1182,17 @@ bool mipb::rates_converged()
 			return false;
 		}
 	}
-
 	return true;
 }
-
-
 int mipb::min_cost(int *channel,int *line)
 {
-
 	int tone,user;
 	int min_tone,min_user;
 	double min=DBL_MAX;
 	bool *user_full = new bool[lines];	
-
 	for (int user=0;user<lines;user++)
 		user_full[user] = true;
-
 	_all_tones_full=true;		// if i put this variable below this line, it segfaults.... compiler bug or weird bug in my code??
-
 	for (tone=0;tone<DMTCHANNELS;tone++) {
 		for (user=0;user<lines;user++) {
 			if (_F[tone][user]==1) {
@@ -1463,25 +1210,18 @@ int mipb::min_cost(int *channel,int *line)
 				min=_cost[tone][user];
 				min_tone=tone;
 				min_user=user;
-					
 			}
 		}
 	}
-	
 	*channel=min_tone;
 	*line=min_user;
-
 	return 0;
 }
-
 int mipb::update_wp()
 {
-
 	double a=1e3;
 	double b=99;
 	double c=9190.24;
-	
-
 	double p_ave=0.0;
 	double div=lines;
 	for (int user=0;user<lines;user++) {
@@ -1491,7 +1231,6 @@ int mipb::update_wp()
 			div--;
 	}
 	p_ave/=div;
-	
 	for (int user=0;user<lines;user++) {
 		//double x=(_p_used[user]*100/_p_budget[user])-p_ave;
 		//double x = _p_used[user] - (_p_ave+_p_lead[user]);
@@ -1500,16 +1239,12 @@ int mipb::update_wp()
 		//_wp[user] = UNdB(2000/(100*(p_ave+0.00001))*(x));
 		//_wp[user] = UNdB(10*(_p_used[user]*100/_p_budget[user] - _p_ave));
 		//_wp[user] = pow(exp((_p_used[user] - _p_ave)),100);
-		
 		//linear plus sigmoid
 		//_wp[user] = a*x+1.001-(a*x+1)*exp(-c*x)/(exp(-c*x) + b);
-	
-
 		// linear	
 		/*		
 		double grad = 1/(1.5*fabs(x));
 		_wp[user] = grad*x+1;
-		
 		if (_behind[user])
 			_wp[user]=1;
 		*/
@@ -1520,7 +1255,6 @@ int mipb::update_wp()
 			_wp[user]=0;
 			continue;
 		}
-		
 		if (x < -100e-3) {
 			//printf("Looks like used %d is behind\n",user);
 			_behind[user]=true;
@@ -1535,25 +1269,19 @@ int mipb::update_wp()
 			}
 			continue;
 		}
-
 		/*		
 		_wp[user] = 1e3*(x/_last_bit_cost)+1;
-	
 		if (_wp[user] < 0)	
 			_wp[user]=10*DBL_MIN;
 		*/
-	
-			
 		if (x > 0) {
 			//_behind[user]=0;
 			//_wp[user] = (1e5/_last_bit_cost)*x+1;
 			assert(_last_bit_cost > 0);
 			double z = MIN(x/_last_bit_cost,709);
 			_wp[user] = exp(0.25*z);
-			
 			//double z = x/_last_bit_cost;
 			//_wp[user] = 1e6*x+1;
-			
 			//double z = x;
 			//_wp[user] = exp(100000*z);
 			if (_wp[user] >= DBL_MAX) {
@@ -1569,29 +1297,22 @@ int mipb::update_wp()
 			_wp[user] = 1;
 			//_behind[user]++;
 		}
-		
-
 		/*
 		double z = MIN(x/_last_bit_cost,709);
 		_wp[user] = exp(0.5*z);
-
 		if (_behind[user])
 			_wp[user]=1;
 		*/
-	
 		/*	
 		if (_behind[user] >= 100 && _b_total[user] > 0) {
 			_behind[user]=0;
 			printf("User %d seems to be behind\n",user);
 		}
 		*/
-	
 		// original
 		//
 		//_wp[user] = pow(exp(x),100);
-
 		// step
-	
 		/*		
 		if (x > 0) {
 			_wp[user]=1e15;
@@ -1602,18 +1323,14 @@ int mipb::update_wp()
 		else {
 			_wp[user]=1;
 		}*/
-
 		//_wp[user] = UNdB(1e5*x);
 		//assert(_wp[user] < DBL_MAX);
 		assert(_wp[user] > 0);
 	}
-
 }
-
 void mipb::init_no_fext_bits()
 {
 	double ref_psd = minus_36_5_dbmhz_watts;
-	
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		for (int user=0;user<lines;user++) {
 			if (tone <= _active_channels[user]-1)
@@ -1623,23 +1340,18 @@ void mipb::init_no_fext_bits()
 			//printf("No fext bits on line %d tone %d = %lf\n",user,tone,_no_fext_bits[tone][user]);
 		}
 	}
-
 }
-
 void mipb::init_ref_bits()
 {
 	double ref_psd = dbmhz_to_watts(-60);
-
 	double power_check[lines];
 	memset(power_check,0,sizeof(double)*lines);
-
 	/*
 	for (int user=0;user<lines;user++) {
 		_active_channels[user] = MIN(DMTCHANNELS,_p_budget[user]/_ref_psd[user]);
 		printf("Line %d active channels = %d\n",user,_active_channels[user]);
 	}
 	*/
-
 	double p_mat[lines][DMTCHANNELS];	// do not be alarmed, this is the other way around than usual on purpose
 	for (int user=0;user<lines;user++) {
 		double noise[DMTCHANNELS];
@@ -1657,8 +1369,6 @@ void mipb::init_ref_bits()
 		int ret=waterfill(user,_init_p_budget[user],NULL,p_mat[user],NULL);	// waterfill on all lines
 		printf("Waterfilling rate on line %d = %d\n",user,ret);
 	}
-
-	
 	for (int tone=0;tone<DMTCHANNELS;tone++) {	
 		double p[lines];
 		double b[lines];
@@ -1669,47 +1379,38 @@ void mipb::init_ref_bits()
 				p[user] = 0;
 			*/
 			p[user] = p_mat[user][tone];
-
 			power_check[user]+=p[user];
 		}
 		calculate_b_vector_from_psd(p,12.95,tone,b);	
-		
 		for (int user=0;user<lines;user++) {
 			_ref_bits[tone][user] = b[user];
 		}
 	}
-
 	for (int user=0;user<lines;user++) {
 		printf("power_check[%d] = %lf\n",user,power_check[user]);
 	}	
 }
-
 double mipb::cf(int tone,int line_id)
 {
-
 	double cost=0.0;
 	double a=0;
 	double b=0;
 	double c[lines];
-
 	if (total_power_constraint_broken(tone,line_id) || spectral_mask_constraint_broken(tone,line_id)) {
 		//printf("Setting tone %d line %d full because of spectral mask or total power broken\n",tone,line_id);
 		_F[tone][line_id] = 1;
 		//printf("Returning max dbl as tone says power constraint broken\n");	
 		return DBL_MAX;
 	}
-
 	if (_F[tone][line_id] == 1) {
 		//printf("Returning max dbl as tone says it is full\n");	
 		return DBL_MAX;
 	}
-
 	if (_b[tone][line_id] >= MAXBITSPERTONE) {
 		_F[tone][line_id]=1;
 		//printf("Returning max dbl as tone says it is past MAX\n");	
 		return DBL_MAX;
 	}
-
 	for (int user=0;user<lines;user++) {
 		if (user == line_id) {
 			if (_old) {
@@ -1744,9 +1445,7 @@ double mipb::cf(int tone,int line_id)
 					_psd->calc(b,g,tone,p_old);				// get psd vector
 					b[line_id]++;		
 					_psd->calc(b,g,tone,p);				// get psd vector
-
 					cost+=_wp[user]*(p[user]-p_old[user]);
-		
 					if (_wp[user]*(p[user]-p_old[user]) < 0) {
 						printf("Line_id = %d\n",line_id);
 						printf("victim = %d\n",user);
@@ -1759,7 +1458,6 @@ double mipb::cf(int tone,int line_id)
 						getchar();
 					}
 					//printf("Extra cost incurred is %6.4g\n",p[user]-p_old[user]);
-					
 				}
 			}*/
 			//cost+=_wxt[user]*_delta_p[tone][line_id][user];		// power for the extra crosstalk incurred
@@ -1778,9 +1476,7 @@ double mipb::cf(int tone,int line_id)
 				//cost+=_w[line_id]*_wp[user]*_delta_p[tone][line_id][user]; 	// power for the extra crosstalk incurred
 			}
 		}	
-	
 	}
-
 	/*	
 	if (b > a && _wp[line_id] < 0.9) {
 		printf("Cost for bit on line %d tone %d is dominated by crosstalk terms even though wp is less than 1\n",line_id,tone);
@@ -1789,11 +1485,9 @@ double mipb::cf(int tone,int line_id)
 		printf("Total bits = %d\n",_total_bits);
 		getchar();
 	}*/
-
 	//printf("Total cost is %6.4g\n",cost);
 	//getchar();
 	//
-
 	/*	
 	if (b > 2*a) {
 		printf("Crosstalk twice price of bit on line %d tone %d\n",line_id,tone);
@@ -1801,7 +1495,6 @@ double mipb::cf(int tone,int line_id)
 		print_vector(_b_total,"b_total");
 	}
 	*/
-
 	if (cost == 0) {
 		printf("WTF\n");
 		printf("Line_id = %d\n",line_id);
@@ -1813,7 +1506,6 @@ double mipb::cf(int tone,int line_id)
 		print_vector(_w,"w");
 		getchar();
 	}
-
 	/*
 	for (int user=0;user<lines;user++) {
 		if (c[user] < 0) {
@@ -1831,38 +1523,27 @@ double mipb::cf(int tone,int line_id)
 		}
 	}
 	*/
-
 	if (_old)
 		return _w[line_id]*cost;
 	else 
 		return cost;
 }
-
 double mipb::var_cf(int tone,int line_id)
 {
-
 	double new_p_ave=0.0;
 	double new_var=0.0;
-
 	for (int user=0;user<lines;user++ ) {
 		new_p_ave+=_p_used[user] + _delta_p[tone][line_id][user];
 	}
-
 	new_p_ave/=lines;
-
 	// calculate new _p_ave
-
 	// find min new variance in _p_used
 	for (int user=0;user<lines;user++) {
 		//new_var+=pow((_p_used[user] + _delta_p[tone][line_id][user]) - new_p_ave),2);
 	}
-
 	new_var/=lines;
-	
 	return new_var;
-	
 }
-
 bool mipb::total_power_constraint_broken(int tone,int user)
 {
         for (int i=0;i<lines;i++) {
@@ -1873,13 +1554,10 @@ bool mipb::total_power_constraint_broken(int tone,int user)
                         return true;
 		}
 	}
-
 	return false;
 }
-
 void mipb::init_power()
 {
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		double g[lines];
 		int b[lines];
@@ -1892,13 +1570,11 @@ void mipb::init_power()
 			calculate_psd_vector(&_b[tone][0],g,tone,&_p[tone][0]);
 		else 
 			_psd[0]->calc(b,g,tone,&_p[tone][0]);
-
 		for (int user=0;user<lines;user++) {
 			assert(_p[tone][user] >= 0);
 			_p_used[user]+=_p[tone][user];
 		}
 	}
-	
 	double p_sum=0.0;
 	for (int user=0;user<lines;user++) {
 		p_sum+=_p_used[user];
@@ -1906,17 +1582,11 @@ void mipb::init_power()
 		assert(_p_used[user] - _p_budget[user] < 0.001);
 	}
 	_p_ave=p_sum/lines;
-
 	dump_matrix(_p,"init_power");
-
 	printf("p_ave = %6.4g\n",_p_ave);
-
-
 }
-              
 int mipb::update_power(int tone, int user)
 {
-
 	_last_bit_cost=0.0;
         for (int i=0;i<lines;i++) {
                 _last_bit_cost+=_p[tone][i]+=_delta_p[tone][user][i];
@@ -1927,19 +1597,13 @@ int mipb::update_power(int tone, int user)
 	//printf("bit cost = %6.4g\n",_delta_p[tone][user][user]);
 	return 0;
 }
-
-
 int mipb::calc_delta_p(int tone,int line_id,int thread_id)
 {
-	
 	double old_p_tot=0.0,new_p_tot=0.0;
-
 	int b[lines];
 	double p[lines];
 	double old_p[lines];
 	double g[lines];
-
-
 	for (int user=0;user<lines;user++) {
 		g[user] = line_array[user]->gamma[line_array[user]->service[tone]];
 		//old_p_tot+=_p[tone][user];
@@ -1951,9 +1615,7 @@ int mipb::calc_delta_p(int tone,int line_id,int thread_id)
 		assert(b[user] >= 0);
 		assert(b[user] <= MAXBITSPERTONE);
 	}
-
 	b[line_id]++;
-
 	if (_is_frac) {
 		_b[tone][line_id]+=_bit_inc;
 		calculate_psd_vector(&_b[tone][0],g,tone,p);
@@ -1963,7 +1625,6 @@ int mipb::calc_delta_p(int tone,int line_id,int thread_id)
 		//_psd[thread_id]->calc(b,g,tone,p);
 		calculate_psd_vector(b,g,tone,p,cache);
 	}
-
 	for (int user=0;user<lines;user++) {
 		if (p[user] < 0) {
 			//printf("No solution on tone %d\n",tone);
@@ -1975,13 +1636,8 @@ int mipb::calc_delta_p(int tone,int line_id,int thread_id)
 		}
 		_delta_p[tone][line_id][user] = p[user] - old_p[user];
 	}	
-	
 	return 0;
 }
-
-
-
-
 bool mipb::spectral_mask_constraint_broken(int tone,int user)
 {
         if(_spectral_mask_on)
@@ -1989,16 +1645,10 @@ bool mipb::spectral_mask_constraint_broken(int tone,int user)
                         return true;
         return false;
 }
-
-
-
-
 void mipb::init_lines()
 {
-
         int tone,user;
         struct line* current;
-
         for (user=0;user<lines;user++) {
                 current=get_line(user);
 		if (_is_frac) {
@@ -2015,43 +1665,29 @@ void mipb::init_lines()
                         current->psd[tone]=watts_to_dbmhz(_p[tone][user]);
                 }
         }
-
-
 }
-
 void mipb::write_current_stats(int tone,int user)
 {
-
 	char fn[80];
 	char fn1[80];
 	char fn2[80];
 	FILE *fp=NULL;
 	FILE *fp1=NULL;
 	FILE *fp2=NULL;
-
 	sprintf(fn,"%s/data/mipb/stats/%d.txt",ROOT_DIR,_total_bits);
 	sprintf(fn1,"%s/data/mipb/stats/b_and_p_stats.txt",ROOT_DIR);
 	sprintf(fn2,"%s/data/mipb/stats/cost_%d.txt",ROOT_DIR,_total_bits);
-
 	fp = fopen(fn,"w");
-
 	if (fp==NULL)
 		exit(2);
-
 	fp1 = fopen(fn1,"a");
-
 	if (fp1==NULL)
 		exit(2);
-
 	fp2 = fopen(fn2,"w");
-
 	if (fp2==NULL)
 		exit(2);
-
-	
 	fprintf(fp,"#%dlines\n",lines);
 	fprintf(fp,"#bit added was on tone %d line %d\n",tone,user);
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		//fprintf(fp,"%d\t",tone);
 #ifdef VDSL_UPSTREAM
@@ -2090,7 +1726,6 @@ void mipb::write_current_stats(int tone,int user)
 			fprintf(fp,"%6.4lg\t",_wp[tone]);
 			fprintf(fp,"%d\t",_b_total[tone]);
 		}
-
 		if (tone == 0) {
 			//double p_ave=0.0;
 			//for (int user=0;user<lines;user++) {
@@ -2098,25 +1733,17 @@ void mipb::write_current_stats(int tone,int user)
 			//}
 			//p_ave/=lines;
 			fprintf(fp,"%6.4g",_p_ave*1e3);
-
 		}
-		
 		fprintf(fp,"\n");
 	}
-
 	fprintf(fp1,"%d\t",_total_bits);
-
 	for (int user=0;user<lines;user++) {
 		fprintf(fp1,"%d   ",_b_total[user]);
 	}
-
 	for (int user=0;user<lines;user++) {
 		fprintf(fp1,"%6.4lg   ",_p_used[user]);
 	}
-
 	fprintf(fp1,"\n");
-
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 		fprintf(fp2,"%d ",tone);
 		for (int user=0;user<lines;user++) {
@@ -2124,48 +1751,31 @@ void mipb::write_current_stats(int tone,int user)
 		}
 		fprintf(fp2,"\n");
 	}
-
-
-
 	fclose(fp);
 	fclose(fp1);
 	fclose(fp2);
-
 }
-
 void mipb::write_stats_totals()
 {
-
         char fn[80];
         FILE *fp;
-
         sprintf(fn,"%s/data/mipb/stats/stats.txt",ROOT_DIR);
-
         fp = fopen(fn,"w");
-
         if (fp==NULL)
                 exit(2);
-
         fprintf(fp,"#%dlines\n",lines);
         fprintf(fp,"#%dbits\n",_total_bits);
         fprintf(fp,"#%dtones\n",DMTCHANNELS);
-
         fclose(fp);
-
 }
-
 void mipb::dump_matrix(double **matrix,const char *tag)
 {
 	char fn[300];
 	FILE *fp;
-
 	sprintf(fn,"/tmp/mipb-%s.txt",tag);
-
 	fp = fopen(fn,"w");
-
 	if (fp==NULL)
 		exit(2);
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 #ifdef VDSL_UPSTREAM
                 if (tone == LOWERCHANNELS) {
@@ -2176,7 +1786,6 @@ void mipb::dump_matrix(double **matrix,const char *tag)
                                 else {
                                         fprintf(fp,"%6.4lf\t",freq_matrix[tone]-CHANNEL_BANDWIDTH);
 				}
-                                
 				for (int user=0;user<lines;user++) {
                                         fprintf(fp,"%d ",0);
                                 }
@@ -2194,23 +1803,16 @@ void mipb::dump_matrix(double **matrix,const char *tag)
 		}
 		fprintf(fp,"\n");
 	}
-
 	fclose(fp);
-
 }
-
 void mipb::dump_int_matrix(int **matrix,const char *tag)
 {
 	char fn[300];
 	FILE *fp;
-
 	sprintf(fn,"/tmp/mipb-%s.txt",tag);
-
 	fp = fopen(fn,"w");
-
 	if (fp==NULL)
 		exit(2);
-
 	for (int tone=0;tone<DMTCHANNELS;tone++) {
 #ifdef VDSL_UPSTREAM
                 if (tone == LOWERCHANNELS) {
@@ -2236,16 +1838,12 @@ void mipb::dump_int_matrix(int **matrix,const char *tag)
 		}
 		fprintf(fp,"\n");
 	}
-
 	fclose(fp);
-
 }
-
 /*
 			for(int user=0;user<lines;user++) {
 				if (_rate_targets[user] == NOT_SET)
 					continue;
-
 				_w_min[user]=0;
 				_w_max[user]=1e-4;
 				//_b_total[user]=0;
@@ -2254,11 +1852,9 @@ void mipb::dump_int_matrix(int **matrix,const char *tag)
 					reset_data();
 					init_cost_matrix();
 					load();				
-
 					print_vector(_w,"_w");
 					print_vector(_b_total,"_b_total");
 					//getchar();
-
 					if (_b_total[user] > _rate_targets[user]) {
 						//printf("Setting _w_max[%d] = %lf\n",user,_w[user]);
 						_w_max[user] = _w[user];
@@ -2272,24 +1868,20 @@ void mipb::dump_int_matrix(int **matrix,const char *tag)
 						//printf("_b_total[%d] = %d\n",user,_b_total[user]);
 						//printf("_rate_targets[%d] = %d\n",user,_rate_targets[user]);
 					}
-
 					if (abs(_b_total[user] - _rate_targets[user]) < _rate_tol) {
 						printf("Converged on line %d\n",user);
 						break;
 					}
-				
 					if (_w[user] == last) {
 						printf("Converged on line %d but rate target not met\n",user);
 						break;
 						//getchar();
 					}
-
 					last=_w[user];
 					_w[user] = (_w_max[user]+_w_min[user])/2;
 					printf("changing weight vector to\n");	
 					print_vector(_w,"_w");
 					print_vector(_b_total,"_b_total");
-
 				}
 			}
 			*/
@@ -2299,7 +1891,6 @@ void mipb::dump_int_matrix(int **matrix,const char *tag)
 				_natural_rate[user] = _b_total[user];
 				printf("Natural rate on line %d = %d\n",user,_natural_rate[user]);
 			}
-
 			bool rates_too_big=true;
 			for (int user=0;user<lines;user++) {
 				if (_rate_targets[user] == NOT_SET)
@@ -2321,7 +1912,6 @@ void mipb::dump_int_matrix(int **matrix,const char *tag)
 					break;	
 				}
 			}
-
 			if (rates_too_big) {
 				printf("Rates are all too big\n");
 				for (int user=0;user<lines;user++) {
@@ -2352,41 +1942,31 @@ void mipb::dump_int_matrix(int **matrix,const char *tag)
 					break;
 			}
 			*/
-
 void mipb::add_to_cost_list(struct cost_entry *c)
 {
-
 	if (_cost_list_head==NULL) {
 		_cost_list_head = new cost_entry;
 		_cost_list_tail = _cost_list_head;
-	
 		_cost_list_head->user=c->user;
 		_cost_list_head->tone=c->tone;
 		_cost_list_head->cost=c->cost;
-
 		return;
 	}
-
 	cost_entry *current = new cost_entry;
-
 	current->user=c->user;
 	current->tone=c->tone;
 	current->cost=c->cost;
-	
 	current->prev=_cost_list_tail;
 	current->prev->next=current;
 	_cost_list_tail=current;
 	return;
-
 }
-
 void mipb::add_to_cost_list_after(struct cost_entry *c,struct cost_entry *current) 
 {
 	struct cost_entry *n = new cost_entry;	// new entry
 	n->user=c->user;
 	n->tone=c->tone;
 	n->cost=c->cost;
-
 	if (current==_cost_list_tail) {		// adding right at the end
 		current->next=n;
 		n->prev=current;
@@ -2394,25 +1974,19 @@ void mipb::add_to_cost_list_after(struct cost_entry *c,struct cost_entry *curren
 		//cout << "Added one to the tail" << endl;
 		return;
 	}
-
 	n->next=current->next;	// link in new entry
 	n->prev=current;
-
 	current->next->prev=n;	// fix next entry in the list prev porinter
 	current->next=n;	// fix current next pointer to now point to n
-
 	assert(n->next !=NULL);
 	return;
-
 }
-
 void mipb::add_to_cost_list_before(struct cost_entry *c,struct cost_entry *current) 
 {
 	struct cost_entry *n = new cost_entry;	// new entry
 	n->user=c->user;
 	n->tone=c->tone;
 	n->cost=c->cost;
-
 	if (current==_cost_list_head) {		// adding right at the front
 		current->prev=n;
 		n->next=current;
@@ -2420,37 +1994,27 @@ void mipb::add_to_cost_list_before(struct cost_entry *c,struct cost_entry *curre
 		//cout << "Added one to the tail" << endl;
 		return;
 	}
-
 	n->next=current;	// link in new entry
 	n->prev=current->prev;
-
 	current->prev->next=n;	// fix next entry in the list prev porinter
 	current->prev=n;	// fix current next pointer to now point to n
-
 	//assert(n->next !=NULL);
 	return;
-
 }
-
-
 void mipb::add_to_front(struct cost_entry *c)
 {
 	struct cost_entry *n = new cost_entry;	// new entry
 	n->user=c->user;
 	n->tone=c->tone;
 	n->cost=c->cost;
-
 	_cost_list_head->prev=n;	// link old head to new entry
 	n->next=_cost_list_head;	// set up new entries next to point to old head
-	
 	_cost_list_head=n;
 }
-
 void mipb::print_cost_list()
 {
 	struct cost_entry *current = _cost_list_head;
 	int entries=0;
-
 	while (current!=NULL) {
 		entries++;
 		//cout << *current << endl;
@@ -2464,57 +2028,43 @@ void mipb::print_cost_list()
 	}
 	cout << "Entries = " << entries << endl;
 }
-
 void mipb::remove_cost_list_head()
 {
 	struct cost_entry *current=_cost_list_head;
-
 	if (current->next == NULL) {
 		print_cost_list();
 	}
-
 	_cost_list_head=current->next;
 	_cost_list_head->prev=NULL;
 	delete current;
-
 	return;
-
 }
-
 void mipb::cost_list_del()
 {
 	struct cost_entry *current=_cost_list_head;
 	struct cost_entry *temp;
-
 	while (current!=NULL){
 		temp=current;
 		delete temp;
 		current=current->next;
 	}
-
 }
-
 double mipb::cf2(int tone,int line_id)
 {
-
 	double cost=0.0;
 	double a=0;
 	double b=0;
 	double c[lines];
-
 	if (total_power_constraint_broken(tone,line_id) || spectral_mask_constraint_broken(tone,line_id)) {
 		_F[tone][line_id] = 1;
 		return DBL_MAX;
 	}
-
 	if (_F[tone][line_id] == 1)
 		return DBL_MAX;
-
 	if (_b[tone][line_id] >= MAXBITSPERTONE) {
 		_F[tone][line_id]=1;
 		return DBL_MAX;
 	}
-
 	for (int user=0;user<lines;user++) {
 		if (user == line_id) {
 			if (_old) {
@@ -2549,9 +2099,7 @@ double mipb::cf2(int tone,int line_id)
 					_psd->calc(b,g,tone,p_old);				// get psd vector
 					b[line_id]++;		
 					_psd->calc(b,g,tone,p);				// get psd vector
-
 					cost+=_wp[user]*(p[user]-p_old[user]);
-		
 					if (_wp[user]*(p[user]-p_old[user]) < 0) {
 						printf("Line_id = %d\n",line_id);
 						printf("victim = %d\n",user);
@@ -2564,7 +2112,6 @@ double mipb::cf2(int tone,int line_id)
 						getchar();
 					}
 					//printf("Extra cost incurred is %6.4g\n",p[user]-p_old[user]);
-					
 				}
 			}*/
 			//cost+=_wxt[user]*_delta_p[tone][line_id][user];		// power for the extra crosstalk incurred
@@ -2583,9 +2130,7 @@ double mipb::cf2(int tone,int line_id)
 				//cost+=_w[line_id]*_wp[user]*_delta_p[tone][line_id][user]; 	// power for the extra crosstalk incurred
 			}
 		}	
-	
 	}
-
 	/*	
 	if (b > a && _wp[line_id] < 0.9) {
 		printf("Cost for bit on line %d tone %d is dominated by crosstalk terms even though wp is less than 1\n",line_id,tone);
@@ -2594,17 +2139,14 @@ double mipb::cf2(int tone,int line_id)
 		printf("Total bits = %d\n",_total_bits);
 		getchar();
 	}*/
-
 	//printf("Total cost is %6.4g\n",cost);
 	//getchar();
 	//
-
 	if (b > 2*a) {
 		printf("Crosstalk twice price of bit on line %d tone %d\n",line_id,tone);
 		print_vector(_wp,"wp");
 		print_vector(_b_total,"b_total");
 	}
-
 	if (cost == 0) {
 		printf("WTF\n");
 		printf("Line_id = %d\n",line_id);
@@ -2616,7 +2158,6 @@ double mipb::cf2(int tone,int line_id)
 		print_vector(_w,"w");
 		getchar();
 	}
-
 	/*
 	for (int user=0;user<lines;user++) {
 		if (c[user] < 0) {
@@ -2634,7 +2175,6 @@ double mipb::cf2(int tone,int line_id)
 		}
 	}
 	*/
-
 	if (_old)
 		return _w[line_id]*cost;
 	else 

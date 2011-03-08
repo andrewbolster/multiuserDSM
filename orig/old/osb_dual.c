@@ -5,11 +5,9 @@
 #include <string.h>
 #include <float.h>
 #include <stdbool.h>
-
 #define P_MAT p_mat[2][2][2][MAXBITSPERTONE+1][MAXBITSPERTONE+1][DMTCHANNELS]
 #define B_MAT b_mat[2][DMTCHANNELS]
 #define S_MAT s_mat[2][DMTCHANNELS]
-
 #define RATE_GOOD(x,y,z) (abs(rate(x,y,p,z) - p->rate_target[x][y]) < e)
 #define RATE_OK(x,y,z) (rate(x,y,p,z) > p->rate_target[x][y])
 //#define RATE_HIGH(x,y,z) ((rate(x,y,p,z) - p->rate_target[x][y]) > e)
@@ -17,13 +15,9 @@
 //#define RATE_LOW(x,y,z) ((rate(x,y,p,z) - p->rate_target[x][y]) < -e)
 #define RATE_LOW(x,y,z) (rate(x,y,p,z) < p->rate_target[x][y])
 #define ALL_RATES_GOOD (RATE_GOOD(0,0,true) && RATE_GOOD(0,1,true) && RATE_GOOD(1,0,true) && RATE_GOOD(1,1,true))
-
 #define GAMMA0 9.95
 #define GAMMA1 6.02
-
-
 struct osb_2_dual_params {
-
 	double P_MAT;
 	int B_MAT;
 	int S_MAT;
@@ -59,7 +53,6 @@ struct osb_2_dual_params {
 	double p0_budget_max;
 	double p1_budget_max;
 };
-
 //static void optimise_w1(struct osb_2_dual_params *p);
 //static void optimise_w2(struct osb_2_dual_params *p);
 static void optimise_w(struct osb_2_dual_params *p);
@@ -76,81 +69,56 @@ static double osb_fext(int line_id,double P_MAT,int channel,int b1,int b2,int s0
 static int rate(int line_id,int service,struct osb_2_dual_params *p,bool print);
 static double tot_pow(int line_id,struct osb_2_dual_params *p,bool print);
 static void osb_dual_init_lines(struct osb_2_dual_params *p);
-
 void osb_init_params(struct osb_2_dual_params *p)
 {
-
         memset(p->b_mat,0,sizeof(int)*lines*DMTCHANNELS);
         memset(p->p_mat,0,sizeof(double)*lines*(MAXBITSPERTONE+1)*(MAXBITSPERTONE+1)*DMTCHANNELS);
         memset(p->s_mat,0,sizeof(int)*lines*DMTCHANNELS);
-
         p->w1_min=0.0;
         p->w1_max=1.0;
-
         p->w2_min=0.0;
         p->w2_max=1.0;
-        
 	p->w3_min=0.0;
         p->w3_max=1.0;
-
         p->w4_min=0.0;
         p->w4_max=1.0;
-
         p->l1_min=0.0;
         p->l1_max=1.0;
-
         p->l2_min=0.0;
         p->l2_max=1.0;
 /*
         p->rate0s0_target=1092;
         p->rate0s1_target=504;
-
         p->rate1s0_target=844;
         p->rate1s1_target=272;
 */
-
 	p->rate_target[0][0] = 100;
 	p->rate_target[0][1] = 100;
 	p->rate_target[1][0] = 1250;
 	p->rate_target[1][1] = 100;
-       
 	p->p0_budget=0.1;
         p->p1_budget=0.1;
 	p->p0_budget_max=0.1;
 	p->p0_budget_min=0.0;
 	p->p1_budget_max=0.1;
 	p->p1_budget_min=0.0;
-
-
         osb_init_p_matrix(p->p_mat);
-
 }
-
-
 struct osb_2_dual_params *osb_2_dual()
 {
-
 	struct osb_2_dual_params *p;
-
 	FILE *fp;
-
 	fp=fopen("osb_dual_test.txt","w");
 	if (fp==NULL)
 		exit(1);
-
 	p = (struct osb_2_dual_params*)malloc(sizeof(struct osb_2_dual_params));
-
 	if (p==NULL) {
 		printf("malloc sucks\n");
 		exit(1);
 	}
-
-	
 	osb_init_params(p);
-
 	//printf("line0 service0 target rate = %d\n",p->rate0s0_target);
 	//printf("line0 service1 target rate = %d\n",p->rate0s1_target);
-
 	//p->w3=0.00005;
 	optimise_w(p);
 /*
@@ -160,7 +128,6 @@ struct osb_2_dual_params *osb_2_dual()
 	p->w4=0.45;
 */
 	//optimise_l1(p);
-
 /*
 	fprintf(fp,"w1\tw2\tl1\tl2\t\tb0s0\tb0s1\tp0\tb1s0\tb1s1\tp1\n");
 	for (p->w1=0.0;p->w1<=1.0;p->w1+=0.05) {
@@ -175,128 +142,88 @@ struct osb_2_dual_params *osb_2_dual()
 		}
 	}
 */
-
-
-
-	
 	rate(0,0,p,true);
 	rate(0,1,p,true);
 	rate(1,0,p,true);
 	rate(1,1,p,true);
 	tot_pow(0,p,true);
 	tot_pow(1,p,true);
-
 	osb_dual_init_lines(p);
-
 	return p;
 }
-
 /*
 void optimise_w1(struct osb_2_dual_params *p)		// w1 = line0service0 weight
 {
-
 	int e = 5;
 	while(abs(rate(0,0,p) - p->rate0s0_target) > e) {
 		p->w1=(p->w1_max+p->w1_min)/2;
 		printf("w1=%lf\n",p->w1);
-
 		optimise_w2(p);
-
 		if (rate(0,0,p) > p->rate0s0_target) 
 			p->w1_max=p->w1;
 		else
 			p->w1_min=p->w1; 
-
 	}
-
 }
-
 void optimise_w2(struct osb_2_dual_params *p)	// line0service 1 weight
 {
-
 	int e = 5;
-
 	while(abs(rate(0,1,p) - p->rate0s1_target) > e) {
 		p->w2=(p->w2_max+p->w2_min)/2;
 		printf("w2=%lf\n",p->w2);
-
 		optimise_w3(p);
-
 		if (rate(0,1,p) > p->rate0s1_target) 
 			p->w2_max=p->w2;
 		else
 			p->w2_min=p->w2; 
-
 	}
-
 }
-
 void optimise_w3(struct osb_2_dual_params *p)		// line1service0 weight
 {
-
 	int e = 5;
 	while(abs(rate(1,0,p) - p->rate1s0_target) > e) {
 		p->w3=(p->w3_max+p->w3_min)/2;
 		printf("w3=%lf\n",p->w3);
-
 		optimise_w4(p);
-
 		if (rate(1,0,p) > p->rate1s0_target) 
 			p->w3_max=p->w3;
 		else
 			p->w3_min=p->w3; 
-
 	}
-
 }
-
 void optimise_w4(struct osb_2_dual_params *p)	// line1service 1 weight
 {
-
 	int e = 5;
-
 	while(abs(rate(1,1,p) - p->rate1s1_target) > e) {
 		p->w4=(p->w4_max+p->w4_min)/2;
 		printf("w4=%lf\n",p->w4);
-
 		optimise_l1(p);
-
 		if (rate(1,1,p) > p->rate1s1_target) 
 			p->w4_max=p->w4;
 		else
 			p->w4_min=p->w4; 
-
 	}
-
 }
 */
-
 #ifdef notdef
-
 void optimise_w(struct osb_2_dual_params *p)
 {
 	int e=5;
-
 	while(1) {
 		p->w1=(p->w1_max+p->w1_min)/2;
                 p->w2=(p->w2_max+p->w2_min)/2;
 		p->w3=(p->w3_max+p->w3_min)/2;
                 //p->w4=(p->w4_max+p->w4_min)/2;
-
 		optimise_l1(p);
-
 		printf("w1=%.8lf w2=%.8lf w3=%.8lf w4=%.8lf l1=%4.2lf l2=%4.2lf\n",p->w1,p->w2,p->w3,p->w4,p->l1,p->l2);
 		/*if (RATE_HIGH(0,0) && RATE_HIGH(0,1) && RATE_HIGH(1,0) && RATE_HIGH(1,1)) {
 			printf("All rates are too high\n");
 			//adjust_p(p);
 		}*/
-
-			
 		if (RATE_GOOD(0,1) && RATE_GOOD(1,1)) {
 			printf("rates are good!\n");
 			return;
 		}
-
 		if (rate(0,1,p,true) > p->rate_target[0][1])	{
 			p->w1_max=p->w1;
 			//p->w3_min=p->w3;
@@ -330,7 +257,6 @@ void optimise_w(struct osb_2_dual_params *p)
 			printf("rate 1,1 is good but 0,1 is too high!\n");
 			p->w3_min=p->w3;	// increase weight of b1s0
 		}	
-		
 		if (RATE_GOOD(0,1) && RATE_LOW(1,1)) {
 			printf("rate 0,1 is good but 1,1 is too low!\n");
 			p->w4_max=p->w4;	// decrease weight of b2s0
@@ -341,30 +267,21 @@ void optimise_w(struct osb_2_dual_params *p)
 			p->w3_max=p->w3;	// decrease weight of b1s0
 		}
 */
-
 		tot_pow(0,p,true);
 		tot_pow(1,p,true);
-	
 	}
-
 }
-
 #endif
-
-
 void optimise_w(struct osb_2_dual_params *p)
 {
 	int e=10;
-	
 	p->w1=(p->w1_max+p->w1_min)/2;
         p->w2=(p->w2_max+p->w2_min)/2;
 	p->w3=(p->w3_max+p->w3_min)/2;
 	//p->w3=1;
         //p->w4=(p->w4_max+p->w4_min)/2;
         //p->w4=1;
-
 	while(1) {
-		
 		p->w1_min=0.0;
 		p->w1_max=1.0;
 		while(!RATE_GOOD(0,1,true)) {
@@ -376,7 +293,6 @@ void optimise_w(struct osb_2_dual_params *p)
 				p->w1_max=p->w1;
 			else
 				p->w1_min=p->w1;
-
 		}
 		printf("w1 converged\n");
 		p->w2_min=0.0;
@@ -386,14 +302,12 @@ void optimise_w(struct osb_2_dual_params *p)
 			printf("Currently adjusting w2\n");
 			printf("w1=%.8lf w2=%.8lf w3=%.8lf w4=%.8lf l1=%4.2lf l2=%4.2lf\n",p->w1,p->w2,p->w3,p->w4,p->l1,p->l2);
 			optimise_l1(p);
-
 			if(RATE_HIGH(1,1,true))
 				p->w2_max=p->w2;
                         else
                                 p->w2_min=p->w2;
 		}
 		printf("w2 converged\n");
-		
 		p->w3_min=0.0;
                 p->w3_max=1.0;
                 while(!RATE_GOOD(1,0,true)) {
@@ -401,7 +315,6 @@ void optimise_w(struct osb_2_dual_params *p)
                         printf("Currently adjusting w3\n");
                         printf("w1=%.8lf w2=%.8lf w3=%.8lf w4=%.8lf l1=%4.2lf l2=%4.2lf\n",p->w1,p->w2,p->w3,p->w4,p->l1,p->l2);
                         optimise_l1(p);
-
                         if(RATE_LOW(1,0,true))
                                 p->w3_max=p->w3;
                         else
@@ -416,7 +329,6 @@ void optimise_w(struct osb_2_dual_params *p)
 			printf("Currently adjusting w4\n");
 			printf("w1=%.8lf w2=%.8lf w3=%.8lf w4=%.8lf l1=%4.2lf l2=%4.2lf\n",p->w1,p->w2,p->w3,p->w4,p->l1,p->l2);
 			optimise_l1(p);
-
 			if(RATE_HIGH(1,0,true))
 				p->w4_max=p->w4;
                         else
@@ -436,43 +348,29 @@ void optimise_w(struct osb_2_dual_params *p)
                         return;
                 }
 		*/
-
 		if (RATE_GOOD(0,1,false) && RATE_GOOD(1,1,false) && RATE_GOOD(1,0,false)) {
 			printf("sweetski\n");
 			return;
-
 		}
 		//e=e-e/4;
-	
 	}
 }
 /*
 void adjust_p(struct osb_2_dual_params *p)
 {
-
 	while (1) {
 		p->p0_budget=(p->p0_budget_max+p->p0_budget_min)/2;
 		p->p1_budget=(p->p1_budget_max+p->p1_budget_min)/2;
-		
 		optimise_l1(p);
-
 		if (ALL_RATES_GOOD) {
 			return;
 		}
-
-		
-
 	}
-
-
 }
 */
-
 void optimise_l1(struct osb_2_dual_params *p)
 {
-
 	double pow,last=DBL_MAX;	// compiler warning
-
 	p->l1=1.0;
 	p->l1_min=0.0;
 	do {
@@ -481,14 +379,10 @@ void optimise_l1(struct osb_2_dual_params *p)
 	} while(tot_pow(0,p,false) > p->p0_budget);
 	p->l1_max=p->l1;
 	//printf("First value of l1 to meet power constraint = %lf\n",p->l1_max);
-
 	while(1) {
 		p->l1=(p->l1_max+p->l1_min)/2;
-		
 		optimise_l2(p);
-
 		pow=tot_pow(0,p,false);
-
 		if (pow > p->p0_budget) {
 			p->l1_min=p->l1;
 		}
@@ -509,13 +403,9 @@ void optimise_l1(struct osb_2_dual_params *p)
 		last=pow;
 	}
 }
-
-
 void optimise_l2(struct osb_2_dual_params *p)
 {
-
 	double pow,last=DBL_MAX;	// compiler warning
-
 	p->l2=1.0;
 	p->l2_min=0.0;
 	do {
@@ -524,13 +414,10 @@ void optimise_l2(struct osb_2_dual_params *p)
 	} while(tot_pow(1,p,false) > p->p1_budget);
 	p->l2_max=p->l2;	
 	//printf("First value of l2 to meet power constraint = %lf\n",p->l2_max);
-
 	while(1) {
 		p->l2=(p->l2_max+p->l2_min)/2;
 		optimise_p(p);
-
 		pow = tot_pow(1,p,false);	
-
 		if (pow > p->p1_budget) {
 			p->l2_min=p->l2;
 		}
@@ -550,13 +437,9 @@ void optimise_l2(struct osb_2_dual_params *p)
 		}
 		last=pow;
 	}
-
 }
-
-
 void optimise_p(struct osb_2_dual_params *p)
 {
-
 	int i;
 	int b1,b2,b1max,b2max;
 	int s0,s1,s0max,s1max;
@@ -564,11 +447,8 @@ void optimise_p(struct osb_2_dual_params *p)
 	double lk_max=0.0,lk=0.0;
 	//char fn[50];
 	//FILE *fp;
-
 	//printf("w1=%.8lf w2=%.8lf w3=%.8lf w4=%.8lf l1=%4.2lf l2=%4.2lf\n",p->w1,p->w2,p->w3,p->w4,p->l1,p->l2);
-
 	for (i=0;i<DMTCHANNELS;i++) {
-	
 		//i=1;
 		/*
 		sprintf(fn,"%s/data/osb_lk_channel_%d",ROOT_DIR,i);
@@ -611,22 +491,17 @@ void optimise_p(struct osb_2_dual_params *p)
 						,p->b_mat[0][i],p->b_mat[1][i]
 						,p->s_mat[0][i],p->s_mat[1][i]);*/
 		//fclose(fp);
-		
 	}
 	//exit(1);
-	
 	//print_b_and_p(b,p);	
 }	
-
 double l_k(int b1,int b2,int s0,int s1,int channel,struct osb_2_dual_params *p)
 {
-
 	//int i;
 	int b1s0=0;
 	int b1s1=0;
 	int b2s0=0;
 	int b2s1=0;
-
 	if (s0==0) {
 		b1s0=b1;
 		b1s1=0;
@@ -643,29 +518,21 @@ double l_k(int b1,int b2,int s0,int s1,int channel,struct osb_2_dual_params *p)
 		b2s1=b2;
 		b2s0=0;
 	}
-		
 	/*return p->w1*b1s0 + (1-p->w1)*b2s0 + p->w2*b1s1 + (1-p->w2)*b2s1 
 		- p->l1*p->p_mat[0][s0][s1][b1][b2][channel]
 		- p->l2*p->p_mat[1][s0][s1][b1][b2][channel];
         */
-
 	return p->w3*b1s0 + p->w1*b1s1 + (1-p->w3)*b2s0 + p->w2*b2s1 
 		- p->l1*p->p_mat[0][s0][s1][b1][b2][channel]
                 - p->l2*p->p_mat[1][s0][s1][b1][b2][channel];
-
-		
 	//return p->w*b1 + (1-p->w)*b2 - p->l1*p->p_mat[0][b1][b2][channel] - p->l2*p->p_mat[1][b1][b2][channel];
-
 	//return b1 + b2 - l1*p_mat[0][b1][b2][channel] - l2*p_mat[1][b1][b2][channel];
 }
-
 void osb_init_p_matrix(double P_MAT)
 {
-
 	int k,b1,b2;
 	int s0,s1;
 	int services=2;
-
 	for (k=0;k<DMTCHANNELS;k++) {
 		for (b1=0;b1<=MAXBITSPERTONE;b1++) {
 			for (b2=0;b2<=MAXBITSPERTONE;b2++) {
@@ -677,13 +544,9 @@ void osb_init_p_matrix(double P_MAT)
 			}
 		}
 	}
-
-
 }
-
 void psd(double P_MAT,int b1,int b2,int s0,int s1,int channel)
 {
-
 	int i=0;
 	p_mat[0][s0][s1][b1][b2][channel] = 0.0;
 	p_mat[1][s0][s1][b1][b2][channel] = 0.0;
@@ -694,13 +557,10 @@ void psd(double P_MAT,int b1,int b2,int s0,int s1,int channel)
 	double gain1;
 	double diff=0.0,last_diff=0.0;
 	int diverge=0;
-
 	current=get_line(0);
 	gain0 = current->gain[channel];
 	current=get_line(1);
 	gain1 = current->gain[channel];
-
-
 	//printf("b1 = %d\tb2 = %d channel = %d\n",b1,b2,channel);
 	//getchar();
 	do {
@@ -730,12 +590,10 @@ void psd(double P_MAT,int b1,int b2,int s0,int s1,int channel)
 	//if (diverge==3)
 		//printf("psd solution diverged for b1=%d b2=%d channel =%d\n",b1,b2,channel);
 }
-
 void _psd(int line_id,int s0,int s1,int b1,int b2,double P_MAT,int channel,double gain)
 {
 	double gamma_hat;
 	int b;
-
 	if (line_id == 0) {	// we're finding the psd on line0
 		b=b1;
 		if (s0==0)	// the service on line0 is service 0, i.e. low BER
@@ -751,9 +609,7 @@ void _psd(int line_id,int s0,int s1,int b1,int b2,double P_MAT,int channel,doubl
 			gamma_hat=pow(10,(GAMMA1+MARGIN)/10);
 	}
 	p_mat[line_id][s0][s1][b1][b2][channel] = (pow(2,(double)b)-1) * gamma_hat/_cnr(line_id,p_mat,channel,gain,b1,b2,s0,s1);
-
 }
-
 double _cnr(int line_id,double P_MAT,int channel,double gain,int b1,int b2,int s0,int s1)
 {
 	struct line *current = list_head;
@@ -762,9 +618,7 @@ double _cnr(int line_id,double P_MAT,int channel,double gain,int b1,int b2,int s
 	int i,k;
 	static double alien_xtalk_array[2][DMTCHANNELS];
 	static double bk_n;
-
 	current = get_line(line_id);
-
 	if (calls++ == 0) {
 		bk_n = dbmhz_to_watts(current->background_noise);
 		for (i=0;i<lines;i++) {
@@ -773,72 +627,49 @@ double _cnr(int line_id,double P_MAT,int channel,double gain,int b1,int b2,int s
 			}
 		}
 	}
-		
-	
 	noise = fsan_sum(osb_fext(line_id,p_mat,channel,b1,b2,s0,s1),alien_xtalk_array[line_id][channel]) + bk_n;
 	//current=get_line(line_id);
-
 	return gain/noise;	
-
 }
-
 double osb_fext(int line_id,double P_MAT,int channel,int b1,int b2,int s0,int s1)
 {
-
 	int i;
 	double xtalk_gain;
 	double noise=0.0;
-	
 	for (i=0;i<lines;i++) {
 		if (i != line_id) {
 			xtalk_gain = *(channel_matrix + channel + (i * DMTCHANNELS) + (lines * line_id * DMTCHANNELS));
 			noise += xtalk_gain * p_mat[i][s0][s1][b1][b2][channel];
 		}
 	}	
-
 	return noise;
 }
-
 int rate(int line_id,int service,struct osb_2_dual_params *p,bool print)
 {
-
 	int rate=0,i;
-
 	for (i=0;i<DMTCHANNELS;i++) {
 		if (p->s_mat[line_id][i] == service)
 			rate += p->b_mat[line_id][i];
 	}
-
 	if (print)
 		printf("current rate on line %d service %d is %d\n",line_id,service,rate);
-
 	return rate;
-
 }
-
 double tot_pow(int line_id,struct osb_2_dual_params *p,bool print)
 {
-	
 	double tot=0.0;
 	int i;
-	
 	for(i=0;i<DMTCHANNELS;i++) {
 		tot += p->p_mat[line_id][p->s_mat[0][i]][p->s_mat[1][i]][p->b_mat[0][i]][p->b_mat[1][i]][i];
 	}
-
 	if (print)
 		printf("current power on line %d is %lf\n",line_id,tot);
-
 	return tot;
-	
 }
-
 void osb_dual_init_lines(struct osb_2_dual_params *p)
 {
-
 	int i,k;
 	struct line* current=list_head;
-
 	for (i=0;i<lines;i++) {
 		current = get_line(i);	
 		current->is_dual = 1;	// dual qos line
