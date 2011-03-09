@@ -2,19 +2,18 @@
 Class that describes the DSL bundle object
 """
 
+#Global imports
 import sys
-from math import *
-from utility import *
 import cmath
 import numpy
 import pydot
 import pyparsing
 import scipy.special as ss
 import pylab
+from math import pow,log10,sqrt
 
-
-
-
+#Local Imports
+from utility import log,freq_on_tone,dbmhz_to_watts,do_transfer_function, UndB
 from line import Line
 
 class Bundle(object):
@@ -67,10 +66,8 @@ class Bundle(object):
             sys.exit(1)
 
 
-        """
-        Calculate the channel matrix
-        """
-        #Clear the gains to be tidy
+        log.info("Calculating the channel matrix")
+        #Initialise the gains
         self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
         #The real work begins
         self.calc_channel_matrix()
@@ -79,12 +76,12 @@ class Bundle(object):
         print self.xtalk_gain
         #self.graph_channel_matrix()
         log.info("Running self check:")
-        print self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
+        self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
         
 
 
     """
-    Calculates the bundle channel gain matrix
+    Calculates the bundle channel gain matrix, generating xtalk_gain[][][]
     :from channel_matrix.c
     """
     def calc_channel_matrix(self): #TODO
@@ -117,7 +114,9 @@ class Bundle(object):
             #listcomprehension for x,v,k on xtalk_gains and gain[k]
             gainratio=[self.xtalk_gain[x,v,k]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
             yeses+=len([1 for i in gainratio if i>0.5])
-        return yeses       
+        
+        log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
+               
     
     """
     Get XT Gain for line objects
@@ -233,9 +232,9 @@ class Bundle(object):
             
             line.cnr = [ line.gain[k]/noise[k] for k in range(self.K)]
             line.snr = [ dbmhz_to_watts(line.psd[k])*line.cnr[k] for k in range(self.K)]
-            line.gamma_m = [ 10*math.log10(line.snr[k]/math.pow(2,line.b[k]-1)) for x in range(self.K)]
+            line.gamma_m = [ 10*log10(line.snr[k]/pow(2,line.b[k]-1)) for x in range(self.K)]
             line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in range(self.lines) ] #TODO _calc_sym_err
-            print line.symerr
+            log.debug("Symbol Err for n:%d,%lf"%(line.id,line.symerr))
             line.p_total = sum(map(dbmhz_to_watts(line.psd)))
             line.b_total = sum(line.b)
             line.rate[line.service] = "sum of line.b[k]" #TODO How to vectorise this? Where Does Service Come From?
@@ -251,9 +250,9 @@ class Bundle(object):
     """
     def _calc_sym_err(self,line,k): #TODO
         
-        M=math.pow(2,line.b[k])
+        M=pow(2,line.b[k])
                
-        return 1 - (1 - (1 - 1/math.sqrt(M))*ss.erf(math.sqrt((3*line.snr[k])/(2*(M-1)))))
+        return 1 - (1 - (1 - 1/sqrt(M))*ss.erf(sqrt((3*line.snr[k])/(2*(M-1)))))
     
     """
     Checks inter-service margins
@@ -261,14 +260,15 @@ class Bundle(object):
     #I suspect this can be ignored
     """
     def check_all_margins(self,gap):
-        for line in self.lines:
+        pass
             
     
     """
     Pretty Print channel Matrix
-    #TODO
+    #TODO I've got no idea how to display this....
     """
     def graph_channel_matrix(self):
+        
         pylab.contourf(self.xtalk_gain[...,0])
         pylab.figure()
         pylab.show

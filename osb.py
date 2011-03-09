@@ -9,14 +9,19 @@ import math
 #Local Imports
 from bundle import Bundle
 from algorithm import Algorithm
+import utility
 
 class OSB(Algorithm):
     """
     Optimum Spectrum Balancing
     """
-    
-    def __init__(self):
+    def run(self):
         self.name = "OSB"
+        #Aimed-for rates per-line
+        self.rate_targets = numpy.zeros(self.bundle.N)
+        #Tolerance of rate-targets (how close is close enough)
+        self.target_tolerance=1
+        
         self.preamble
         self.w=[]
         #How the fuck does this iterate over the bundle?
@@ -24,11 +29,44 @@ class OSB(Algorithm):
             for lineb in self.bundle.lines:
                 #Ignore comparing lines to themselves
                 if linea.id != lineb.id:
-                    self.optimise_l1(w,linea,lineb)
+                    self.optimise_weights(linea,lineb)
         self.postscript
         return  
     
-    #Optimise Lambda1 (from osb_original)
+    """
+    Optimise W
+    """
+    def optimise_weights(self,linea,lineb):
+        
+        #FIXME There is no way this makes sense for multi-user system >2
+        if (self.rate_targets[lineb.id]==0):
+            self._optimise_w(linea,lineb)
+        elif (self.rate_targets[lineb.id]==0):
+            #Swap and carry on regardless
+            self._optimise_w(lineb,linea)
+        else:
+            utility.log.error("What the fuck am I supposed to do now?!")
+        
+    
+    """
+    Optimise W- working function
+    
+    """
+    def _optimise_w(self,linea,lineb):
+        w_max=1
+        w_min=0
+        while (abs(linea.rate()-self.rate_targets[linea.id]) > self.target_tolerance):
+            w=(w_max+w_min)/2
+            self.optimise_l1(w,linea,lineb)
+            if linea.rate() > self.rate_targets[linea.id]:
+                w_max=w
+            else:
+                w_min=w
+    
+    """
+    Optimise Lambda 1
+    :from OSB_original.pdf paper
+    """
     def optimise_l1(self,w,linea,lineb):
         l1_max=1
         l1_min=0
@@ -47,7 +85,10 @@ class OSB(Algorithm):
                 l1_max=l1
             
                 
-    #Optimise Lambda2 (from osb_original)
+    """
+    Optimise Lambda 2
+    :from OSB_original.pdf paper
+    """
     def optimise_l2(self,w,l1,linea,lineb):
         l2_max=1
         l2_min=0
@@ -65,7 +106,11 @@ class OSB(Algorithm):
                 l2_min=l2
             else:
                 l2_max=l2
-        
+                
+    """
+    Optimise Power (aka optimise_s)
+    :from OSB_original.pdf paper
+    """   
     def optimise_p(self,w,l1,l2,linea,lineb):
         L_max=-1.0 #max L_k seen
         b1_max = 0 #overall max for b1
@@ -80,21 +125,34 @@ class OSB(Algorithm):
                     L_k=self._L(w, l1, l2, linea, lineb, k, b1, b2)
                     if L_k > L_max:
                         L_max = L_k
+                        #Store these new maxe's
                         linea.b[k] = b1_max = b1
                         lineb.b[k] = b2_max = b2
+                        
                     #Powers need to be updated at some point. see PSD_vector.h
             #end of search double loop on b's
+            #Update 'best' bit loads
             linea.b[k]=b1_max
             lineb.b[k]=b2_max
+            #Update powers
+            self.update_psds(linea)
+            self.update_psds(lineb)
+            #The reason why this seems to make sense HERE is that
+            #in theory, the above double loop would be 'instant'.
             
-                     
-    #has a line power converged?
+
+    """
+    Convergence check for both lambda optimisations
+    """                 
     def _converged(self,line,lastpower):
         #How much convergence is satisfactory?
         e=0.01
         return (abs(sum(line.p),lastpower)<e)
     
-    #Lagrangian
+    """
+    Calculate the Lagrangian
+    :from osb_original.pdf and osb.c
+    """
     def _L(self,w,l1,l2,linea,lineb,k,b1,b2):
         result=0
         #Weighted Sections

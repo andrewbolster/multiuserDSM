@@ -20,16 +20,19 @@ class Algorithm(object):
         self.C_G = 0
         self.MAXBITSPERTONE = 15
         self.MINPSD=60
-        self.target_rate = None #Need to set this for load_fm and ISB
+        self.MAXRATE = None #Need to set this for load_fm and ISB
+        self.MAXPOWER = None     
 
-        pass
     
     def preamble(self):
         #Stuff that needs to be done for any algorithm        
-        gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
-
-        pass
+        self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
+        utility.log.info("Lets get this party started!")
     
+    def postscript(self):
+        utility.log.info("All Done Here")
+        
+    #FIXME I'm fairly sure nothing below here is layed out properly yet; am_load_ra is used in SOME algos...
     def am_load_ra(self,line):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, RR_OSB
         line.b = numpy.zeros(self.bundle.K)
         tone_full = numpy.tile(False,self.bundle.K)
@@ -49,7 +52,7 @@ class Algorithm(object):
             if (line.b[tone] >= self.MAXBITSPERTONE):
                 tone_full[tone] = True
             
-            if (p_total > self.p_budget):
+            if (p_total > self.MAXPOWER):
                 line.b[tone]-=1
                 p_total -=delta_p[tone]
                 break
@@ -68,24 +71,29 @@ class Algorithm(object):
             if (line.psd[tone] < self.MINPSD) and (line.b[tone] != 0):
                 line.psd[tone] = self.MINPSD
         
-        b_total = sum(line.b)
         
         line.service = numpy.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
         
-        return b_total
+        return line.rate()
     
     def am_load_fm(self,line,half=0):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, Single_IWF
         #half:(-1:bottom,0:both,1:top)
-        
+        """
+        Initialise Everything
+        """
         line.b = numpy.zeros(self.bundle.K)
         tone_full = numpy.tile(False,self.bundle.K)     #set all tones to full
         p_total=0
         b_total=0
-        delta_p = []
+               
+        """
+        Calculate Initial bit/tone costs
+        """
+        delta_p=self._calc_delta_p(line,tone_full)
         
-        self._calc_delta_p(line)
-        
-        """Deal with Halves""" #Why is there a check on K==512?
+        """
+        Deal with Halves
+        """ #Why is there a check on K==512?
         if ( half == 1 ): #Top Half
             for tone in range(self.bundle.K/2):
                 tone_full[tone] = True
@@ -95,42 +103,57 @@ class Algorithm(object):
                 tone_full[tone] = True        
                 utility.log.debug("Bottom Half only")
         
-        while (0 < min(delta_p)): #TODO I know this doesn't work, Don't understand the breaking state see am_load.c find_min()
+        while (0 < min(delta_p)):
             tone = numpy.argmin(delta_p) #return the tone with the lowest bit-adding cost
             line.b[tone]+=1
             b_total += 1            #Keep track of yer bits!
             p_total += delta_p[tone]
-            if (b_total == self.target_rate):
+            
+            """Rate/Power/Bit Checking"""
+            if (b_total == self.MAXRATE):
+                utility.log.debug("n:%d,k:%d - rate-satisfied"%(line.id,tone))
                 break #I'm done          
             if (line.b[tone] >= self.MAXBITSPERTONE):
                 tone_full[tone] = True
-                utility.log.debug("Tone %d full"%tone)
-
-            if (p_total > self.p_budget):
+                utility.log.info("n:%d,k:%d - tone full"%(line.id,tone))
+            if (p_total > self.MAXPOWER):
+                utility.log.info("n:%d,k:%d - exceeded power budget, rolling back"%(line.id,tone))
                 line.b[tone]-=1
                 b_total -=1
                 p_total -=delta_p[tone]
                 break
             
-            self._calc_delta_p(line)
+            #Recalculate bit/tone costs
+            delta_p=self._calc_delta_p(line,tone_full)
         else:
             utility.log.info("All Tones are full!") #Breaking statement where min(delta_p) <= 0
         
-        self.update_psds(line)                
+        #Update powers
+        self.update_psds(line)
+                        
         line.service = numpy.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
         
-        if b_total != self.target_rate:
-            utility.log.error("Could not reach target data rate. Desired:",self.target_rate," Achieved:",b_total)                
+        if b_total != self.MAXRATE: #This should be right as b_total is incrementally added
+            utility.log.error("Could not reach target data rate. Desired:",self.MAXRATE," Achieved:",b_total)                
         return b_total
-        
-    def _calc_delta_p(self,line): #TODO:Used in several am_load related functions; need to make variable safe
+    
+    """
+    Calculate cost of additional bit on all the tones in a line
+    :from am_load.c (implicit)
+    Optimised from original version (Thank you wolframalpha)
+    """
+    def _calc_delta_p(self,line,tone_full):
+        delta_p=numpy.zeros(self.bundle.K)
         for tone in self.bundle.K:
-            if not self.tone_full[tone]:
-                self.delta_p[tone] = (pow(2,(line.b[tone]-1)) * 3 - 2 )* self.gamma_hat/line.cnr[tone]
+            if not tone_full[tone]:
+                delta_p[tone] = (pow(2,(line.b[tone]-1)) * 3 - 2 )* self.gamma_hat/line.cnr[tone]
             else:
-                self.delta_p[tone] = 100
+                delta_p[tone] = 100
                 
+    """
+    Update the power allocations on this line from bit allocations
+    This could be moved into the Line object, but gamma_hat is dependent on per algorithm variables
+    """
     def update_psds(self,line):
-        #updates PSD's for this line
         for tone in xrange(self.bundle.K):
             line.psd[tone] = utility.watts_to_dbmhz((math.pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone])) #TODO gamma_hat/cnr[k] functionalise

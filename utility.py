@@ -56,7 +56,7 @@ def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth t
     
     w = 2 * math.pi * freq
 
-    log.debug("Freq=%f,Len=%d",freq,length)
+    #log.debug("Freq=%f,Len=%d",freq,length)
     Z = complex(_R(freq),w*_L(freq))
     Y = complex(_G(freq),w*_C(freq))
 
@@ -67,14 +67,14 @@ def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth t
 
     Zs = complex(100,0)
     Zl = complex(100,0)
-    log.debug("w:%.3f",w)
-    log.debug("R:%.3f L:%.3f G:%.3f C:%.3f",_R(freq),_L(freq),_G(freq),_C(freq))
-    log.debug("Z:%s Y:%s Z0:%s Gamma:%s GammaD:%s",complex2str(Z),complex2str(Y),complex2str(Z0),complex2str(gamma),complex2str(gammad))
+    #log.debug("w:%.3f",w)
+    #log.debug("R:%.3f L:%.3f G:%.3f C:%.3f",_R(freq),_L(freq),_G(freq),_C(freq))
+    #log.debug("Z:%s Y:%s Z0:%s Gamma:%s GammaD:%s",complex2str(Z),complex2str(Y),complex2str(Z0),complex2str(gamma),complex2str(gammad))
     upper = Z0 * ( 1/cmath.cosh(gammad)) #sech=1/cosh
     lower = Zs * ( (Z0/Zl) + cmath.tanh(gammad) ) + Z0 * ( 1+ (Z0/Zl)*cmath.tanh(gammad) )
 
     H = upper/lower
-    log.debug("Returned Transfer Function: %g",cmath.polar(H)[0])
+    #log.debug("Returned Transfer Function: %g",cmath.polar(H)[0])
     return cmath.polar(H)[0]        #polar returns (abs(h),real(h))
 
 def _R(freq):

@@ -35,9 +35,12 @@ class IWF(Algorithm):
         self.rate_targets = numpy.tile()
         
         #TODO start timer system here
-        self.preamble
+        self.preamble()
 
         iterations = rate_iterations = 0
+        """
+        Iteratively Execute am_load_X and check rate targets
+        """
         while iterations < 30 and rate_iterations < 10:
             while self.bundle.check_all_margins(2):
                 for i,line in enumerate(self.bundle.lines):
@@ -51,6 +54,9 @@ class IWF(Algorithm):
             #assume the best
             targets_met=True
             
+            """
+            Target Checking
+            """
             for i,line in enumerate(self.bundle.lines): #TODO List Comprehension/Reduce?
                 if line.rate_target == None:
                     continue
@@ -65,7 +71,5 @@ class IWF(Algorithm):
             
         else: #will only run after 30 failed iterations or 10 failed 
             utility.log.warning("Convergence Failure after "+iterations+" iterations, "+rate_iterations+" rate iterations")
-            return -1
         
-        self.postscript
-        return   
+        self.postscript()
