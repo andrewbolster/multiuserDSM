@@ -18,7 +18,7 @@ class OSB(Algorithm):
     def run(self):
         self.name = "OSB"
         #Aimed-for rates per-line
-        self.rate_targets = numpy.zeros(self.bundle.N)
+        self.rate_targets = numpy.tile(100,self.bundle.N)
         #Tolerance of rate-targets (how close is close enough)
         self.target_tolerance=1
         
@@ -29,12 +29,12 @@ class OSB(Algorithm):
             for lineb in self.bundle.lines:
                 #Ignore comparing lines to themselves
                 if linea.id != lineb.id:
-                    self.optimise_weights(linea,lineb)
+                    self._optimise_w(linea,lineb)
         self.postscript
         return  
     
     """
-    Optimise W
+    Optimise W -Currently not used
     """
     def optimise_weights(self,linea,lineb):
         
@@ -147,7 +147,7 @@ class OSB(Algorithm):
     def _converged(self,line,lastpower):
         #How much convergence is satisfactory?
         e=0.01
-        return (abs(sum(line.p),lastpower)<e)
+        return (abs(sum(line.p)-lastpower)<e)
     
     """
     Calculate the Lagrangian
@@ -158,6 +158,6 @@ class OSB(Algorithm):
         #Weighted Sections
         result+= (w*b1+(1-w)*b2)
         #Lagrangian Sections
-        result-= (l1*linea.p[k])*(self.bundle.xtalk_gain[b1][b2][k])##It wasnt
-        result-= (l2*lineb.p[k])*(self.bundle.xtalk_gain[b1][b2][k])
+        result-= (l1*linea.p[k])*(self.bundle.xtalk_gain[b1,b2,k])#this isn't supposed to be xtalk, its p_matrix. No idea where the fuck it comes from tho.
+        result-= (l2*lineb.p[k])*(self.bundle.xtalk_gain[b1,b2,k])
         return result

@@ -28,7 +28,7 @@ class Line(object):
         self.snr = []
         self.cnr = []
         self.gamma_m = []
-        self.b = []
+        self.b = numpy.zeros(bundle.K) #bit loading on each subchannel
         
     def __str__(self):
         """
@@ -54,7 +54,7 @@ class Line(object):
     Called from bundle
     """
     def sanity(self):
-        for t in range(self.parent.K):
+        for t in range(self.bundle.K):
             assert self.b[t] >= 0, "Tone "+t+" less than zero:"+self.b[t]
             assert self.gain[t] >= 0, "Gain "+t+" less than zero"+self.gain[t]
         assert self.background_noise >=0, "Background noise is not set on line "+self.id
