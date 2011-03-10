@@ -16,17 +16,15 @@ class Algorithm(object):
         """
         Algorithm Constants; usually set within child classes
         """
-        self.MARGIN = 3.0
-        self.C_G = 0
-        self.MAXBITSPERTONE = 15
-        self.MINPSD=60
         self.MAXRATE = None #Need to set this for load_fm and ISB
-        self.MAXPOWER = None     
+        self.MAXPOWER = None
+        self.MAXBITSPERTONE = 15
 
+
+        
     
     def preamble(self):
         #Stuff that needs to be done for any algorithm        
-        self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
         utility.log.info("Lets get this party started!")
     
     def postscript(self):
@@ -66,10 +64,7 @@ class Algorithm(object):
         else:
             utility.log.info("All Tones are full!") #Breaking statement where min(delta_p) < 0
         
-        for tone in xrange(self.bundle.K):
-            line.psd[tone] = utility.watts_to_dbmhz((math.pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone])) #TODO gamma_hat/cnr[k] functionalise
-            if (line.psd[tone] < self.MINPSD) and (line.b[tone] != 0):
-                line.psd[tone] = self.MINPSD
+        self.update_psds(line)
         
         
         line.service = numpy.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
@@ -146,14 +141,6 @@ class Algorithm(object):
         delta_p=numpy.zeros(self.bundle.K)
         for tone in self.bundle.K:
             if not tone_full[tone]:
-                delta_p[tone] = (pow(2,(line.b[tone]-1)) * 3 - 2 )* self.gamma_hat/line.cnr[tone]
+                delta_p[tone] = (pow(2,(line.b[tone]-1)) * 3 - 2 )* self.bundle.gamma_hat/line.cnr[tone]
             else:
                 delta_p[tone] = 100
-                
-    """
-    Update the power allocations on this line from bit allocations
-    This could be moved into the Line object, but gamma_hat is dependent on per algorithm variables
-    """
-    def update_psds(self,line):
-        for tone in xrange(self.bundle.K):
-            line.psd[tone] = utility.watts_to_dbmhz((math.pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone])) #TODO gamma_hat/cnr[k] functionalise

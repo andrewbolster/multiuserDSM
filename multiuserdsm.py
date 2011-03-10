@@ -15,13 +15,11 @@ parser.add_option("-n","--network", dest="network", help="read network configura
 parser.add_option("-K","--tones", dest="K", help="specify number of DMTCHANNELS",metavar="K",default=512)
 
 (options,args) = parser.parse_args()
+bundle = Bundle(options.network,options.K)
 
 if __name__ == "__main__":
-    bundle = Bundle(options.network,options.K)
     """
-	Perform algorithm selection and option passing
-	"""
+    Perform algorithm selection and option passing
+    """
     algo = OSB(bundle)
     algo.run()
-    
-    

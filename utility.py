@@ -3,7 +3,8 @@
 __author__="bolster"
 __date__ ="$02-Dec-2010 18:48:38$"
 
-import math, cmath, numpy
+import math, cmath, numpy, scipy.special as sps
+import functools,cPickle
 
 import logging
 
@@ -16,7 +17,7 @@ f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
 log.addHandler(h)
 
-material={
+material={#taken from type 2 in transfer_fn.c
         "r_0c"	:179,
         "a_c"	:35.89e-3,
         "r_0s"	:0,
@@ -36,12 +37,31 @@ material={
         "g_e"	:1.033
         }
 
+CHANNEL_BANDWIDTH = 4312.5 #from include/multiuser_load.h
+
+"""
+Fancy memoise decorator to make my life easy
+"""
+def memoize(fctn):
+        memory = {}
+        @functools.wraps(fctn)
+        def memo(*args,**kwargs):
+                haxh = cPickle.dumps((args, sorted(kwargs.iteritems())))
+
+                if haxh not in memory:
+                        memory[haxh] = fctn(*args,**kwargs)
+
+                return memory[haxh]
+        if memo.__doc__:
+            memo.__doc__ = "\n".join([memo.__doc__,"This function is memoized."])
+        return memo   
+
+
 """
 Let the transfer function default to type 2;
     Allows for easy default change later
     Allows for easy 'case-based' changes
 """
-
 def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth to Zs/Zl come from? They do nothing!
     """
     Z=impedance/l, Y=admittance/l
@@ -68,7 +88,7 @@ def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth t
     Zs = complex(100,0)
     Zl = complex(100,0)
     #log.debug("w:%.3f",w)
-    #log.debug("R:%.3f L:%.3f G:%.3f C:%.3f",_R(freq),_L(freq),_G(freq),_C(freq))
+    #log.debug("R:%e L:%e G:%e C:%e",_R(freq),_L(freq),_G(freq),_C(freq))
     #log.debug("Z:%s Y:%s Z0:%s Gamma:%s GammaD:%s",complex2str(Z),complex2str(Y),complex2str(Z0),complex2str(gamma),complex2str(gammad))
     upper = Z0 * ( 1/cmath.cosh(gammad)) #sech=1/cosh
     lower = Zs * ( (Z0/Zl) + cmath.tanh(gammad) ) + Z0 * ( 1+ (Z0/Zl)*cmath.tanh(gammad) )
@@ -95,7 +115,9 @@ def _L(freq):
     """
     Return L Parameter for transfer function
     """
-    return (material["l_0"]+material["l_inf"]*math.pow(freq*1e-3/material["f_m"],material["b"]))/(1+freq*1e-3/material["f_m"])
+    upper=(material["l_0"]+material["l_inf"]*math.pow(freq*1e-3/material["f_m"],material["b"]))
+    lower=(1+math.pow(freq*1e-3/material["f_m"],material["b"]))
+    return (upper/lower)
 
 def _C(freq):
     return material["c_inf"]+material["c_0"]*math.pow(freq,-material["c_e"])
@@ -107,16 +129,26 @@ def _G(freq):
 Mathematical Utilities
 """
 def dbmhz_to_watts(psd):
-    return UndB(psd)*1e-3
+    return UndB(psd)*1e-3*CHANNEL_BANDWIDTH
 
 def UndB(input):
-    return math.pow(10,input)
+    try:
+        return math.pow(10,input)
+    except ValueError:
+        log.error("Caught Exception on UndB(%f)"%input)
+        raise ValueError
 
 def watts_to_dbmhz(psd):
-    return TodB(psd*1e3)
+    return TodB((psd*1e3)/CHANNEL_BANDWIDTH)
 
 def TodB(input):
-    return 10*math.log10(input)
+    try:
+        if input != 0.0: return 10*math.log10(input)
+        else: return 0
+    except ValueError:
+        log.error("Caught Exception on TodB(%f)"%input)
+        return 0
+
 
 def freq_on_tone(K): #TODO
         """
@@ -126,6 +158,17 @@ def freq_on_tone(K): #TODO
 
 def complex2str(complex):
     return '{0:.3f}{1:+.3f}i'.format(complex.real,complex.imag)
+
+def _Q_1(value):
+    return math.sqrt(2)*sps.erfc(1-2*value)
+
+def _Ne(M): #from http://www.docstoc.com/docs/21599433/Basics-of-Digital-Modulation
+    rtM=math.sqrt(M)
+    return ((2*rtM)-1)/rtM
+
+#Uncoded SNR Gap (Probability-bit-error:Pe,N Nearest Neighbours:Ne)
+def get_GAMMA(Pe,M):
+    return (pow(_Q_1(Pe/_Ne(M)),2)/3)
 
 if __name__ == "__main__":
 

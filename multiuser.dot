@@ -1,0 +1,9 @@
+digraph G {
+rankdir=LR
+graph_channel_matrix;
+calc_fext_xtalk_gain;
+_h2;
+check_all_margins;
+check_xtalk_gains;
+_f;
+}

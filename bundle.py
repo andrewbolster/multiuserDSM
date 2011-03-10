@@ -13,7 +13,7 @@ import pylab
 from math import pow,log10,sqrt
 
 #Local Imports
-from utility import log,freq_on_tone,dbmhz_to_watts,do_transfer_function, UndB
+from utility import *
 from line import Line
 
 class Bundle(object):
@@ -46,6 +46,12 @@ class Bundle(object):
             "g_0"    :0,
             "g_e"    :0
             }
+        self.MARGIN = 3.0   #Performance Margin db
+        self.C_G = 0        #Coding Gain db
+        self.GAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
+        
+        self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
+
 
         """
         Try to open and parse the network configuration file
@@ -92,7 +98,7 @@ class Bundle(object):
                         li.gain[k] = self.xtalk_gain[i,j,k] = li.transfer_fn(freq_on_tone(k))
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
-                    log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
+                    #log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
     
     """
     Check Normalised XT Gains
@@ -116,13 +122,6 @@ class Bundle(object):
             yeses+=len([1 for i in gainratio if i>0.5])
         
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
-               
-    
-    """
-    Get XT Gain for line objects
-    """
-    def get_xtalk_gain(self,line1,line2,channel):
-        return self.xtalk_gain(line1.id, line2.id,channel)
     
     """
     Calculate Far End XT Gain
@@ -183,7 +182,7 @@ class Bundle(object):
         H = h1*h2*h3
         
         gain = H * self.fext(freq, max(vnt,dnt)-max(vlt,dlt))
-        log.debug("Returned xtalk_gain: %g",gain)
+        #log.debug("Returned xtalk_gain: %g",gain)
 
         return gain  
     
@@ -227,19 +226,31 @@ class Bundle(object):
     def calculate_snr(self):
         for line in self.lines:
             line.sanity()
+            noise = numpy.zeros(self.K)
             
-            noise = [ line.calc_fext_noise(k) + line.alien_xtalk(k) + dbmhz_to_watts(line.noise) for k in range(self.K)] #TODO alien
-            
-            line.cnr = [ line.gain[k]/noise[k] for k in range(self.K)]
-            line.snr = [ dbmhz_to_watts(line.psd[k])*line.cnr[k] for k in range(self.K)]
-            line.gamma_m = [ 10*log10(line.snr[k]/pow(2,line.b[k]-1)) for x in range(self.K)]
-            line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in range(self.lines) ] #TODO _calc_sym_err
-            log.debug("Symbol Err for n:%d,%lf"%(line.id,line.symerr))
-            line.p_total = sum(map(dbmhz_to_watts(line.psd)))
+            for tone in xrange(self.K):
+                
+                noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
+                line.cnr[tone] = line.gain[tone]/noise
+                #log.debug("b%d,b%e,g%e"%(line.b[tone],(pow(2,line.b[tone])-1),(self.gamma_hat/line.cnr[tone])))
+                line.p[tone] = watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone]))
+                if (line.p[tone] < line.MINPSD) and (line.b[tone] != 0):
+                    log.debug("Changing p from %e to MINPSD"%line.p[tone])
+                    #line.p[tone] = line.MINPSD
+                line.snr[tone] = dbmhz_to_watts(line.p[tone])*line.cnr[tone]
+                print line.calc_fext_noise(tone)
+                print line.gain
+                print line.cnr
+                print line.snr
+                print line.p
+                print line.b
+                
+                line.gamma_m[tone] = TodB(line.snr[tone]/pow(2,line.b[tone]-1))
+                
+            #line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in xrange(self.K)] #TODO _calc_sym_err
+            line.p_total = sum(map(dbmhz_to_watts,line.p))
             line.b_total = sum(line.b)
-            line.rate[line.service] = "sum of line.b[k]" #TODO How to vectorise this? Where Does Service Come From?
-            if line.is_frac():
-                line.rate[line.service] =  "sum of line._b[k]"
+            
             """
             With This whole Fractional thing; 
             Are b/_b ever different? If its a fractional line is b[k] ever needed?
@@ -264,6 +275,76 @@ class Bundle(object):
             
     
     """
+    Generate PSD vector matrix between two lines and return element
+    :from psd_vector.c
+    #FIXME How can this be memoised if this depends on 
+    """
+    def calc_psd(self,k):
+        #Generate A Matrix (See Intro.pdf 2.23)
+        A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
+        for i,linea in enumerate(self.lines):
+            for j, lineb in enumerate(self.lines):
+                if i==j: 
+                    A[i,j]=1
+                else:
+                    A[i,j]=self._psd_A_elem(linea, lineb, k)
+
+        #Generate B Matrix (same reference)
+        B=numpy.asmatrix(numpy.zeros(self.N))
+        for i,line in enumerate(self.lines):
+            B[0,i]=self._psd_B_elem(line, k)
+        
+        #Yeah, lets twist again!
+        B=B.T
+                
+        #Everyone loves linear algebra...dont they?
+        if (False): #QR or regular way?
+            q,r = numpy.linalg.qr(A)
+            assert numpy.allclose(A,numpy.dot(q,r))
+            p= numpy.dot(q.T,B)
+            P=numpy.dot(numpy.linalg.inv(r),p)
+        else:
+            P=numpy.linalg.solve(A,B)
+        
+        #Because I'm paranoid
+        assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
+        #log.info("Calc_psd(b1:%d,b2:%d,k:%d)=P %s"%(b1,b2,k,P))
+        return P
+
+        
+    """
+    PSD A-Element
+    """
+    def _psd_A_elem(self,linea,lineb,k):
+        return -self._f(linea,k)*self.xtalk_gain[lineb.id][linea.id][k]/self.xtalk_gain[linea.id][linea.id][k]
+    
+    """
+    PSD B-Element
+    """
+    def _psd_B_elem(self,line,k):
+        return -self._f(line,k)*(dbmhz_to_watts(-140)+line.alien_xtalk(k))/self.xtalk_gain[line.id][line.id][k]
+                    
+    """
+    Transfer function lookup - |h_{i,j}|^2
+    This more or less does nothing but return xtalk_gain but is closer to the math
+    """
+    def _h2(self,line1,line2,channel):
+        return self.xtalk_gain[line1.id][line2.id][channel]
+    
+    """
+    F- Gamma function - 
+    f(line,k)=\Gamma(2^{b_n(k)} -1)
+    :from psd_vector.c
+    """
+    def _f(self,line,k):
+        if hasattr(line,'g'):
+            g=line.g[k] #TODO gamma values from symerr.c ?
+        else:
+            g=(12.8) #I'm lazy, using default value from intro.pdf
+            
+        b=line.b[k]
+        return pow(10,(g+3)/10)*(pow(2,b)-1) #TODO initially, b=0, so this doesnt work
+    """    
     Pretty Print channel Matrix
     #TODO I've got no idea how to display this....
     """
@@ -272,5 +353,3 @@ class Bundle(object):
         pylab.contourf(self.xtalk_gain[...,0])
         pylab.figure()
         pylab.show
-
-            

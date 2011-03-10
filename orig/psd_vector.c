@@ -11,6 +11,7 @@
 #include <Eigen/LU>
 USING_PART_OF_NAMESPACE_EIGEN
 #define inv 1
+#define GSL //This was bugging me
 #define F(g,b) pow(10,(g+3)/10)*(pow(2,b)-1)
 #define TONE_CACHE_SIZE 80000
 bool psd_caching;
