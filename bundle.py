@@ -17,37 +17,38 @@ from utility import *
 from line import Line
 
 class Bundle(object):
+    N = 0                  #Filled in on loading file, here to remind me
+    lines = []            # the DSL line objects
+    xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
+
+    #Assuming that each bundle is going to be one medium
+    """
+    Material Parameters
+    """
+    material={
+        "r_0c"    :0,
+        "a_c"    :0,
+        "r_0s"    :0,
+        "a_s"    :0,
+    
+        "l_0"    :0,
+        "l_inf"    :0,
+    
+        "b"        :0,
+        "f_m"    :0,
+    
+        "c_inf"    :0,
+        "c_0"    :0,
+        "c_e"    :0,
+    
+        "g_0"    :0,
+        "g_e"    :0
+        }
+    MARGIN = 3.0   #Performance Margin db
+    C_G = 0        #Coding Gain db
     def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
         self.K = int(K)                # the number of DMT channels
-        self.N = 0                  #Filled in on loading file, here to remind me
-        self.lines = []            # the DSL line objects
-        self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
 
-        #Assuming that each bundle is going to be one medium
-        """
-        Material Parameters
-        """
-        self.material={
-            "r_0c"    :0,
-            "a_c"    :0,
-            "r_0s"    :0,
-            "a_s"    :0,
-        
-            "l_0"    :0,
-            "l_inf"    :0,
-        
-            "b"        :0,
-            "f_m"    :0,
-        
-            "c_inf"    :0,
-            "c_0"    :0,
-            "c_e"    :0,
-        
-            "g_0"    :0,
-            "g_e"    :0
-            }
-        self.MARGIN = 3.0   #Performance Margin db
-        self.C_G = 0        #Coding Gain db
         self.GAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
         
         self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
@@ -233,10 +234,7 @@ class Bundle(object):
                 noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
                 line.cnr[tone] = line.gain[tone]/noise
                 #log.debug("b%d,b%e,g%e"%(line.b[tone],(pow(2,line.b[tone])-1),(self.gamma_hat/line.cnr[tone])))
-                line.p[tone] = watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone]))
-                if (line.p[tone] < line.MINPSD) and (line.b[tone] != 0):
-                    log.debug("Changing p from %e to MINPSD"%line.p[tone])
-                    #line.p[tone] = line.MINPSD
+                ##Need to update p
                 line.snr[tone] = dbmhz_to_watts(line.p[tone])*line.cnr[tone]
                 print line.calc_fext_noise(tone)
                 print line.gain

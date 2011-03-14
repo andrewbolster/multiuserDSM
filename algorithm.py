@@ -8,21 +8,20 @@ import math
 import numpy
 
 
+
 class Algorithm(object):
+    """
+    Algorithm Constants; usually set within child classes
+    """
+    MAXRATE = None #Need to set this for load_fm and ISB
+    MAXPOWER = None
+    MAXBITSPERTONE = 15
+    name="Default Algorithm Name; You should never see this!"
+
+        
     def __init__(self,bundle):
-        self.name="Default Algorithm Name; You should never see this!"
         self.bundle=bundle
-        
-        """
-        Algorithm Constants; usually set within child classes
-        """
-        self.MAXRATE = None #Need to set this for load_fm and ISB
-        self.MAXPOWER = None
-        self.MAXBITSPERTONE = 15
 
-
-        
-    
     def preamble(self):
         #Stuff that needs to be done for any algorithm        
         utility.log.info("Lets get this party started!")
@@ -60,7 +59,7 @@ class Algorithm(object):
                 p_total -= delta_p[tone]
                 tone_full[tone] = True
             
-            self._calc_delta_p(line)
+            self._calc_delta_p(line,tone_full)
         else:
             utility.log.info("All Tones are full!") #Breaking statement where min(delta_p) < 0
         
@@ -144,3 +143,16 @@ class Algorithm(object):
                 delta_p[tone] = (pow(2,(line.b[tone]-1)) * 3 - 2 )* self.bundle.gamma_hat/line.cnr[tone]
             else:
                 delta_p[tone] = 100
+        return delta_p
+                
+    """
+    Update PSD's for this line
+    :from am_load.c (implicit)
+    Potentially integratable into calculatesnr?
+    """
+    def update_psds(self,line):
+        for tone in self.bundle.K:
+            line.p[tone] = utility.watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone]))
+            if (line.p[tone] < line.MINPSD) and (line.b[tone] != 0):
+                utility.log.debug("Changing p from %e to MINPSD"%line.p[tone])
+                line.p[tone] = line.MINPSD

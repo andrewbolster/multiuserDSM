@@ -24,6 +24,9 @@ class OSB(Algorithm):
         
         self.preamble
         self.w=[]
+        self.p=numpy.zeros((self.bundle.N,self.MAXBITSPERTONE+1,self.MAXBITSPERTONE+1))
+        self.b=numpy.asmatrix(numpy.zeros((self.bundle.N,self.bundle.K)))
+        
         #How the fuck does this iterate over the bundle?
         for linea in self.bundle.lines:
             for lineb in self.bundle.lines:
@@ -75,7 +78,7 @@ class OSB(Algorithm):
         power=-1.0 #initialised so that converged will work
         utility.log.info("optimise_l1(w:%f)"%(w))
         #First need to find the max permissable value of lambda_n (l1_max)
-        while sum(linea.p) < linea.p_max:
+        while sum(linea.p) < linea.p_max :
             l1_max = 2 * l1_max  #This could be replaced by a bitshift?
             self.optimise_l2(w,l1_max,linea,lineb)
 
@@ -157,7 +160,7 @@ class OSB(Algorithm):
             #turn it into a useable tuple index and assign to b_max's
             (b1_max,b2_max)=numpy.unravel_index(max, L.shape)
             
-            print L.shape,numpy.matrix.max(L),max,b1_max,b2_max
+            utility.log.debug("Shape:%s"%str(L.shape))
             
             #Update 'best' bit loads
             linea.b[k]=b1_max
@@ -177,7 +180,8 @@ class OSB(Algorithm):
     def _converged(self,line,lastpower):
         #How much convergence is satisfactory?
         e=0.01
-        return (abs(sum(line.p)-lastpower)<e)
+        #return (abs(sum(line.p)-lastpower)<e)
+        return True
     
     """
     Calculate the Lagrangian
