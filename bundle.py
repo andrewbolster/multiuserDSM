@@ -313,7 +313,7 @@ class Bundle(object):
         log.info("P:%s"%str(P))
         
         
-        
+        #FIXME This should just return [p0 p1 p2...] not [[px...]]
         return numpy.asarray(P.T) #column -> row
 
         
