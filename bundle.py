@@ -198,7 +198,7 @@ class Bundle(object):
        
         x=-55   #This is different from the NICC Model  #FUDGE
         x+= 20*log10(freq/90e3)         #f in Hz
-        x+= 6*log10(len(self.lines)-1)/(49) #n disturbers 
+        x+= 6*log10((self.N-1.0)/49)    #n disturbers 
         x+= 10*log10(length)            #shared length in km
         
         try:
@@ -234,7 +234,6 @@ class Bundle(object):
                 noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
                 line.cnr[tone] = line.gain[tone]/noise
                 #log.debug("b%d,b%e,g%e"%(line.b[tone],(pow(2,line.b[tone])-1),(self.gamma_hat/line.cnr[tone])))
-                ##Need to update p
                 line.snr[tone] = dbmhz_to_watts(line.p[tone])*line.cnr[tone]
                 print line.calc_fext_noise(tone)
                 print line.gain
@@ -277,20 +276,20 @@ class Bundle(object):
     :from psd_vector.c
     #FIXME How can this be memoised if this depends on 
     """
-    def calc_psd(self,k):
+    def calc_psd(self,bitload,gamma,k,power):
         #Generate A Matrix (See Intro.pdf 2.23)
         A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
-        for i,linea in enumerate(self.lines):
-            for j, lineb in enumerate(self.lines):
+        for i in range(self.N):
+            for j in range(self.N):
                 if i==j: 
                     A[i,j]=1
                 else:
-                    A[i,j]=self._psd_A_elem(linea, lineb, k)
+                    A[i,j]=self._psd_A_elem(i,j,bitload,gamma,k)
 
         #Generate B Matrix (same reference)
         B=numpy.asmatrix(numpy.zeros(self.N))
         for i,line in enumerate(self.lines):
-            B[0,i]=self._psd_B_elem(line, k)
+            B[0,i]=self._psd_B_elem(line,bitload,gamma,k)
         
         #Yeah, lets twist again!
         B=B.T
@@ -306,21 +305,29 @@ class Bundle(object):
         
         #Because I'm paranoid
         assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
-        #log.info("Calc_psd(b1:%d,b2:%d,k:%d)=P %s"%(b1,b2,k,P))
-        return P
+        
+        
+        
+        log.info("A:%s"%str(A))
+        log.info("B:%s"%str(B))
+        log.info("P:%s"%str(P))
+        
+        
+        
+        return numpy.asarray(P.T) #column -> row
 
         
     """
     PSD A-Element
     """
-    def _psd_A_elem(self,linea,lineb,k):
-        return -self._f(linea,k)*self.xtalk_gain[lineb.id][linea.id][k]/self.xtalk_gain[linea.id][linea.id][k]
+    def _psd_A_elem(self,i,j,bitload,gamma,k):
+        return -self._f(i,bitload,gamma)*self.xtalk_gain[i][j][k]/self.xtalk_gain[i][i][k]
     
     """
     PSD B-Element
     """
-    def _psd_B_elem(self,line,k):
-        return -self._f(line,k)*(dbmhz_to_watts(-140)+line.alien_xtalk(k))/self.xtalk_gain[line.id][line.id][k]
+    def _psd_B_elem(self,line,bitload,gamma,k):
+        return -self._f(line.id,bitload,gamma)*(line.noise+line.alien_xtalk(k))/self.xtalk_gain[line.id][line.id][k]
                     
     """
     Transfer function lookup - |h_{i,j}|^2
@@ -334,13 +341,11 @@ class Bundle(object):
     f(line,k)=\Gamma(2^{b_n(k)} -1)
     :from psd_vector.c
     """
-    def _f(self,line,k):
-        if hasattr(line,'g'):
-            g=line.g[k] #TODO gamma values from symerr.c ?
-        else:
-            g=(12.8) #I'm lazy, using default value from intro.pdf
-            
-        b=line.b[k]
+    def _f(self,lineid,bitload,gamma):
+        assert(isinstance(bitload,numpy.ndarray))
+        assert(isinstance(gamma,numpy.ndarray))
+        g=gamma[lineid] #TODO gamma values from symerr.c ?   
+        b=bitload[lineid]
         return pow(10,(g+3)/10)*(pow(2,b)-1) #TODO initially, b=0, so this doesnt work
     """    
     Pretty Print channel Matrix

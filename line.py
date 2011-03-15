@@ -19,7 +19,7 @@ class Line(object):
         self.gain = numpy.zeros(bundle.K) 
         self.p = numpy.tile(-36.5,bundle.K) #PSD of this line, initial value
         self.id = id #could this be removed as an array of lines?
-        self.noise = -140 #Assuming standard background noise
+        self.noise = utility.dbmhz_to_watts(-140) #Assuming standard background noise
         self.type = 2   #I'm assuming this declares the material of the line
                         #so in theory it can be removed from transfer_fn
 

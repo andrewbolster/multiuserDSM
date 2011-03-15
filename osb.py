@@ -5,10 +5,12 @@ Algorithm Modules
 #Global Imports
 import numpy
 import math
+import sys
 
 #Local Imports
 from bundle import Bundle
 from algorithm import Algorithm
+from line import Line
 import utility
 
 class OSB(Algorithm):
@@ -21,159 +23,169 @@ class OSB(Algorithm):
         self.rate_targets = numpy.tile(100,self.bundle.N)
         #Tolerance of rate-targets (how close is close enough)
         self.target_tolerance=1
+        #Default values
+        self.defaults={'maxval':sys.maxint*1.0,
+                       'l':0.0,
+                       'l_min':1.0,
+                       'l_max':0.0,
+                       'w':1.0/self.bundle.N,
+                       'w_max':100,
+                       'w_min':0,
+                       'p_budget':0.02818, #watts #from scenarios.c
+                       'rate_target':False,
+                       'min_step':500, #was min_sl
+                       'p_tol':0.015
+                       }
+        
+        #rate targeting #TODO
+        self.rate_targets=numpy.tile(self.defaults['rate_target'], self.bundle.N)
+        self.power_budget=numpy.tile(self.defaults['p_budget'], self.bundle.N)
+
         
         self.preamble
-        self.w=[]
-        self.p=numpy.zeros((self.bundle.N,self.MAXBITSPERTONE+1,self.MAXBITSPERTONE+1))
-        self.b=numpy.asmatrix(numpy.zeros((self.bundle.N,self.bundle.K)))
-        
-        #How the fuck does this iterate over the bundle?
-        for linea in self.bundle.lines:
-            for lineb in self.bundle.lines:
-                #Ignore comparing lines to themselves
-                if linea.id != lineb.id:
-                    self._optimise_w(linea,lineb)
-                    utility.log.info("Optimised W for %d,%d"%(linea.id,lineb.id))
-        self.postscript
-        return  
-    
-    """
-    Optimise W -Currently not used
-    """
-    def optimise_weights(self,linea,lineb):
-        
-        #FIXME There is no way this makes sense for multi-user system >2
-        if (self.rate_targets[lineb.id]==0):
-            self._optimise_w(linea,lineb)
-        elif (self.rate_targets[lineb.id]==0):
-            #Swap and carry on regardless
-            self._optimise_w(lineb,linea)
+        #Power and bitloading are dim(KxN)
+        self.p=numpy.asmatrix(numpy.zeros((self.bundle.K,self.bundle.N)))
+        self.b=numpy.asmatrix(numpy.zeros((self.bundle.K,self.bundle.N)))
+        #lambda values and weights are dim(N)
+        self.l=numpy.zeros((self.bundle.N))
+        self.w=numpy.tile(self.defaults['w'],(self.bundle.N))
+        #status tracking values
+        self.l_best=numpy.zeros((self.bundle.N))
+        self.l_last =numpy.tile(-self.defaults['maxval'],self.bundle.N)
+
+        self.w_min=numpy.zeros((self.bundle.N))
+        self.w_max=numpy.zeros((self.bundle.N))
+                              
+        #TODO Implement rate region searching
+        if (all(rate != self.defaults['rate_target'] for rate in self.rate_targets)):
+            pass
         else:
-            utility.log.error("What the fuck am I supposed to do now?!")
-        
+            self._bisect_l();
+        #init_lines() What the hell is this?
+        self.bundle.calculate_snr() #move into postscript?
+        self.postscript
+        return
     
     """
-    Optimise W- working function
+    Lambda Bisection
+    :from osb_bb.c
+    """
+    def _bisect_l(self):
+        utility.log.info("Beginning Bisection")
+        p_now = numpy.zeros(self.bundle.N)
+        while not self._l_converged():
+            for id,line in enumerate(self.bundle.lines):
+                l_min=self.defaults['l_min']
+                l_max=self.defaults['l_max']
+                self.l[id]=self.defaults['l']
+                
+                #L-range hunting
+                utility.log.info("Beginning l-range hunt;line:%d"%id)
+                while True: #FIXME there must be a better way of doing this
+                    self.optimise_p()
+                    utility.log.debug("After optimise_p(), p:%s"%str(self.total_power(line)))
+                    if self.total_power(line) > self.power_budget[id]:
+                        if (self.l[id] == self.defaults['l']):
+                            self.l[id]+=1 #0*2=0
+                        else:
+                            self.l[id]<<1 #*=2
+                    else:
+                        break
+                l_max=self.l[id]
+                l_min=self.l[id]/2.0
+                utility.log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
+
+                
+                #Actual optimisation
+                last=False #force _l_converged to do first loop
+                utility.log.info("Beginning optimisation run")            
+                while not self._l_converged(line,last):
+                    self.l[id]=(l_max+l_min)/2
+                    self.optimise_p()
+                    power=self.total_power(line)
+                    if power > self.power_budget[id]:
+                        l_min=self.l[id]
+                    else:
+                        l_max=self.l[id]
+                    last=power
+            #End line loop
+            p_now=numpy.r_(map(self.totalpower,self.bundle.lines))
+            
+                    
+                    
+    """
+    l converged
+    Decides whether the line/bundle is done
+    """
+    def _l_converged(self,line=False,last=False):
+        if isinstance(line,Line): #if called with a line
+            if last == False: 
+                return False #Force the first loop through
+            else:
+                howfar = abs(self.power_budget[line.id]-self.total_power(line))
+                return (self.total_power(line) == last or howfar < self.defaults('p_tolerance'))
+        else:
+            #if called without a line, assume operation on the bundle
+            if (self.l_last == self.l).all(): 
+                #Optimisation done since all values the same as last time
+                return True
+            else:
+                #TODO Need to add rate checking in here for rate mode
+                return False
+            
+    """
+    Total Power: return a line's planned total power
+    """
+    def total_power(self,line):
+        assert(isinstance(line,Line))
+        #swap the tone and line dimensions for cleanliness
+        #FIXME Make sure this works when N>MAXBITSPERTONE, not sure of the shape of this.
+        power = numpy.add.reduce(self.p)[0,line.id]
+        assert(isinstance(power,numpy.float64))
+        return power
     
-    """
-    def _optimise_w(self,linea,lineb):
-        w_max=1
-        w_min=0
-        while (abs(linea.rate()-self.rate_targets[linea.id]) > self.target_tolerance):
-            w=(w_max+w_min)/2.0
-            
-            self.optimise_l1(w,linea,lineb)
-            if linea.rate() > self.rate_targets[linea.id]:
-                w_max=w
-            else:
-                w_min=w
     
-    """
-    Optimise Lambda 1
-    :from OSB_original.pdf paper
-    """
-    def optimise_l1(self,w,linea,lineb):
-        l1_max=1
-        l1_min=0
-        power=-1.0 #initialised so that converged will work
-        utility.log.info("optimise_l1(w:%f)"%(w))
-        #First need to find the max permissable value of lambda_n (l1_max)
-        while sum(linea.p) < linea.p_max :
-            l1_max = 2 * l1_max  #This could be replaced by a bitshift?
-            self.optimise_l2(w,l1_max,linea,lineb)
-
-        utility.log.info("optimised_l1:max %d"%l1_max)
-            
-        while not self._converged(linea,power): #TODO
-            utility.log.debug("Not Converged:l1(%e,%e)"%(l1_min,l1_max))
-            l1 = (l1_max + l1_min)/2.0
-            self.optimise_l2(w,l1,linea,lineb)
-            power=sum(linea.p)
-            if power > linea.p_max:
-                l1_min=l1
-            else:
-                l1_max=l1
-                
-        utility.log.debug("Converged:l1(%e,%e)"%(l1_min,l1_max))
-
-            
-                
-    """
-    Optimise Lambda 2
-    :from OSB_original.pdf paper
-    """
-    def optimise_l2(self,w,l1,linea,lineb):
-        l2_max=1
-        l2_min=0
-        power=-1.0 #initialised so that converged will work
-        utility.log.info("optimise_l2(w:%f,l1:%f)"%(w,l1))
-
-        #First need to find the max permissable value of lambda_n (l1_max)
-        while sum(lineb.p) < lineb.p_max:
-            l2_max = 2 * l2_max  #This could be replaced by a bitshift?
-            self.optimise_p(w,l1,l2_max,linea,lineb)
-
-        utility.log.info("optimised_l2:max %d"%l2_max)
-        
-        while not self._converged(lineb,power): #TODO
-            utility.log.debug("Not Converged:l2(%e,%e)"%(l2_min,l2_max))
-            l2 = (l2_max + l2_min)/2.0
-            self.optimise_p(w,l1,l2,linea,lineb)
-            power=sum(lineb.p)
-            if power > lineb.p_max:
-                l2_min=l2
-            else:
-                l2_max=l2
-                
-        utility.log.debug("Converged:l2(%e,%e)"%(l2_min,l2_max))
                 
     """
     Optimise Power (aka optimise_s)
     :from OSB_original.pdf paper
     """   
-    def optimise_p(self,w,l1,l2,linea,lineb):
-        utility.log.info("optimise_p(w:%f,l1:%f,l2:%f)"%(w,l1,l2))
+    def optimise_p(self):
         #for each subchannel
-        for k in range(self.bundle.K):
-            utility.log.info("optimise_p(w:%f,l1:%f,l2:%f,k:%d)"%(w,l1,l2,k))
-            b1_max = 0 #overall max for b1
-            b2_max = 0 #overall max for b2
-            """
-            #and each bit possibility
-            for b1 in xrange(self.MAXBITSPERTONE):
-                #for both lines
-                for b2 in xrange(self.MAXBITSPERTONE):
-                    L_k=self._L(w, l1, l2, linea, lineb, k, b1, b2)
-                    if L_k > L_max:
-                        L_max = L_k
-                        #Store these new maxes
-                        b1_max = b1
-                        b2_max = b2
-                        
-                    #Powers need to be updated at some point. see PSD_vector.h
-            #end of search double loop on b's
-            """
-            #Generate full matrix of bitrate potentials
-            L=self._L_mat(w, l1, l2, linea, lineb, k)
-            #find the argmax
-            max=numpy.matrix.argmax(L)
-            #turn it into a useable tuple index and assign to b_max's
-            (b1_max,b2_max)=numpy.unravel_index(max, L.shape)
+        for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
+            utility.log.info("optimise_p(k:%d)"%k)
+            lk_max=-self.defaults['maxval']
+            #for each bit combination
+            b_combinator=utility.combinations(range(self.MAXBITSPERTONE), self.bundle.N)
+            for b_combo in b_combinator:
+                b_combo=numpy.asarray(b_combo)
+                lk=self._l_k(b_combo,k)
+                utility.log.debug("LK/LK_max:%s %s"%(lk,lk_max))
+                if lk > lk_max:
+                    lk_max=lk
+                    b_max=b_combo
+            #By now we have b_max[k]
+            self.p[k]=self.bundle.calc_psd(b_max,self.w,k,self.p)
+            utility.log.info("P:%s"%str(self.p))
+            self.b[k]=b_max
+        #Now we have b hopefully optimised
             
-            utility.log.debug("Shape:%s"%str(L.shape))
-            
-            #Update 'best' bit loads
-            linea.b[k]=b1_max
-            lineb.b[k]=b2_max
-            
-        #Update powers
-        self.bundle.calculate_snr()
-        utility.log.info("optimised_p(w:%f,l1:%f,l2:%f)=(%d,%d)"%(w,l1,l2,b1_max,b2_max))
-        
-        #The reason why this seems to make sense HERE is that
-        #in theory, the above double loop would be 'instant'.
-            
+    """
+    L_k; Return the Lagrangian given a bit-loading combination and tone
+    """
+    def _l_k(self,bitload,k):
+        #use a local p for later parallelism
+        p=self.bundle.calc_psd(bitload,self.w,k,self.p)
+        #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
+        if (p < 0).any(): #TODO Spectral Mask
+            return -self.defaults['maxval']
+        lp=numpy.multiply(self.l,p)
+        bw=numpy.multiply(bitload,self.w)
+        utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
 
+        lk=numpy.subtract.reduce(bw,lp)
+        assert(isinstance(lk,numpy.float64))
+        return lk
     """
     Convergence check for both lambda optimisations
     """                 
@@ -183,18 +195,6 @@ class OSB(Algorithm):
         #return (abs(sum(line.p)-lastpower)<e)
         return True
     
-    """
-    Calculate the Lagrangian
-    :from osb_original.pdf and osb.c
-    """
-    def _L(self,w,l1,l2,linea,lineb,k,b1,b2):
-        result=0
-        #Weighted Sections
-        result+= (w*b1+(1-w)*b2)
-        #Lagrangian Sections
-        result-= (l1*linea.p[k])*(self.bundle.calc_psd(k)[0])#this isn't supposed to be xtalk, its p_matrix. No idea where the fuck it comes from tho.
-        result-= (l2*lineb.p[k])*(self.bundle.calc_psd(k)[1])
-        return result
     
     """
     Calculate the full lagrangian matrix for all bitrates
@@ -203,16 +203,17 @@ class OSB(Algorithm):
         L0_ij=l1*linea.p[k]*P[0]
         L1_ij=l2*lineb.p[k]*P[1]
     """
-    def _L_mat(self,w,l1,l2,linea,lineb,k):
+    def _L_mat(self,gamma,l1,l2,linea,lineb,k):
         bitmax=self.MAXBITSPERTONE
         #Initialise Destination matrix
-        W=numpy.asmatrix([[ w*i+(1-w)*j for i in xrange(bitmax)] for j in xrange(bitmax)])
+        W=numpy.asmatrix([[ gamma*i+(1-gamma)*j for i in xrange(bitmax)] for j in xrange(bitmax)])
         P=self.bundle.calc_psd(k)
+        
         L0=l1*linea.p[k]*P[0]
         L1=l2*lineb.p[k]*P[1]
-        L=W-L0-L1
+        result=W-L0-L1
         
-        return L
+        return result
         
         
         
