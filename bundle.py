@@ -164,25 +164,34 @@ class Bundle(object):
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
                
         if dir == "DOWNSTREAM":                 #If DOWNSTREAM, swap nt/lt's
-            (dnt,dlt)=(xtalker.lt,xtalker.nt)
-            (vnt,vlt)=(victim.lt,victim.nt)
-        else:
-            (dnt,dlt)=(xtalker.nt,xtalker.lt)
-            (vnt,vlt)=(victim.nt,victim.lt)
+            (D1,D2)=(xtalker.lt,xtalker.nt)
+            (A,B)=(victim.lt,victim.nt)
+        else: #Upstream
+            (D1,D2)=(xtalker.nt,xtalker.lt)
+            (A,B)=(victim.nt,victim.lt)
             
+        shared_length=abs(min(B,D2)-max(A,D1))
+        head_length=abs(A-D1)
+        tail_length=B-D2
         
-        h1 = self.insertion_loss(abs(dnt-vnt), freq)
-        h2 = self.insertion_loss(max(vnt,dnt)-dlt, freq)
-        h3 = self.insertion_loss(dlt-vlt, freq)
+        h1 = self.insertion_loss(head_length, freq)
+        h2 = self.insertion_loss(shared_length, freq)
+        h3 = self.insertion_loss(tail_length, freq)
         """
         This _H takes away the biggest pain of the fext gain cases; 
         H1 > 0 in cases 1,3,4,6,7 (also acting as H4 using abs())
         H2 active in all cases, but using max(v.nt,x.lt)
         H3 > 0 in cases 1,2,3
+        
+        NB, insertion_loss(<0,f)=1
+        
+        I think AMK's Case1/9 fext(length) is wrong. Should be the
+        common length between the victim and xtalker, not the combined
+        length
         """
         H = h1*h2*h3
         
-        gain = H * self.fext(freq, max(vnt,dnt)-max(vlt,dlt))
+        gain = H * self.fext(freq, shared_length)
         #log.debug("Returned xtalk_gain: %g",gain)
 
         return gain  
@@ -272,7 +281,7 @@ class Bundle(object):
             
     
     """
-    Generate PSD vector matrix between two lines and return element
+    Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
     #FIXME How can this be memoised if this depends on 
     """
@@ -294,7 +303,7 @@ class Bundle(object):
         #Transpose B to be single-column matrix (1xN.NxN)
         B=B.T               
         assert(B.shape==(self.N,1))
-        
+        #log.debug("A,B:%s,%s"%(str(A),str(B)))
         #Everyone loves linear algebra...dont they?
         if (False): #QR or regular way?
             q,r = numpy.linalg.qr(A)
@@ -306,31 +315,29 @@ class Bundle(object):
         
         #Because I'm paranoid
         assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
-        
-        
+        P=P.T
         """
         log.info("A:%s"%str(A))
         log.info("B:%s"%str(B))
-        log.info("P:%s"%str(P))
+        log.info("P:%s"%str(P[0]))
         """
-        P=P.T
         assert(P.shape==(1,self.N))
         
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
-        return numpy.asarray(P)[0]
+        return P[0]
 
         
     """
     PSD A-Element
     """
     def _psd_A_elem(self,i,j,bitload,gamma,k):
-        return -self._f(i,bitload,gamma)*self.xtalk_gain[i][j][k]/self.xtalk_gain[i][i][k]
+        return (-self._f(i,bitload,gamma)*self.xtalk_gain[j][i][k])/self.xtalk_gain[i][i][k]
     
     """
     PSD B-Element
     """
     def _psd_B_elem(self,line,bitload,gamma,k):
-        return -self._f(line.id,bitload,gamma)*(line.noise+line.alien_xtalk(k))/self.xtalk_gain[line.id][line.id][k]
+        return self._f(line.id,bitload,gamma)*(line.noise+line.alien_xtalk(k))/self.xtalk_gain[line.id][line.id][k]
                     
     """
     Transfer function lookup - |h_{i,j}|^2

@@ -190,6 +190,10 @@ def combinations(iterable, r,type=int):
             return
         indices[i:] = [indices[i] + 1] * (r - i)
         yield tuple(pool[i] for i in indices)
+        
+#since numpy matrixes are a pain to convert to arrays
+def mat2arr(matrix):
+    return numpy.squeeze(numpy.asarray(matrix))
 
 if __name__ == "__main__":
 
