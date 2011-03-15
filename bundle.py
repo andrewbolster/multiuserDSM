@@ -10,6 +10,8 @@ import pydot
 import pyparsing
 import scipy.special as ss
 import pylab
+import pprint
+import itertools
 from math import pow,log10,sqrt
 
 #Local Imports
@@ -20,30 +22,8 @@ class Bundle(object):
     N = 0                  #Filled in on loading file, here to remind me
     lines = []            # the DSL line objects
     xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
-
     #Assuming that each bundle is going to be one medium
-    """
-    Material Parameters
-    """
-    material={
-        "r_0c"    :0,
-        "a_c"    :0,
-        "r_0s"    :0,
-        "a_s"    :0,
-    
-        "l_0"    :0,
-        "l_inf"    :0,
-    
-        "b"        :0,
-        "f_m"    :0,
-    
-        "c_inf"    :0,
-        "c_0"    :0,
-        "c_e"    :0,
-    
-        "g_0"    :0,
-        "g_e"    :0
-        }
+
     MARGIN = 3.0   #Performance Margin db
     C_G = 0        #Coding Gain db
     def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
@@ -80,7 +60,7 @@ class Bundle(object):
         self.calc_channel_matrix()
         
         log.info("Printing xtalk_gain")
-        print self.xtalk_gain
+        self.print_xtalk()
         #self.graph_channel_matrix()
         log.info("Running self check:")
         self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
@@ -283,7 +263,6 @@ class Bundle(object):
     """
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
-    #FIXME How can this be memoised if this depends on 
     """
     def calc_psd(self,bitload,gamma,k,power):
         #Generate A Matrix (See Intro.pdf 2.23)
@@ -366,3 +345,20 @@ class Bundle(object):
         pylab.contourf(self.xtalk_gain[...,0])
         pylab.figure()
         pylab.show
+    
+    """
+    Print Channel Matrix to file after generation
+    """
+    def print_cm(self,filename):
+        f=open(filename,'w')
+        
+    """
+    Print Channel Matrix to screen
+    """
+    def print_xtalk(self):
+        for tone in range(self.K):
+            print("\n%d:"%(tone)),
+            for i in range(self.N):
+                for j in range(self.N):
+                    print("%e"%self.xtalk_gain[i][j][tone]), 
+        

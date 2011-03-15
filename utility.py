@@ -16,8 +16,8 @@ h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
 log.addHandler(h)
-
-material={#taken from type 2 in transfer_fn.c
+"""
+material={#taken from type 3 in transfer_fn.c
         "r_0c"	:179,
         "a_c"	:35.89e-3,
         "r_0s"	:0,
@@ -35,7 +35,61 @@ material={#taken from type 2 in transfer_fn.c
 
         "g_0"	:0.5e-9,
         "g_e"	:1.033
-        }
+        }"""
+material=[{ # awg 26
+            "r_0c":286.17578,     # ohms/km
+            "a_c":0.14769620,
+
+            "l_0":675.36888e-6,   # H/km
+            "l_inf":488.95186e-6, # H/km
+
+            "b":0.92930728,
+            "f_m":806.33863,      # kHz  
+
+            "c_inf":49e-9,        # F/km
+            "c_0":0,
+            "c_e":0,
+
+            "g_0":43e-9,          # S/km
+            "g_e":0.70,
+            },{
+            # BT_DWUG
+            "r_0c":179,           # ohms/km
+            "a_c":35.89e-3,
+
+            "l_0":0.695e-3,       # H/km
+            "l_inf":585e-6,       # H/km
+
+            "b":1.2,
+            "f_m":1000,           # kHz  
+
+            "c_inf":55e-9,        # F/km
+            "c_0":1e-9,
+            "c_e":0.1,
+
+            "g_0":0.5e-9,         # S/km
+            "g_e":1.033
+            },{
+            # awg 24
+            "r_0c":174.55888,     # ohms/km
+            "a_c":0.053073,
+
+            "l_0":617.29e-6,      # H/km
+            "l_inf":478.97e-6,    # H/km
+
+            "b":1.1529,
+            "f_m":553.760,        # kHz  
+
+            "c_inf":50e-9,        # F/km
+            "c_0":0.0,
+            "c_e":0.0,
+
+            "g_0":234.87476e-15,  # S/km
+            "g_e":1.38,
+    }]
+
+t=2 #Type 3 in transferfn.c
+
 
 CHANNEL_BANDWIDTH = 4312.5 #from include/multiuser_load.h
 
@@ -104,54 +158,51 @@ def _R(freq):
     """
     Return R Parameter for transfer function
     """
-    c_partial = math.pow(material["a_c"]*freq*freq+math.pow(material["r_0c"],4),(0.25))
+    c_partial = math.pow(material[t]["a_c"]*freq*freq+math.pow(material[t]["r_0c"],4),(0.25))
 
-    if material["r_0s"] > 0:
-        s_partial = math.pow(material["a_s"]*math.pow(freq,2)+math.pow(material["r_0s"],4),(0.25))
-        return (c_partial*s_partial)/(c_partial+s_partial)
-    else:
+    try:
+        if material[t]["r_0s"] > 0:
+            s_partial = math.pow(material[t]["a_s"]*math.pow(freq,2)+math.pow(material[t]["r_0s"],4),(0.25))
+            return (c_partial*s_partial)/(c_partial+s_partial)
+    except KeyError:
         return c_partial
-
-    return
-
+    
 def _L(freq):
     """
     Return L Parameter for transfer function
     """
-    upper=(material["l_0"]+material["l_inf"]*math.pow(freq*1e-3/material["f_m"],material["b"]))
-    lower=(1+math.pow(freq*1e-3/material["f_m"],material["b"]))
+    upper=(material[t]["l_0"]+material[t]["l_inf"]*math.pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
+    lower=(1+math.pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
     return (upper/lower)
 
 def _C(freq):
-    return material["c_inf"]+material["c_0"]*math.pow(freq,-material["c_e"])
+    return material[t]["c_inf"]+material[t]["c_0"]*math.pow(freq,-material[t]["c_e"])
 
 def _G(freq):
-    return material["g_0"]*math.pow(freq,material["g_e"])
+    return material[t]["g_0"]*math.pow(freq,material[t]["g_e"])
 
 """
 Mathematical Utilities
 """
 def dbmhz_to_watts(psd):
-    return UndB(psd)*1e-3*CHANNEL_BANDWIDTH
-
-def UndB(input):
-    try:
-        return math.pow(10,input)
-    except ValueError:
-        log.error("Caught Exception on UndB(%f)"%input)
-        raise ValueError
+    return UndB(psd/10)*1e-3*CHANNEL_BANDWIDTH
 
 def watts_to_dbmhz(psd):
     return TodB((psd*1e3)/CHANNEL_BANDWIDTH)
 
+def UndB(input):
+    try:
+        return math.pow(10,input/10)
+    except ValueError:
+        log.error("Caught Exception on UndB(%f)"%input)
+        raise ValueError
+
 def TodB(input):
     try:
-        if input != 0.0: return 10*math.log10(input)
-        else: return 0
+        return 10*math.log10(input)
     except ValueError:
         log.error("Caught Exception on TodB(%f)"%input)
         return 0
-
 
 def freq_on_tone(K): #TODO
         """

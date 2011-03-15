@@ -84,7 +84,7 @@ class OSB(Algorithm):
                 utility.log.info("Beginning l-range hunt;line:%d"%id)
                 while True: #FIXME there must be a better way of doing this
                     self.optimise_p()
-                    utility.log.debug("After optimise_p(), p:%s"%str(self.total_power(line)))
+                    utility.log.debug("After optimise_p(), total p:%s"%str(self.total_power(line)))
                     if self.total_power(line) > self.power_budget[id]:
                         evertested=True
                         if (self.l[id] == self.defaults['l']):
@@ -92,6 +92,7 @@ class OSB(Algorithm):
                         else:
                             self.l[id]<<1 #*=2
                     else:
+                        #Continues on here but really shouldn't
                         assert(evertested==True)
                         break
                 l_max=self.l[id]
@@ -101,10 +102,11 @@ class OSB(Algorithm):
                 
                 #Actual optimisation
                 last=False #force _l_converged to do first loop
-                utility.log.info("Beginning optimisation run")            
+                utility.log.info("Beginning optimisation run;line:%d"%id)           
                 while not self._l_converged(line,last):
                     self.l[id]=(l_max+l_min)/2
                     self.optimise_p()
+                    utility.log.debug("After optimise_p(), total p:%s"%str(self.total_power(line)))                    
                     power=self.total_power(line)
                     if power > self.power_budget[id]:
                         l_min=self.l[id]
@@ -132,6 +134,7 @@ class OSB(Algorithm):
             #if called without a line, assume operation on the bundle
             if (self.l_last == self.l).all(): 
                 #Optimisation done since all values the same as last time
+                assert(self.l[0]>0)
                 return True
             else:
                 #TODO Need to add rate checking in here for rate mode
@@ -159,7 +162,6 @@ class OSB(Algorithm):
     def optimise_p(self):
         #for each subchannel
         for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
-            #utility.log.info("optimise_p(k:%d)"%k)
             lk_max=-self.defaults['maxval']
             b_max=[]
             #for each bit combination
@@ -173,7 +175,7 @@ class OSB(Algorithm):
                     b_max=b_combo
             #By now we have b_max[k]
             self.p[k]=self.bundle.calc_psd(b_max,self.w,k,self.p)
-            utility.log.info("Max[k=%d][lk=%s][bcombo=%s]%s"%(k,str(lk),str(b_max),str(self.p[k])))
+            utility.log.info("Max[k=%d][bmax=%s]%s"%(k,str(b_max),str(self.p[k])))
             self.b[k]=b_max
         #Now we have b hopefully optimised
             
@@ -197,7 +199,7 @@ class OSB(Algorithm):
         bw=np.add.reduce(bitload*self.w)
         #bw=\sum_i^N{bitload_i*w_i}
 
-        utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
+        #utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
         lk=bw-lp
         
         assert(isinstance(lk,np.float64))
