@@ -61,6 +61,8 @@ def memoize(fctn):
 Let the transfer function default to type 2;
     Allows for easy default change later
     Allows for easy 'case-based' changes
+This has been independently tested against 
+the old exe, don't screw with it without testing again
 """
 def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth to Zs/Zl come from? They do nothing!
     """
@@ -71,6 +73,7 @@ def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth t
     Should Use PyGSL, but start off with cmath
     """
     
+    #Length must be in KM
     if measure == "m":
         length /= 1000
     

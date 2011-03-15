@@ -179,9 +179,9 @@ class OSB(Algorithm):
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
-        lp=numpy.multiply(self.l,p)
+        lp=numpy.multiply(self.l,p)[0]
         bw=numpy.multiply(bitload,self.w)
-        utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
+        #utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
 
         lk=numpy.subtract.reduce(bw,lp)
         assert(isinstance(lk,numpy.float64))

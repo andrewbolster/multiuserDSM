@@ -290,10 +290,11 @@ class Bundle(object):
         B=numpy.asmatrix(numpy.zeros(self.N))
         for i,line in enumerate(self.lines):
             B[0,i]=self._psd_B_elem(line,bitload,gamma,k)
+            
+        #Transpose B to be single-column matrix (1xN.NxN)
+        B=B.T               
+        assert(B.shape==(self.N,1))
         
-        #Yeah, lets twist again!
-        B=B.T
-                
         #Everyone loves linear algebra...dont they?
         if (False): #QR or regular way?
             q,r = numpy.linalg.qr(A)
@@ -307,14 +308,16 @@ class Bundle(object):
         assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
         
         
-        
+        """
         log.info("A:%s"%str(A))
         log.info("B:%s"%str(B))
         log.info("P:%s"%str(P))
-        
+        """
+        P=P.T
+        assert(P.shape==(1,self.N))
         
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
-        return numpy.asarray(P.T) #column -> row
+        return numpy.asarray(P)[0]
 
         
     """
