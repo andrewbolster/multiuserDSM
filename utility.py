@@ -10,7 +10,7 @@ import logging
 
 # Log everything, and send it to stderr.
 log = logging.getLogger('multiuserdsm')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')

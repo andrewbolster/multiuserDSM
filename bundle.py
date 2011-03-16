@@ -85,6 +85,9 @@ class Bundle(object):
     """
     Check Normalised XT Gains and xtalk symmetry 
     :from channel_matrix.c
+    Normalised Gains arn't really needed but its just as easy to keep it in
+    XTalk symmetry needs to be checked because if all the lines are NOT the same
+    the xtalk_gain matrix can NOT be symmetric in the [i,j] axis
     """
     def check_xtalk_gains(self):
         yeses=0
@@ -110,10 +113,10 @@ class Bundle(object):
         if len(ntlt)!=1:
             #Not all the lines are the same so the xtalk matrix cannot be symmetric
             log.info("Lines are different, xtalk should not be symmetric")
-            assert (self.xtalk_gain.transpose(1, 0, 2) != self.xtalk_gain).all(), "Xtalk Symmtric"
+            assert (self.xtalk_gain.transpose(1, 0, 2) != self.xtalk_gain).all(), "Xtalk Symmetric with different lines"
         else:
             log.info("Lines are identical, xtalk should be symmetric")
-            assert (self.xtalk_gain.transpose(1, 0, 2) == self.xtalk_gain).all(), "Xtalk not Symmtric"
+            assert (self.xtalk_gain.transpose(1, 0, 2) == self.xtalk_gain).all(), "Xtalk not Symmetric with identical lines"
               
             
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
@@ -311,9 +314,9 @@ class Bundle(object):
         
         #Because I'm paranoid
         assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
-        log.info("A:\n%s"%str(A))
-        log.info("B:\n%s"%str(B))
-        log.info("P:\n%s"%str(P))
+        log.debug("A:\n%s"%str(A))
+        log.debug("B:\n%s"%str(B))
+        log.debug("P:\n%s"%str(P))
         P=P.T
 
         assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)

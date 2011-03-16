@@ -25,7 +25,7 @@ class OSB(Algorithm):
         self.target_tolerance=1
         #Default values
         self.defaults={'maxval':sys.maxint*1.0,
-                       'l':0.0,
+                       'l':0.0,             #From osb_bb.c::bisect_l()
                        'l_min':0.0,
                        'l_max':1.0,
                        'w':1.0/self.bundle.N, #should be the same for any real value
