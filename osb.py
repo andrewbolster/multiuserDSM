@@ -26,15 +26,16 @@ class OSB(Algorithm):
         #Default values
         self.defaults={'maxval':sys.maxint*1.0,
                        'l':0.0,
-                       'l_min':1.0,
-                       'l_max':0.0,
-                       'w':1.0/self.bundle.N,
+                       'l_min':0.0,
+                       'l_max':1.0,
+                       'w':1.0/self.bundle.N, #should be the same for any real value
                        'w_max':100,
                        'w_min':0,
-                       'p_budget':0.02818, #watts #from scenarios.c
+                       'p_budget':0.110,    #watts #from scenarios.c
                        'rate_target':False,
-                       'min_step':500, #was min_sl
-                       'p_tol':0.015
+                       'min_step':500,      #was min_sl
+                       'p_tol':0.015,
+                       'GAMMA':9.95
                        }
         
         #rate targeting #TODO
@@ -74,46 +75,47 @@ class OSB(Algorithm):
         utility.log.info("Beginning Bisection")
         p_now = np.zeros(self.bundle.N)
         while not self._l_converged():
-            for id,line in enumerate(self.bundle.lines):
+            for lineid,line in enumerate(self.bundle.lines):
                 l_min=self.defaults['l_min']
                 l_max=self.defaults['l_max']
-                self.l[id]=self.defaults['l']
+                self.l[lineid]=self.defaults['l']
                 
                 #L-range hunting
-                utility.log.info("Beginning l-range hunt;line:%d"%id)
+                utility.log.info("Beginning l-range hunt;line:%d"%lineid)
                 while True: #FIXME there must be a better way of doing this
-                    self.optimise_p()
+                    self.optimise_p(self.l)
                     linepower=self.total_power(line)
                     utility.log.debug("After optimise_p(), total p:%s"%str(linepower))
-                    if ( linepower > self.power_budget[id]):
-                        utility.log.info("Think We've got it:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[id])))
-                        
-                        if (self.l[id] == self.defaults['l']):
-                            self.l[id]+=1 #0*2=0
+                    #Keep increasing l until power is lower than the budget (l inversely proportional to power)
+                    if ( linepower > self.power_budget[lineid]):                        
+                        if (self.l[lineid] == self.defaults['l']):
+                            self.l[lineid]+=1 #0*2=0
                         else:
-                            self.l[id]*=2
+                            self.l[lineid]*=2
                     else:
-                        #This one's a dud
+                        utility.log.info("Satisfied power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))
                         break
-                assert(self.l[id]>=0)
-                l_max=self.l[id]
-                l_min=self.l[id]/2.0
+                assert self.l[lineid]!=0, "Tried to use a zero l[%d] value"%lineid
+                #this value is the highest that satisfies the power budget
+                l_max=self.l[lineid]
+                #but we know this value doesn't, so use it as the minimum
+                l_min=self.l[lineid]/2.0
                 utility.log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
 
                 
                 #Actual optimisation
                 last=False #force _l_converged to do first loop
-                utility.log.info("Beginning optimisation run;line:%d"%id)           
+                utility.log.info("Beginning optimisation run;line:%d"%lineid)           
                 while not self._l_converged(line,last):
-                    self.l[id]=(l_max+l_min)/2
-                    self.optimise_p()
+                    self.l[lineid]=(l_max+l_min)/2
+                    self.optimise_p(self.l)
                     utility.log.debug("After optimise_p(), total p:%s"%str(self.total_power(line)))                    
-                    power=self.total_power(line)
-                    if power > self.power_budget[id]:
-                        l_min=self.l[id]
+                    linepower=self.total_power(line)
+                    if linepower > self.power_budget[lineid]:
+                        l_min=self.l[lineid]
                     else:
-                        l_max=self.l[id]
-                    last=power
+                        l_max=self.l[lineid]
+                    last=linepower
             #End line loop
             p_now=np.asmatrix(map(self.total_power,self.bundle.lines))
         #End while loop
@@ -160,7 +162,8 @@ class OSB(Algorithm):
     Optimise Power (aka optimise_s)
     :from OSB_original.pdf paper
     """   
-    def optimise_p(self):
+    def optimise_p(self,lambdas):
+        gamma=self.defaults['GAMMA']
         #for each subchannel
         for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
             lk_max=-self.defaults['maxval']
@@ -169,13 +172,15 @@ class OSB(Algorithm):
             b_combinator=utility.combinations(range(self.MAXBITSPERTONE), self.bundle.N)
             for b_combo in b_combinator:
                 b_combo=np.asarray(b_combo)
-                lk=self._l_k(b_combo,k)
-                #utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
-                if lk >= lk_max:
+                #The lagrangian value for this bit combination
+                lk=self._l_k(b_combo,gamma,lambdas,k)
+                utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
+                if lk > lk_max:
                     lk_max=lk
                     b_max=b_combo
             #By now we have b_max[k]
-            self.p[k]=self.bundle.calc_psd(b_max,self.w,k,self.p)
+            assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
+            self.p[k]=self.bundle.calc_psd(b_max,gamma,k,self.p)
             #utility.log.info("Max[k=%d][bmax=%s]%s"%(k,str(b_max),utility.psd2str(self.p[k])))
             self.b[k]=b_max
 
@@ -183,16 +188,16 @@ class OSB(Algorithm):
             
     """
     L_k; Return the Lagrangian given a bit-loading combination and tone
+    Effectively the cost function
     """
-    def _l_k(self,bitload,k):
+    def _l_k(self,bitload,gamma,lambdas,k):
         #If anything is dialed off, theres no point in calculating this
         if (bitload <= 0).any():
             return -self.defaults['maxval']
         #use a local p for later parallelism
         #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))
-        bw=np.add.reduce(bitload*self.w)
-        #bw=\sum_i^N{bitload_i*w_i}
-        p=self.bundle.calc_psd(bitload,self.w,k,self.p)
+        
+        p=self.bundle.calc_psd(bitload,gamma,k,self.p)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
@@ -201,13 +206,24 @@ class OSB(Algorithm):
         # p is a matrix of power values required on each line[k] to support bitload[line] bits
         # l is the current lambda array #TODO parallelise?
         # bitload is the current bitload array
-        # w is the gamma-weight array
-        lp=np.add.reduce(self.l*utility.mat2arr(p))
+        # w is the omega-weight array
+        #bw=\sum_i^N{bitload_i*w_i}
         #lp=\sum_i^N{l_i*p_i}
         
-
-        #utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
+        if (False): #Are you feeling fancy?
+            bw=np.add.reduce(bitload*self.w)
+            lp=np.add.reduce(lambdas*utility.mat2arr(p))
+            
+        else: #BORING
+            bw=lp=0
+            for lineid in range(self.bundle.N):
+                bw+=bitload[lineid]*float(self.w[lineid])
+                lp+=lambdas[lineid]*utility.mat2arr(p)[lineid]
+        
         lk=bw-lp
+        
+        #utility.log.debug("LK:%s,BW:%s,LP:%s,B:%s,P:%s,W:%s,L:%s"%(str(lk),str(bw),str(lp),str(bitload),str(p),str(self.w),str(lambdas)))
+
         
         assert(isinstance(lk,np.float64))
         return lk

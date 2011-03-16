@@ -16,26 +16,8 @@ h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
 log.addHandler(h)
-"""
-material={#taken from type 3 in transfer_fn.c
-        "r_0c"	:179,
-        "a_c"	:35.89e-3,
-        "r_0s"	:0,
-        "a_s"	:0,
 
-        "l_0"	:0.695e-3,
-        "l_inf"	:585e-6,
 
-        "b"		:1.2,
-        "f_m"	:1000,
-
-        "c_inf"	:55e-9,
-        "c_0"	:1e-9,
-        "c_e"	:0.1,
-
-        "g_0"	:0.5e-9,
-        "g_e"	:1.033
-        }"""
 material=[{ # awg 26
             "r_0c":286.17578,     # ohms/km
             "a_c":0.14769620,

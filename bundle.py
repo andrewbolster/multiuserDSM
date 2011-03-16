@@ -28,9 +28,7 @@ class Bundle(object):
     C_G = 0        #Coding Gain db
     def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
         self.K = int(K)                # the number of DMT channels
-
         self.GAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
-        
         self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
 
 
@@ -64,6 +62,7 @@ class Bundle(object):
         #self.graph_channel_matrix()
         log.info("Running self check:")
         self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
+        self.print_xtalk_onetone(self.K/2)
         
 
 
@@ -80,6 +79,7 @@ class Bundle(object):
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                     #log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
+        assert(not numpy.allclose(self.xtalk_gain[0].T,self.xtalk_gain[0]))
     
     """
     Check Normalised XT Gains
@@ -102,6 +102,20 @@ class Bundle(object):
             gainratio=[self.xtalk_gain[x,v,k]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
             yeses+=len([1 for i in gainratio if i>0.5])
         
+        #Check symmetry if all lines are the same
+        ntlt=set([(line.nt,line.lt) for line in self.lines])
+        if len(ntlt)!=1:
+            #Not all the lines are the same so the xtalk matrix cannot be symmetric
+            log.info("Lines are different, xtalk should not be symmetric")
+            for k in range(self.K):
+                assert (self.xtalk_gain[:,:,k].T!=self.xtalk_gain[:,:,k]).all()==True, "Xtalk Symmtric on tone %d"%k
+        else:
+            log.info("Lines are identical, xtalk should be symmetric")
+            for k in range(self.K):
+                assert (self.xtalk_gain[:,:,k].T==self.xtalk_gain[:,:,k]).all()==True, "Xtalk Not Symmtric on tone %d"%k
+            
+        log.info("%s"%str(ntlt))
+            
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
     
     """
@@ -294,13 +308,15 @@ class Bundle(object):
         
         #Because I'm paranoid
         assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
+        """
+        log.info("A:\n%s"%str(A))
+        log.info("B:\n%s"%str(B))
+        log.info("P:\n%s"%str(P))
+        """
         P=P.T
-        """
-        log.info("A:%s"%str(A))
-        log.info("B:%s"%str(B))
-        log.info("P:%s"%str(P[0]))
-        """
-        assert(P.shape==(1,self.N))
+
+        assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
+        #assert (P>0).any(),"Zero or Negative P\n%s"%str(P) #TODO Spectral Mask?
         
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
         return P[0]
@@ -331,9 +347,9 @@ class Bundle(object):
     :from psd_vector.c
     """
     def _f(self,lineid,bitload,gamma):
-        assert(isinstance(bitload,numpy.ndarray))
-        assert(isinstance(gamma,numpy.ndarray))
-        g=gamma[lineid] #TODO gamma values from symerr.c ?   
+        assert isinstance(bitload,numpy.ndarray) and len(bitload)>0,"WTF is this bitload? %s,%s"%(str(bitload),type(bitload))
+        assert(isinstance(gamma,float))
+        g=gamma #TODO gamma values from symerr.c ? initially 9.95 for osb  
         b=bitload[lineid]
         return pow(10,(g+3)/10)*(pow(2,b)-1) #TODO initially, b=0, so this doesnt work
     """    
@@ -361,4 +377,14 @@ class Bundle(object):
             for i in range(self.N):
                 for j in range(self.N):
                     print("%e"%self.xtalk_gain[i][j][tone]), 
+    
+    """
+    Print Channel Matrix to screen
+    """
+    def print_xtalk_onetone(self,tone):
+        print("\n%d:"%(tone))
+        for i in range(self.N):
+            print("")
+            for j in range(self.N):
+                print("%e"%self.xtalk_gain[i][j][tone]), 
         
