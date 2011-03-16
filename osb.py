@@ -80,21 +80,22 @@ class OSB(Algorithm):
                 self.l[id]=self.defaults['l']
                 
                 #L-range hunting
-                evertested=False
                 utility.log.info("Beginning l-range hunt;line:%d"%id)
                 while True: #FIXME there must be a better way of doing this
                     self.optimise_p()
-                    utility.log.debug("After optimise_p(), total p:%s"%str(self.total_power(line)))
-                    if self.total_power(line) > self.power_budget[id]:
-                        evertested=True
+                    linepower=self.total_power(line)
+                    utility.log.debug("After optimise_p(), total p:%s"%str(linepower))
+                    if ( linepower > self.power_budget[id]):
+                        utility.log.info("Think We've got it:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[id])))
+                        
                         if (self.l[id] == self.defaults['l']):
                             self.l[id]+=1 #0*2=0
                         else:
-                            self.l[id]<<1 #*=2
+                            self.l[id]*=2
                     else:
-                        #Continues on here but really shouldn't
-                        assert(evertested==True)
+                        #This one's a dud
                         break
+                assert(self.l[id]>=0)
                 l_max=self.l[id]
                 l_min=self.l[id]/2.0
                 utility.log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
@@ -175,29 +176,35 @@ class OSB(Algorithm):
                     b_max=b_combo
             #By now we have b_max[k]
             self.p[k]=self.bundle.calc_psd(b_max,self.w,k,self.p)
-            utility.log.info("Max[k=%d][bmax=%s]%s"%(k,str(b_max),str(self.p[k])))
+            #utility.log.info("Max[k=%d][bmax=%s]%s"%(k,str(b_max),utility.psd2str(self.p[k])))
             self.b[k]=b_max
+
         #Now we have b hopefully optimised
             
     """
     L_k; Return the Lagrangian given a bit-loading combination and tone
     """
     def _l_k(self,bitload,k):
+        #If anything is dialed off, theres no point in calculating this
+        if (bitload <= 0).any():
+            return -self.defaults['maxval']
         #use a local p for later parallelism
         #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))
+        bw=np.add.reduce(bitload*self.w)
+        #bw=\sum_i^N{bitload_i*w_i}
         p=self.bundle.calc_psd(bitload,self.w,k,self.p)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
-        
+        #utility.log.error("%d:%s:P<0:%s"%(k,str(bitload),utility.psd2str(p)))
+
         # p is a matrix of power values required on each line[k] to support bitload[line] bits
         # l is the current lambda array #TODO parallelise?
         # bitload is the current bitload array
         # w is the gamma-weight array
         lp=np.add.reduce(self.l*utility.mat2arr(p))
         #lp=\sum_i^N{l_i*p_i}
-        bw=np.add.reduce(bitload*self.w)
-        #bw=\sum_i^N{bitload_i*w_i}
+        
 
         #utility.log.debug("LP:%s,BW:%s,p:%s,l:%s"%(str(lp),str(bw),str(p),str(self.l)))
         lk=bw-lp

@@ -185,7 +185,7 @@ def _G(freq):
 Mathematical Utilities
 """
 def dbmhz_to_watts(psd):
-    return UndB(psd/10)*1e-3*CHANNEL_BANDWIDTH
+    return UndB(psd)*1e-3*CHANNEL_BANDWIDTH
 
 def watts_to_dbmhz(psd):
     return TodB((psd*1e3)/CHANNEL_BANDWIDTH)
@@ -245,6 +245,11 @@ def combinations(iterable, r,type=int):
 #since numpy matrixes are a pain to convert to arrays
 def mat2arr(matrix):
     return numpy.squeeze(numpy.asarray(matrix))
+
+#makes things human
+def psd2str(psd):
+    assert(isinstance(psd,numpy.core.defmatrix.matrix))
+    return str(map(watts_to_dbmhz,mat2arr(psd)))
 
 if __name__ == "__main__":
 
