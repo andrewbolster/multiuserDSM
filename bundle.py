@@ -59,10 +59,11 @@ class Bundle(object):
         
         log.info("Printing xtalk_gain")
         self.print_xtalk()
+        self.print_xtalk_onetone(self.K/2)
+
         #self.graph_channel_matrix()
         log.info("Running self check:")
         self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
-        self.print_xtalk_onetone(self.K/2)
         
 
 
@@ -82,7 +83,7 @@ class Bundle(object):
         assert(not numpy.allclose(self.xtalk_gain[0].T,self.xtalk_gain[0]))
     
     """
-    Check Normalised XT Gains
+    Check Normalised XT Gains and xtalk symmetry 
     :from channel_matrix.c
     """
     def check_xtalk_gains(self):
@@ -104,17 +105,16 @@ class Bundle(object):
         
         #Check symmetry if all lines are the same
         ntlt=set([(line.nt,line.lt) for line in self.lines])
+        log.info("%s"%str(ntlt))
+
         if len(ntlt)!=1:
             #Not all the lines are the same so the xtalk matrix cannot be symmetric
             log.info("Lines are different, xtalk should not be symmetric")
-            for k in range(self.K):
-                assert (self.xtalk_gain[:,:,k].T!=self.xtalk_gain[:,:,k]).all()==True, "Xtalk Symmtric on tone %d"%k
+            assert (self.xtalk_gain.transpose(1, 0, 2) != self.xtalk_gain).all(), "Xtalk Symmtric"
         else:
             log.info("Lines are identical, xtalk should be symmetric")
-            for k in range(self.K):
-                assert (self.xtalk_gain[:,:,k].T==self.xtalk_gain[:,:,k]).all()==True, "Xtalk Not Symmtric on tone %d"%k
-            
-        log.info("%s"%str(ntlt))
+            assert (self.xtalk_gain.transpose(1, 0, 2) == self.xtalk_gain).all(), "Xtalk not Symmtric"
+              
             
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
     
@@ -132,7 +132,7 @@ class Bundle(object):
             victim and xtalker == length (5)
         victim lt < xtalker lt
             victim nt < xtalker nt (1/9)
-            victim nt < xtalker nt (3)
+            victim nt > xtalker nt (3)
         victim lt > xtalker lt
             victim nt > xtalker nt (9/1)
             victim nt < xtalker nt (7)
@@ -164,8 +164,11 @@ class Bundle(object):
             (D1,D2)=(xtalker.nt,xtalker.lt)
             (A,B)=(victim.nt,victim.lt)
             
+        #Shared length is the H2 Span
         shared_length=abs(min(B,D2)-max(A,D1))
+        #Head Length is the H1/H4 Span
         head_length=abs(A-D1)
+        #Tail Length is the H3 Span
         tail_length=B-D2
         
         h1 = self.insertion_loss(head_length, freq)
@@ -308,11 +311,9 @@ class Bundle(object):
         
         #Because I'm paranoid
         assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
-        """
         log.info("A:\n%s"%str(A))
         log.info("B:\n%s"%str(B))
         log.info("P:\n%s"%str(P))
-        """
         P=P.T
 
         assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
