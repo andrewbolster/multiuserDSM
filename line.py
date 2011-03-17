@@ -15,12 +15,12 @@ class Line(object):
         self.bundle = bundle
         self.nt = int(nt)
         self.lt = int(lt)
-        self.length = self.nt - self.lt
+        self.length = abs(self.nt - self.lt)
         self.gain = numpy.zeros(bundle.K) 
         self.p = numpy.tile(-36.5,bundle.K) #PSD of this line, initial value
         self.id = id #could this be removed as an array of lines?
         self.noise = utility.dbmhz_to_watts(-140) #Assuming standard background noise
-        self.type = 2   #I'm assuming this declares the material of the line
+        self.type = 3   #I'm assuming this declares the material of the line
                         #so in theory it can be removed from transfer_fn
 
         self.p_total = 0    #configured in bundle.calculate_snr
@@ -51,7 +51,7 @@ class Line(object):
     """   
     def transfer_fn(self, freq):
         #C Version uses bundle as a linked list of lines so most of this function is redundant.
-        return utility.do_transfer_function(abs(self.length), freq ,type=self.type)
+        return utility.do_transfer_function(abs(self.length), freq ,measure="m", type=self.type)
     
     """
     Line Sanity Check

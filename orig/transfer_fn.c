@@ -148,7 +148,7 @@ double do_transfer_fn(int type, double length, double f)
         C = C_inf + c_0*pow(f,-c_e);
         G = g_0 * pow(f,g_e);
 
-	//printf("f=%lf\tR = %lf\tL = %e\tC = %e G = %e\n",f,R,L,C,G);
+	printf("f=%lf\tR = %lf\tL = %e\tC = %e G = %e\n",f,R,L,C,G);
 	//getchar();
 
         GSL_SET_COMPLEX(&Z,R,w*L);      // set impedance per unit length

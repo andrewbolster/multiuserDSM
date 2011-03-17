@@ -25,7 +25,7 @@ class OSB(Algorithm):
         self.target_tolerance=1
         #Default values
         self.defaults={'maxval':sys.maxint*1.0,
-                       'l':0.0,             #From osb_bb.c::bisect_l()
+                       'l':0.0,             #From osb_bb.c::bisect_l() (modified from 0)
                        'l_min':0.0,
                        'l_max':1.0,
                        'w':1.0/self.bundle.N, #should be the same for any real value
@@ -45,7 +45,7 @@ class OSB(Algorithm):
         
         self.preamble
         #Power and bitloading are dim(KxN)
-        self.p=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))
+        self.p=np.zeros((self.bundle.K,self.bundle.N))
         self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))
         #lambda values and weights are dim(N)
         self.l=np.zeros((self.bundle.N))
@@ -85,9 +85,9 @@ class OSB(Algorithm):
                 while True: #FIXME there must be a better way of doing this
                     self.optimise_p(self.l)
                     linepower=self.total_power(line)
-                    utility.log.debug("After optimise_p(), total p:%s"%str(linepower))
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
-                    if ( linepower > self.power_budget[lineid]):                        
+                    if ( linepower > self.power_budget[lineid]): 
+                        utility.log.debug("Missed power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))                      
                         if (self.l[lineid] == self.defaults['l']):
                             self.l[lineid]+=1 #0*2=0
                         else:
@@ -174,14 +174,14 @@ class OSB(Algorithm):
                 b_combo=np.asarray(b_combo)
                 #The lagrangian value for this bit combination
                 lk=self._l_k(b_combo,gamma,lambdas,k)
-                utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
+                #utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
                 if lk > lk_max:
                     lk_max=lk
                     b_max=b_combo
             #By now we have b_max[k]
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,gamma,k,self.p)
-            #utility.log.info("Max[k=%d][bmax=%s]%s"%(k,str(b_max),utility.psd2str(self.p[k])))
+            utility.log.debug("Max[k=%d][bmax=%s]%s"%(k,str(b_max),self.p[k]))
             self.b[k]=b_max
 
         #Now we have b hopefully optimised
@@ -212,13 +212,13 @@ class OSB(Algorithm):
         
         if (False): #Are you feeling fancy?
             bw=np.add.reduce(bitload*self.w)
-            lp=np.add.reduce(lambdas*utility.mat2arr(p))
+            lp=np.add.reduce(lambdas*p)
             
         else: #BORING
             bw=lp=0
             for lineid in range(self.bundle.N):
                 bw+=bitload[lineid]*float(self.w[lineid])
-                lp+=lambdas[lineid]*utility.mat2arr(p)[lineid]
+                lp+=lambdas[lineid]*p[lineid]
         
         lk=bw-lp
         

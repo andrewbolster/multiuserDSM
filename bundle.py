@@ -19,14 +19,13 @@ from utility import *
 from line import Line
 
 class Bundle(object):
-    N = 0                  #Filled in on loading file, here to remind me
-    lines = []            # the DSL line objects
-    xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
-    #Assuming that each bundle is going to be one medium
-
     MARGIN = 3.0   #Performance Margin db
     C_G = 0        #Coding Gain db
     def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
+        self.N = 0                  #Filled in on loading file, here to remind me
+        self.lines = []            # the DSL line objects
+        self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
+        #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
         self.GAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
         self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
@@ -52,14 +51,12 @@ class Bundle(object):
 
 
         log.info("Calculating the channel matrix")
-        #Initialise the gains
-        self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
         #The real work begins
         self.calc_channel_matrix()
         
         log.info("Printing xtalk_gain")
         self.print_xtalk()
-        self.print_xtalk_onetone(self.K/2)
+        self.print_xtalk_onetone(0)
 
         #self.graph_channel_matrix()
         log.info("Running self check:")
@@ -71,7 +68,9 @@ class Bundle(object):
     Calculates the bundle channel gain matrix, generating xtalk_gain[][][]
     :from channel_matrix.c
     """
-    def calc_channel_matrix(self): #TODO
+    def calc_channel_matrix(self):
+        #Initialise the gains
+        self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
         for k in range(self.K):                         #For Each Tone
             for i,li in enumerate(self.lines):          #Between Every Victim
                 for j,lj in enumerate(self.lines):      # and every xtalker
@@ -80,7 +79,6 @@ class Bundle(object):
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                     #log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
-        assert(not numpy.allclose(self.xtalk_gain[0].T,self.xtalk_gain[0]))
     
     """
     Check Normalised XT Gains and xtalk symmetry 
@@ -109,14 +107,17 @@ class Bundle(object):
         #Check symmetry if all lines are the same
         ntlt=set([(line.nt,line.lt) for line in self.lines])
         log.info("%s"%str(ntlt))
-
+        
         if len(ntlt)!=1:
             #Not all the lines are the same so the xtalk matrix cannot be symmetric
             log.info("Lines are different, xtalk should not be symmetric")
-            assert (self.xtalk_gain.transpose(1, 0, 2) != self.xtalk_gain).all(), "Xtalk Symmetric with different lines"
+            for k in range(self.K):
+                assert (self.xtalk_gain[:,:,k].T!=self.xtalk_gain[:,:,k]).all()==False, "Xtalk Symmtric on tone %d"%k
+
         else:
             log.info("Lines are identical, xtalk should be symmetric")
-            assert (self.xtalk_gain.transpose(1, 0, 2) == self.xtalk_gain).all(), "Xtalk not Symmetric with identical lines"
+            for k in range(self.K):
+                assert (self.xtalk_gain[:,:,k].T!=self.xtalk_gain[:,:,k]).any()==True, "Xtalk Not Symmtric on tone %d"%k
               
             
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
@@ -160,19 +161,19 @@ class Bundle(object):
     """
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
                
-        if dir == "DOWNSTREAM":                 #If DOWNSTREAM, swap nt/lt's
-            (D1,D2)=(xtalker.lt,xtalker.nt)
-            (A,B)=(victim.lt,victim.nt)
+        if dir == "DOWNSTREAM":                 #If DOWNSTREAM, swap  and negate nt/lt's
+            (D1,D2)=(-xtalker.lt,-xtalker.nt)
+            (A,B)=(-victim.lt,-victim.nt)
         else: #Upstream
             (D1,D2)=(xtalker.nt,xtalker.lt)
             (A,B)=(victim.nt,victim.lt)
             
         #Shared length is the H2 Span
-        shared_length=abs(min(B,D2)-max(A,D1))
+        shared_length=abs(max(B,D2)-min(A,D1))/1000
         #Head Length is the H1/H4 Span
-        head_length=abs(A-D1)
+        head_length=abs(A-D1)/1000
         #Tail Length is the H3 Span
-        tail_length=B-D2
+        tail_length=(B-D2)/1000
         
         h1 = self.insertion_loss(head_length, freq)
         h2 = self.insertion_loss(shared_length, freq)
@@ -192,12 +193,14 @@ class Bundle(object):
         H = h1*h2*h3
         
         gain = H * self.fext(freq, shared_length)
-        #log.debug("Returned xtalk_gain: %g",gain)
+        log.debug("A:%d,B:%d,D1:%d,D2:%d"%(A,B,D1,D2))
+        log.debug("H1:%f,H2:%f,H3:%f"%(head_length,shared_length,tail_length))
+        log.debug("Returned xtalk_gain: %g: H1:%g,H2:%g,H3:%g,FXT:%g",gain,h1,h2,h3,self.fext(freq, shared_length))
 
         return gain  
     
     """
-    Calculate FEXT for given Freq and Length
+    Calculate FEXT for given Freq and Length in m
     Uses:
         UndB
     Model from BT's simulation parameters document cp38-2 http://www.niccstandards.org.uk/files/current/NICC%20ND%201513%20(2010-01).pdf
@@ -207,8 +210,8 @@ class Bundle(object):
        
         x=-55   #This is different from the NICC Model  #FUDGE
         x+= 20*log10(freq/90e3)         #f in Hz
-        x+= 6*log10((self.N-1.0)/49)    #n disturbers 
-        x+= 10*log10(length)            #shared length in km
+        x+= 6*log10(float(self.N-1)/49)    #n disturbers 
+        x+= 10*log10(length)       #shared length in km
         
         try:
             return UndB(x)
@@ -321,9 +324,9 @@ class Bundle(object):
 
         assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
         #assert (P>0).any(),"Zero or Negative P\n%s"%str(P) #TODO Spectral Mask?
-        
+        #log.debug("P[0]:%s%s"%(str(mat2arr(P[0])),type(mat2arr(P[0]))))
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
-        return P[0]
+        return mat2arr(P[0])
 
         
     """
@@ -355,7 +358,9 @@ class Bundle(object):
         assert(isinstance(gamma,float))
         g=gamma #TODO gamma values from symerr.c ? initially 9.95 for osb  
         b=bitload[lineid]
-        return pow(10,(g+3)/10)*(pow(2,b)-1) #TODO initially, b=0, so this doesnt work
+        result=pow(10,(g+3)/10)*(pow(2,b)-1)
+        log.debug("f:%f,g:%f,b:%d"%(result,g,b))
+        return result #TODO initially, b=0, so this doesnt work
     """    
     Pretty Print channel Matrix
     #TODO I've got no idea how to display this....

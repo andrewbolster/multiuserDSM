@@ -3,14 +3,14 @@
 __author__="bolster"
 __date__ ="$02-Dec-2010 18:48:38$"
 
-import math, cmath, numpy, array, scipy.special as sps
+import math, cmath, numpy, scipy.special as sps
 import functools,cPickle
 
 import logging
 
 # Log everything, and send it to stderr.
 log = logging.getLogger('multiuserdsm')
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
@@ -92,15 +92,12 @@ def memoize(fctn):
             memo.__doc__ = "\n".join([memo.__doc__,"This function is memoized."])
         return memo   
 
-
 """
 Let the transfer function default to type 2;
     Allows for easy default change later
     Allows for easy 'case-based' changes
-This has been independently tested against 
-the old exe, don't screw with it without testing again
 """
-def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth to Zs/Zl come from? They do nothing!
+def do_transfer_function(length,freq,type=3, measure="m"):
     """
     Z=impedance/l, Y=admittance/l
     Z=R+jwL, Y=G+jwC
@@ -133,6 +130,7 @@ def do_transfer_function(length,freq,type=2, measure="m"):#TODO Where on earth t
     lower = Zs * ( (Z0/Zl) + cmath.tanh(gammad) ) + Z0 * ( 1+ (Z0/Zl)*cmath.tanh(gammad) )
 
     H = upper/lower
+    H*=H
     #log.debug("Returned Transfer Function: %g",cmath.polar(H)[0])
     return cmath.polar(H)[0]        #polar returns (abs(h),real(h))
 
@@ -230,9 +228,14 @@ def mat2arr(matrix):
 
 #makes things human
 def psd2str(psd):
-    assert(isinstance(psd,numpy.core.defmatrix.matrix))
-    return str(map(watts_to_dbmhz,mat2arr(psd)))
+    assert(isinstance(psd,numpy.ndarray))
+    return str(map(watts_to_dbmhz,psd))
 
 if __name__ == "__main__":
 
-    print do_transfer_function(2,8.5e4)
+    test_len=3000
+    test_f=freq_on_tone(0)
+    test_result=0.000853
+    
+    mine=do_transfer_function(test_len,test_f)
+    assert mine == test_result, "Transfer function isn't right"

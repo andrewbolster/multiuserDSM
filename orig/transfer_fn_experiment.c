@@ -23,7 +23,7 @@ main()
 	printf("Enter frequency in Hz > ");
 	scanf("%lf",&freq);
 
-	printf("transfer_fn(%d,%lf,%lf) = %lf\n",type,length,freq,do_transfer_fn(type,length,freq));
+	printf("transfer_fn(%d,%lf,%lf) = %e\n",type,length,freq,do_transfer_fn(type,length,freq));
 }
 
 #endif
@@ -162,7 +162,13 @@ double do_transfer_fn(int type, double length, double f)
 
         denom1 = gsl_complex_mul(Z_s,gsl_complex_add(gsl_complex_div(Z_0,Z_l),gsl_complex_tanh(gammad))); // denom1=Z_s(Z_0/Z_l + tanh(gammad))
 
-        denom2 = gsl_complex_mul(Z_0,gsl_complex_add_real(gsl_complex_mul(gsl_complex_div(Z_0,Z_l),gsl_complex_tanh(gammad)),1));
+        denom2 = gsl_complex_mul(Z_0,
+        			gsl_complex_add_real(
+        					gsl_complex_mul(
+        							gsl_complex_div(Z_0,Z_l),
+        					gsl_complex_tanh(gammad))
+					,1)
+				);
 
         H = gsl_complex_div(top,gsl_complex_add(denom1,denom2));
 
