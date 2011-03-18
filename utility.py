@@ -109,6 +109,9 @@ def do_transfer_function(length,freq,type=3, measure="m"):
     #Length must be in KM
     if measure == "m":
         length /= 1000
+    elif measure == "km":
+        pass
+    else: raise TypeError('Improper measurement scale used') 
     
     w = 2 * math.pi * freq
 
@@ -167,8 +170,8 @@ Mathematical Utilities
 def dbmhz_to_watts(psd):
     return UndB(psd)*1e-3*CHANNEL_BANDWIDTH
 
-def watts_to_dbmhz(psd):
-    return TodB((psd*1e3)/CHANNEL_BANDWIDTH)
+def watts_to_dbmhz(e):
+    return TodB((e*1e3)/CHANNEL_BANDWIDTH)
 
 def UndB(input):
     try:

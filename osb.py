@@ -6,6 +6,7 @@ Algorithm Modules
 import numpy as np
 import math
 import sys
+import logging
 
 #Local Imports
 from bundle import Bundle
@@ -31,7 +32,7 @@ class OSB(Algorithm):
                        'w':1.0/self.bundle.N, #should be the same for any real value
                        'w_max':100,
                        'w_min':0,
-                       'p_budget':0.110,    #watts #from scenarios.c
+                       'p_budget':0.110,    #watts #from scenarios.c (0.110
                        'rate_target':False,
                        'min_step':500,      #was min_sl
                        'p_tol':0.015,
@@ -87,13 +88,14 @@ class OSB(Algorithm):
                     linepower=self.total_power(line)
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
                     if ( linepower > self.power_budget[lineid]): 
-                        utility.log.debug("Missed power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))                      
+                        utility.log.info("Missed power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))                      
                         if (self.l[lineid] == self.defaults['l']):
                             self.l[lineid]+=1 #0*2=0
                         else:
                             self.l[lineid]*=2
                     else:
                         utility.log.info("Satisfied power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))
+                        
                         break
                 assert self.l[lineid]!=0, "Tried to use a zero l[%d] value"%lineid
                 #this value is the highest that satisfies the power budget
@@ -150,9 +152,9 @@ class OSB(Algorithm):
         if isinstance(line,Line):
             #swap the tone and line dimensions for cleanliness
             #FIXME Make sure this works when N>MAXBITSPERTONE, not sure of the shape of this.
-            power = np.add.reduce(self.p)[0,line.id]
+            power = np.add.reduce(self.p)[line.id]
         else: 
-            power = np.add.reduce(np.add.reduce(self.p),axis=1)[0,0]
+            power = np.add.reduce(np.add.reduce(self.p))[0,0]
         assert(isinstance(power,np.float64))
         return power
     
@@ -181,7 +183,7 @@ class OSB(Algorithm):
             #By now we have b_max[k]
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,gamma,k,self.p)
-            utility.log.debug("Max[k=%d][bmax=%s]%s"%(k,str(b_max),self.p[k]))
+            utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepower=%s]"%(k,str(b_max),str(lambdas),str(self.total_power(self.bundle.lines[0]))))
             self.b[k]=b_max
 
         #Now we have b hopefully optimised
@@ -196,8 +198,9 @@ class OSB(Algorithm):
             return -self.defaults['maxval']
         #use a local p for later parallelism
         #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))
-        
+        utility.log.setLevel(logging.INFO)
         p=self.bundle.calc_psd(bitload,gamma,k,self.p)
+        utility.log.setLevel(logging.DEBUG)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']

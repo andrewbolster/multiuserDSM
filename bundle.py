@@ -75,9 +75,9 @@ class Bundle(object):
             for i,li in enumerate(self.lines):          #Between Every Victim
                 for j,lj in enumerate(self.lines):      # and every xtalker
                     if i == j:                          #If you're talking to yourself, do lazy transfer_fn
-                        li.gain[k] = self.xtalk_gain[i,j,k] = li.transfer_fn(freq_on_tone(k))
+                        li.gain[k] = self.xtalk_gain[i][j][k] = li.transfer_fn(freq_on_tone(k))
                     else:                               #Otherwise look at XT
-                        self.xtalk_gain[i,j,k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
+                        self.xtalk_gain[i][j][k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                     #log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
     
     """
@@ -169,9 +169,9 @@ class Bundle(object):
             (A,B)=(victim.nt,victim.lt)
             
         #Shared length is the H2 Span
-        shared_length=abs(max(B,D2)-min(A,D1))/1000
+        shared_length=abs(max(A,D1)-min(B,D2))/1000
         #Head Length is the H1/H4 Span
-        head_length=abs(A-D1)/1000
+        head_length=(A-D1)/1000
         #Tail Length is the H3 Span
         tail_length=(B-D2)/1000
         
@@ -180,9 +180,10 @@ class Bundle(object):
         h3 = self.insertion_loss(tail_length, freq)
         """
         This _H takes away the biggest pain of the fext gain cases; 
-        H1 > 0 in cases 1,3,4,6,7 (also acting as H4 using abs())
+        H1 > 0 in cases 1,3,4,6,7
         H2 active in all cases, but using max(v.nt,x.lt)
         H3 > 0 in cases 1,2,3
+        H4 Not relevent for FEXT
         
         NB, insertion_loss(<0,f)=1
         
@@ -228,7 +229,7 @@ class Bundle(object):
         it is looking at a common length between two lines
         """
         if length > 0:
-            return do_transfer_function(length,freq )
+            return do_transfer_function(length,freq,measure="km")
         else: 
             return 1 #Leads straight into multiplication; so ends up x*0=0 otherwise
     
@@ -288,19 +289,16 @@ class Bundle(object):
     :from psd_vector.c
     """
     def calc_psd(self,bitload,gamma,k,power):
-        #Generate A Matrix (See Intro.pdf 2.23)
+        #Generate Matrices (See Intro.pdf 2.23)
         A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
+        B=numpy.asmatrix(numpy.zeros(self.N))
         for i in range(self.N):
             for j in range(self.N):
                 if i==j: 
                     A[i,j]=1
                 else:
-                    A[i,j]=self._psd_A_elem(i,j,bitload,gamma,k)
-
-        #Generate B Matrix (same reference)
-        B=numpy.asmatrix(numpy.zeros(self.N))
-        for i,line in enumerate(self.lines):
-            B[0,i]=self._psd_B_elem(line,bitload,gamma,k)
+                    A[i,j]=(-self._f(i,bitload,gamma)*self.xtalk_gain[i][j][k])/self.xtalk_gain[i][i][k]
+            B[0,i]=self._f(i,bitload,gamma)*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
             
         #Transpose B to be single-column matrix (1xN.NxN)
         B=B.T               
@@ -332,15 +330,9 @@ class Bundle(object):
     """
     PSD A-Element
     """
-    def _psd_A_elem(self,i,j,bitload,gamma,k):
-        return (-self._f(i,bitload,gamma)*self.xtalk_gain[j][i][k])/self.xtalk_gain[i][i][k]
-    
-    """
-    PSD B-Element
-    """
-    def _psd_B_elem(self,line,bitload,gamma,k):
-        return self._f(line.id,bitload,gamma)*(line.noise+line.alien_xtalk(k))/self.xtalk_gain[line.id][line.id][k]
-                    
+    def _psd_A_elem(self,i,j,bitload,gamma,k): #Transfer gain from victim i to xtalker j
+        return 
+   
     """
     Transfer function lookup - |h_{i,j}|^2
     This more or less does nothing but return xtalk_gain but is closer to the math
@@ -359,7 +351,7 @@ class Bundle(object):
         g=gamma #TODO gamma values from symerr.c ? initially 9.95 for osb  
         b=bitload[lineid]
         result=pow(10,(g+3)/10)*(pow(2,b)-1)
-        log.debug("f:%f,g:%f,b:%d"%(result,g,b))
+        #log.debug("f:%f,g:%f,b:%d"%(result,g,b))
         return result #TODO initially, b=0, so this doesnt work
     """    
     Pretty Print channel Matrix
