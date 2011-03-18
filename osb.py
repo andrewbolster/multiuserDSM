@@ -29,14 +29,14 @@ class OSB(Algorithm):
                        'l':0.0,             #From osb_bb.c::bisect_l() (modified from 0)
                        'l_min':0.0,
                        'l_max':1.0,
-                       'w':1.0/self.bundle.N, #should be the same for any real value
+                       'w':10.0, #same behaviour for any real value
                        'w_max':100,
                        'w_min':0,
                        'p_budget':0.110,    #watts #from scenarios.c (0.110
                        'rate_target':False,
                        'min_step':500,      #was min_sl
                        'p_tol':0.015,
-                       'GAMMA':9.95
+                       'GAMMA':self.bundle.GAMMA
                        }
         
         #rate targeting #TODO
@@ -46,10 +46,10 @@ class OSB(Algorithm):
         
         self.preamble
         #Power and bitloading are dim(KxN)
-        self.p=np.zeros((self.bundle.K,self.bundle.N))
+        self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
         self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))
         #lambda values and weights are dim(N)
-        self.l=np.zeros((self.bundle.N))
+        self.l=np.tile(self.defaults['l'],(self.bundle.N))
         self.w=np.tile(self.defaults['w'],(self.bundle.N))
         #status tracking values
         self.l_best=np.zeros((self.bundle.N))
@@ -80,7 +80,7 @@ class OSB(Algorithm):
                 l_min=self.defaults['l_min']
                 l_max=self.defaults['l_max']
                 self.l[lineid]=self.defaults['l']
-                
+                lastpower=self.defaults['maxval']                
                 #L-range hunting
                 utility.log.info("Beginning l-range hunt;line:%d"%lineid)
                 while True: #FIXME there must be a better way of doing this
@@ -88,14 +88,14 @@ class OSB(Algorithm):
                     linepower=self.total_power(line)
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
                     if ( linepower > self.power_budget[lineid]): 
-                        utility.log.info("Missed power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))                      
+                        utility.log.info("Missed power budget:linepower:%s,lastdrop:%s,budget:%s"%(str(linepower),str((lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
+                        lastpower=linepower                      
                         if (self.l[lineid] == self.defaults['l']):
-                            self.l[lineid]+=1 #0*2=0
+                            self.l[lineid]=1 #0*2=0
                         else:
                             self.l[lineid]*=2
                     else:
                         utility.log.info("Satisfied power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))
-                        
                         break
                 assert self.l[lineid]!=0, "Tried to use a zero l[%d] value"%lineid
                 #this value is the highest that satisfies the power budget
@@ -172,18 +172,21 @@ class OSB(Algorithm):
             b_max=[]
             #for each bit combination
             b_combinator=utility.combinations(range(self.MAXBITSPERTONE), self.bundle.N)
+            utility.log.setLevel(logging.INFO)
             for b_combo in b_combinator:
                 b_combo=np.asarray(b_combo)
                 #The lagrangian value for this bit combination
                 lk=self._l_k(b_combo,gamma,lambdas,k)
                 #utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
-                if lk > lk_max:
+                if lk >= lk_max:
                     lk_max=lk
                     b_max=b_combo
             #By now we have b_max[k]
+            utility.log.setLevel(logging.DEBUG)
+
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,gamma,k,self.p)
-            utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepower=%s]"%(k,str(b_max),str(lambdas),str(self.total_power(self.bundle.lines[0]))))
+            (k==224) and utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepower=%s]"%(k,str(b_max),str(lambdas),str(self.total_power(self.bundle.lines[0]))))
             self.b[k]=b_max
 
         #Now we have b hopefully optimised
@@ -198,9 +201,7 @@ class OSB(Algorithm):
             return -self.defaults['maxval']
         #use a local p for later parallelism
         #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))
-        utility.log.setLevel(logging.INFO)
         p=self.bundle.calc_psd(bitload,gamma,k,self.p)
-        utility.log.setLevel(logging.DEBUG)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
@@ -225,7 +226,7 @@ class OSB(Algorithm):
         
         lk=bw-lp
         
-        #utility.log.debug("LK:%s,BW:%s,LP:%s,B:%s,P:%s,W:%s,L:%s"%(str(lk),str(bw),str(lp),str(bitload),str(p),str(self.w),str(lambdas)))
+        (k==0) and utility.log.debug("LK:%s,BW:%s,LP:%s,B:%s,P:%s,W:%s,L:%s"%(str(lk),str(bw),str(lp),str(bitload),str(p),str(self.w),str(lambdas)))
 
         
         assert(isinstance(lk,np.float64))

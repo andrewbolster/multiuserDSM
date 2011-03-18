@@ -21,14 +21,17 @@ from line import Line
 class Bundle(object):
     MARGIN = 3.0   #Performance Margin db
     C_G = 0        #Coding Gain db
+    GAMMA= 9.95
+    UGAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
+    gamma_hat = pow(10,(UGAMMA+MARGIN-C_G)/10)
+    
     def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
         self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
-        self.GAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
-        self.gamma_hat = pow(10,(self.GAMMA+self.MARGIN-self.C_G)/10)
+        
 
 
         """
@@ -292,20 +295,21 @@ class Bundle(object):
         #Generate Matrices (See Intro.pdf 2.23)
         A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
         B=numpy.asmatrix(numpy.zeros(self.N))
-        for x in range(self.N):
-            for v in range(self.N):
-                if x==v: 
-                    A[x,v]=1
+        for v in range(self.N):
+            for x in range(self.N):
+                if v==x: 
+                    A[v,x]=1
                 else:
-                    A[x,v]=(-self._f(x,bitload,gamma)*self.xtalk_gain[x][v][k])/self.xtalk_gain[x][x][k]
-            B[0,x]=self._f(x,bitload,gamma)*(dbmhz_to_watts(-140)/self.xtalk_gain[x][x][k])    
+                    A[v,x]=(-self._f(x,bitload)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+        for i in range(self.N):
+            B[0,i]=self._f(i,bitload)*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
             
         #Transpose B to be single-column matrix (1xN.NxN)
         B=B.T               
-        assert(B.shape==(self.N,1))
+        #assert(B.shape==(self.N,1))
         #log.debug("A,B:%s,%s"%(str(A),str(B)))
         #Everyone loves linear algebra...dont they?
-        if (False): #QR or regular way?
+        if (True): #QR or regular way?
             q,r = numpy.linalg.qr(A)
             assert numpy.allclose(A,numpy.dot(q,r))
             p= numpy.dot(q.T,B)
@@ -314,17 +318,26 @@ class Bundle(object):
             P=numpy.linalg.solve(A,B)
         
         #Because I'm paranoid
-        assert numpy.allclose(B,(numpy.dot(A,P))), log.error("Turns out linear algebra is hard")
-        log.debug("A:\n%s"%str(A))
-        log.debug("B:\n%s"%str(B))
-        log.debug("P:\n%s"%str(P))
+        #assert numpy.allclose(B,(numpy.dot(A,P))), "Turns out linear algebra is hard"
+        
+        #Useful debugging
+        if k == 0 and False: 
+            log.debug("A:\n%s"%str(A))
+            log.debug("B:\n%s"%str(B))
+            log.debug("P:\n%s"%str(P))
+        
         P=P.T
 
-        assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
+        #assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
+        P=mat2arr(P[0])
         #assert (P>0).any(),"Zero or Negative P\n%s"%str(P) #TODO Spectral Mask?
         #log.debug("P[0]:%s%s"%(str(mat2arr(P[0])),type(mat2arr(P[0]))))
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
-        return mat2arr(P[0])
+        for i in range(self.N):
+            if (abs(P[i]) < 4.31e-14):
+                P[i]=0
+        
+        return P 
 
 
     """
@@ -339,9 +352,9 @@ class Bundle(object):
     f(line,k)=\Gamma(2^{b_n(k)} -1)
     :from psd_vector.c
     """
-    def _f(self,lineid,bitload,gamma):
+    def _f(self,lineid,bitload,gamma=GAMMA):
         assert isinstance(bitload,numpy.ndarray) and len(bitload)>0,"WTF is this bitload? %s,%s"%(str(bitload),type(bitload))
-        assert(isinstance(gamma,float))
+        #assert(isinstance(gamma,float))
         g=gamma #TODO gamma values from symerr.c ? initially 9.95 for osb  
         b=bitload[lineid]
         result=pow(10,(g+3)/10)*(pow(2,b)-1)
