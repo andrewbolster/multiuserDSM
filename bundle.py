@@ -72,13 +72,13 @@ class Bundle(object):
         #Initialise the gains
         self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
         for k in range(self.K):                         #For Each Tone
-            for i,li in enumerate(self.lines):          #Between Every Victim
-                for j,lj in enumerate(self.lines):      # and every xtalker
-                    if i == j:                          #If you're talking to yourself, do lazy transfer_fn
-                        li.gain[k] = self.xtalk_gain[i][j][k] = li.transfer_fn(freq_on_tone(k))
+            for x,lx in enumerate(self.lines):          #Between Every xtalker
+                for v,lv in enumerate(self.lines):      # and every victim
+                    if x == v:                          #If you're talking to yourself, do lazy transfer_fn
+                        lx.gain[k] = self.xtalk_gain[x][v][k] = lx.transfer_fn(freq_on_tone(k))
                     else:                               #Otherwise look at XT
-                        self.xtalk_gain[i][j][k] = self.calc_fext_xtalk_gain(li,lj,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
-                    #log.debug("Set channel %d,%d,%d to %g",i,j,k,self.xtalk_gain[i,j,k])
+                        self.xtalk_gain[x][v][k] = self.calc_fext_xtalk_gain(lx,lv,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
+                    #log.debug("Set channel %d,%d,%d to %g",x,v,k,self.xtalk_gain[x,v,k])
     
     """
     Check Normalised XT Gains and xtalk symmetry 
@@ -292,13 +292,13 @@ class Bundle(object):
         #Generate Matrices (See Intro.pdf 2.23)
         A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
         B=numpy.asmatrix(numpy.zeros(self.N))
-        for i in range(self.N):
-            for j in range(self.N):
-                if i==j: 
-                    A[i,j]=1
+        for x in range(self.N):
+            for v in range(self.N):
+                if x==v: 
+                    A[x,v]=1
                 else:
-                    A[i,j]=(-self._f(i,bitload,gamma)*self.xtalk_gain[i][j][k])/self.xtalk_gain[i][i][k]
-            B[0,i]=self._f(i,bitload,gamma)*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
+                    A[x,v]=(-self._f(x,bitload,gamma)*self.xtalk_gain[x][v][k])/self.xtalk_gain[x][x][k]
+            B[0,x]=self._f(x,bitload,gamma)*(dbmhz_to_watts(-140)/self.xtalk_gain[x][x][k])    
             
         #Transpose B to be single-column matrix (1xN.NxN)
         B=B.T               
@@ -326,13 +326,7 @@ class Bundle(object):
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
         return mat2arr(P[0])
 
-        
-    """
-    PSD A-Element
-    """
-    def _psd_A_elem(self,i,j,bitload,gamma,k): #Transfer gain from victim i to xtalker j
-        return 
-   
+
     """
     Transfer function lookup - |h_{i,j}|^2
     This more or less does nothing but return xtalk_gain but is closer to the math
@@ -375,17 +369,17 @@ class Bundle(object):
     def print_xtalk(self):
         for tone in range(self.K):
             print("\n%d:"%(tone)),
-            for i in range(self.N):
-                for j in range(self.N):
-                    print("%e"%self.xtalk_gain[i][j][tone]), 
+            for x in range(self.N):
+                for v in range(self.N):
+                    print("%e"%self.xtalk_gain[x][v][tone]), 
     
     """
     Print Channel Matrix to screen
     """
     def print_xtalk_onetone(self,tone):
         print("\n%d:"%(tone))
-        for i in range(self.N):
+        for x in range(self.N):
             print("")
-            for j in range(self.N):
-                print("%e"%self.xtalk_gain[i][j][tone]), 
+            for v in range(self.N):
+                print("%e"%self.xtalk_gain[x][v][tone]), 
         
