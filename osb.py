@@ -44,10 +44,7 @@ class OSB(Algorithm):
         self.power_budget=np.tile(self.defaults['p_budget'], self.bundle.N)
 
         
-        self.preamble
-        #Power and bitloading are dim(KxN)
-        self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
-        self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))
+        self.preamble()
         #lambda values and weights are dim(N)
         self.l=np.tile(self.defaults['l'],(self.bundle.N))
         self.w=np.tile(self.defaults['w'],(self.bundle.N))
@@ -65,8 +62,7 @@ class OSB(Algorithm):
         else:
             self._bisect_l();
         #init_lines() What the hell is this?
-        #self.bundle.calculate_snr() #move into postscript?
-        self.postscript
+        self.postscript()
         return
     
     """
@@ -77,8 +73,6 @@ class OSB(Algorithm):
         utility.log.info("Beginning Bisection")
         p_now = np.zeros(self.bundle.N)
         while not self._l_converged():
-            self.l_lastlast = self.l_last
-            self.l_last = self.l
             for lineid,line in enumerate(self.bundle.lines):
                 l_min=self.defaults['l_min']
                 l_max=self.defaults['l_max']
@@ -122,7 +116,8 @@ class OSB(Algorithm):
                     last=linepower
             #End line loop
             p_now=np.asmatrix(map(self.total_power,self.bundle.lines))
-            
+            self.l_last_last = self.l_last
+            self.l_last = self.l
         #End while loop
         utility.log.info("And Were Done!")
             
@@ -145,10 +140,10 @@ class OSB(Algorithm):
                 #Optimisation done since all values the same as last time
                 assert (self.l > 0).all()
                 utility.log.info("Last = L")
-            elif (self.l_last_last == self.l_last).all():
-                assert (self.l > 0).all()
-                utility.log.info("LastLast = Last, This should never have happened...")
-                return True
+                if (self.l_last_last == self.l_last).all():
+                    utility.log.info("LastLast = Last")
+                    return True
+                else: return False
             else:
                 #TODO Need to add rate checking in here for rate mode
                 return False
@@ -179,7 +174,6 @@ class OSB(Algorithm):
             b_max=[]
             #for each bit combination
             b_combinator=utility.combinations(range(self.MAXBITSPERTONE), self.bundle.N)
-            utility.log.setLevel(logging.INFO)
             for b_combo in b_combinator:
                 b_combo=np.asarray(b_combo)
                 #The lagrangian value for this bit combination
@@ -189,7 +183,6 @@ class OSB(Algorithm):
                     lk_max=lk
                     b_max=b_combo
             #By now we have b_max[k]
-            utility.log.setLevel(logging.DEBUG)
 
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,k)

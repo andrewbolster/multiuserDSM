@@ -5,7 +5,7 @@ Algorithm Parent module
 import sys
 import utility
 import math
-import numpy
+import numpy as np
 
 
 
@@ -23,17 +23,25 @@ class Algorithm(object):
         self.bundle=bundle
 
     def preamble(self):
-        #Stuff that needs to be done for any algorithm        
+        #Stuff that needs to be done for any algorithm
+        #Power and bitloading are dim(KxN)
+        self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
+        self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))     
         utility.log.info("Lets get this party started!")
     
     def postscript(self):
+        self.b=utility.mat2arr(self.b)
+        for line in self.bundle.lines:
+            line.p=self.p[:,line.id]
+            line.b=self.b[:,line.id]
+        self.bundle.calculate_snr() #move into postscript?
         utility.log.info("All Done Here")
         
     #FIXME I'm fairly sure nothing below here is layed out properly yet; am_load_ra is used in SOME algos...
     def am_load_ra(self,line):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, RR_OSB
-        line.b = numpy.zeros(self.bundle.K)
-        tone_full = numpy.tile(False,self.bundle.K)
-        p = numpy.zeros(self.bundle.K)
+        line.b = np.zeros(self.bundle.K)
+        tone_full = np.tile(False,self.bundle.K)
+        p = np.zeros(self.bundle.K)
         p_total=0
         b_total=0
         delta_p = []
@@ -66,7 +74,7 @@ class Algorithm(object):
         self.update_psds(line)
         
         
-        line.service = numpy.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
+        line.service = np.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
         
         return line.rate()
     
@@ -75,8 +83,8 @@ class Algorithm(object):
         """
         Initialise Everything
         """
-        line.b = numpy.zeros(self.bundle.K)
-        tone_full = numpy.tile(False,self.bundle.K)     #set all tones to full
+        line.b = np.zeros(self.bundle.K)
+        tone_full = np.tile(False,self.bundle.K)     #set all tones to full
         p_total=0
         b_total=0
                
@@ -98,7 +106,7 @@ class Algorithm(object):
                 utility.log.debug("Bottom Half only")
         
         while (0 < min(delta_p)):
-            tone = numpy.argmin(delta_p) #return the tone with the lowest bit-adding cost
+            tone = np.argmin(delta_p) #return the tone with the lowest bit-adding cost
             line.b[tone]+=1
             b_total += 1            #Keep track of yer bits!
             p_total += delta_p[tone]
@@ -125,7 +133,7 @@ class Algorithm(object):
         #Update powers
         self.update_psds(line)
                         
-        line.service = numpy.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
+        line.service = np.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
         
         if b_total != self.MAXRATE: #This should be right as b_total is incrementally added
             utility.log.error("Could not reach target data rate. Desired:",self.MAXRATE," Achieved:",b_total)                
@@ -137,7 +145,7 @@ class Algorithm(object):
     Optimised from original version (Thank you wolframalpha)
     """
     def _calc_delta_p(self,line,tone_full):
-        delta_p=numpy.zeros(self.bundle.K)
+        delta_p=np.zeros(self.bundle.K)
         for tone in self.bundle.K:
             if not tone_full[tone]:
                 delta_p[tone] = (pow(2,(line.b[tone]-1)) * 3 - 2 )* self.bundle.gamma_hat/line.cnr[tone]

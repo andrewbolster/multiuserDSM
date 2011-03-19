@@ -12,11 +12,14 @@ import scipy.special as ss
 import pylab
 import pprint
 import itertools
+import joblib #http://packages.python.org/joblib/installing.html
+from tempfile import mkdtemp
 from math import pow,log10,sqrt
 
 #Local Imports
 from utility import *
 from line import Line
+
 
 class Bundle(object):
     MARGIN = 3.0   #Performance Margin db
@@ -247,24 +250,20 @@ class Bundle(object):
             line.sanity()
             noise = np.zeros(self.K)
             
+            log.debug("fext\tgain\tcnr\tsnr")
             for tone in xrange(self.K):
                 
                 noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
-                line.cnr[tone] = line.gain[tone]/noise
-                #log.debug("b%d,b%e,g%e"%(line.b[tone],(pow(2,line.b[tone])-1),(self.gamma_hat/line.cnr[tone])))
-                line.snr[tone] = dbmhz_to_watts(line.p[tone])*line.cnr[tone]
-                print line.calc_fext_noise(tone)
-                print line.gain
-                print line.cnr
-                print line.snr
-                print line.p
-                print line.b
+                line.cnr[tone] = line.gain[tone]/noise #gain calculated from xtalk_gain generation
+                line.snr[tone] = dbmhz_to_watts(line.p[tone])*noise
+                log.debug("%d,%e,%e,%e,%e,"%(tone,line.calc_fext_noise(tone),line.gain[tone],line.cnr[tone],line.snr[tone]))
                 
                 line.gamma_m[tone] = TodB(line.snr[tone]/pow(2,line.b[tone]-1))
                 
             #line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in xrange(self.K)] #TODO _calc_sym_err
             line.p_total = sum(map(dbmhz_to_watts,line.p))
             line.b_total = sum(line.b)
+            log.info("Line:%d,Power:%fW,Rate:%dbps"%(line.id,line.p_total,line.b_total))
             
             """
             With This whole Fractional thing; 
@@ -363,8 +362,6 @@ class Bundle(object):
     :from psd_vector.c
     """
     def _f(self,bitload,gamma=GAMMA):
-        assert isinstance(bitload,np.int64),"WTF is this bitload? %s,%s"%(str(bitload),type(bitload))
-        #assert(isinstance(gamma,float))
         result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
         #log.debug("f:%f,g:%f,b:%d"%(result,g,b))
         return result #TODO initially, b=0, so this doesnt work

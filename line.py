@@ -59,9 +59,8 @@ class Line(object):
     Called from bundle
     """
     def sanity(self):
-        for k in range(self.bundle.K):
-            assert self.b[k] >= 0, utility.log.error("Tone %d less than zero:%e"%(k,self.b[k]))
-            assert self.gain[k] >= 0, utility.log.error("Gain %d less than zero:%e"%(k,self.gain[k]))
+        assert (self.b >= 0).all(), utility.log.error("Tone less than zero")
+        assert (self.gain >= 0).all(), utility.log.error("Gain less than zero")
         utility.log.debug("Line %d is sane"%self.id)
         return
     
@@ -72,10 +71,11 @@ class Line(object):
     def calc_fext_noise(self,k):
         noise=0
         for xtalker in self.bundle.lines:
-            if xtalker == self : continue   #stop hitting yourself!
+            if xtalker == self : 
+                continue   #stop hitting yourself!
             else:
-                noise += utility.dbmhz_to_watts(self.p[k])*self.bundle._h2(xtalker,self,k)
-                utility.log.debug("calc_fext_noiseh2:%g"%self.bundle._h2(xtalker,self,k))
+                noise += utility.dbmhz_to_watts(self.p[k])*self.bundle._h2(self,xtalker,k)
+                utility.log.debug("calc_fext_noiseh2:%g"%self.bundle._h2(self,xtalker,k))
                 utility.log.debug("linepower:%g"% self.p[k])
         return noise
     
