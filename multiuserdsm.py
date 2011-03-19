@@ -12,7 +12,7 @@ log.info("Starting Up...")
 parser = OptionParser()
 
 parser.add_option("-n","--network", dest="network", help="read network configuration from FILE",metavar="NETWORK",default="test.net")
-parser.add_option("-K","--tones", dest="K", help="specify number of DMTCHANNELS",metavar="K",default=512)
+parser.add_option("-K","--tones", dest="K", help="specify number of DMTCHANNELS",metavar="K",default=224)
 
 (options,args) = parser.parse_args()
 bundle = Bundle(options.network,options.K)

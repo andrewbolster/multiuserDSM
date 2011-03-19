@@ -26,7 +26,7 @@ class OSB(Algorithm):
         self.target_tolerance=1
         #Default values
         self.defaults={'maxval':sys.maxint*1.0,
-                       'l':0.0,             #From osb_bb.c::bisect_l() (modified from 0)
+                       'l':1.0,             #From osb_bb.c::bisect_l() (modified from 0)
                        'l_min':0.0,
                        'l_max':1.0,
                        'w':10.0, #same behaviour for any real value
@@ -54,6 +54,7 @@ class OSB(Algorithm):
         #status tracking values
         self.l_best=np.zeros((self.bundle.N))
         self.l_last=np.tile(-self.defaults['maxval'],self.bundle.N)
+        self.l_last_last=np.tile(+self.defaults['maxval'],self.bundle.N)
 
         self.w_min=np.zeros((self.bundle.N))
         self.w_max=np.zeros((self.bundle.N))
@@ -64,7 +65,7 @@ class OSB(Algorithm):
         else:
             self._bisect_l();
         #init_lines() What the hell is this?
-        self.bundle.calculate_snr() #move into postscript?
+        #self.bundle.calculate_snr() #move into postscript?
         self.postscript
         return
     
@@ -76,6 +77,8 @@ class OSB(Algorithm):
         utility.log.info("Beginning Bisection")
         p_now = np.zeros(self.bundle.N)
         while not self._l_converged():
+            self.l_lastlast = self.l_last
+            self.l_last = self.l
             for lineid,line in enumerate(self.bundle.lines):
                 l_min=self.defaults['l_min']
                 l_max=self.defaults['l_max']
@@ -90,14 +93,13 @@ class OSB(Algorithm):
                     if ( linepower > self.power_budget[lineid]): 
                         utility.log.info("Missed power budget:linepower:%s,lastdrop:%s,budget:%s"%(str(linepower),str((lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
                         lastpower=linepower                      
-                        if (self.l[lineid] == self.defaults['l']):
+                        if (self.l[lineid] < 1):
                             self.l[lineid]=1 #0*2=0
                         else:
                             self.l[lineid]*=2
                     else:
                         utility.log.info("Satisfied power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))
                         break
-                assert self.l[lineid]!=0, "Tried to use a zero l[%d] value"%lineid
                 #this value is the highest that satisfies the power budget
                 l_max=self.l[lineid]
                 #but we know this value doesn't, so use it as the minimum
@@ -120,7 +122,9 @@ class OSB(Algorithm):
                     last=linepower
             #End line loop
             p_now=np.asmatrix(map(self.total_power,self.bundle.lines))
+            
         #End while loop
+        utility.log.info("And Were Done!")
             
                     
                     
@@ -133,13 +137,17 @@ class OSB(Algorithm):
             if last == False: 
                 return False #Force the first loop through
             else:
-                howfar = abs(self.power_budget[line.id]-self.total_power(line))
-                return howfar < self.defaults['p_tol']
-        else:
-            #if called without a line, assume operation on the bundle
+                thispower = self.total_power(line)
+                howfar = abs(self.power_budget[line.id]-thispower)
+                return howfar < self.defaults['p_tol'] or thispower==last
+        else: #if called without a line, assume operation on the bundle
             if (self.l_last == self.l).all(): 
                 #Optimisation done since all values the same as last time
-                assert(self.l[0]>0)
+                assert (self.l > 0).all()
+                utility.log.info("Last = L")
+            elif (self.l_last_last == self.l_last).all():
+                assert (self.l > 0).all()
+                utility.log.info("LastLast = Last, This should never have happened...")
                 return True
             else:
                 #TODO Need to add rate checking in here for rate mode
@@ -165,7 +173,6 @@ class OSB(Algorithm):
     :from OSB_original.pdf paper
     """   
     def optimise_p(self,lambdas):
-        gamma=self.defaults['GAMMA']
         #for each subchannel
         for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
             lk_max=-self.defaults['maxval']
@@ -197,7 +204,7 @@ class OSB(Algorithm):
     """
     def _l_k(self,bitload,lambdas,k):
         #If anything is dialed off, theres no point in calculating this
-        if (bitload <= 0).any():
+        if (bitload < 0).any():
             return -self.defaults['maxval']
         #use a local p for later parallelism
         #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))

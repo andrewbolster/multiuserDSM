@@ -31,6 +31,7 @@ class Bundle(object):
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
+        self._psd_cache = {}
         self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
         
 
@@ -293,11 +294,19 @@ class Bundle(object):
     :from psd_vector.c
     """
     def calc_psd(self,bitload,k):
+        #Caching implementation (AMK)
+        key = str(bitload)+str(k)
+        try:
+            ret = self._psd_cache[key]
+            return ret
+        except:
+            pass
+        
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
         B=np.asmatrix(np.zeros(self.N))
-        for v in range(self.N):
-            for x in range(self.N):
+        for v in range(self.N): #victims
+            for x in range(self.N): #xtalkers
                 if v==x: 
                     A[v,x]=1
                 else:
@@ -337,7 +346,7 @@ class Bundle(object):
         for i in range(self.N):
             if (abs(P[i]) < 4.31e-14):
                 P[i]=0
-        
+        self._psd_cache[key]=P        
         return P 
 
 
@@ -393,5 +402,4 @@ class Bundle(object):
         for x in range(self.N):
             print("")
             for v in range(self.N):
-                print("%e"%self.xtalk_gain[x][v][tone]), 
-        
+                print("%e"%self.xtalk_gain[x][v][tone]),   
