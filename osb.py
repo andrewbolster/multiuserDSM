@@ -35,7 +35,7 @@ class OSB(Algorithm):
                        'p_budget':0.110,    #watts #from scenarios.c (0.110
                        'rate_target':False,
                        'min_step':500,      #was min_sl
-                       'p_tol':0.015,
+                       'p_tol':0.0015,      #should be 0.015
                        'GAMMA':self.bundle.GAMMA
                        }
         
@@ -134,7 +134,7 @@ class OSB(Algorithm):
                 return False #Force the first loop through
             else:
                 howfar = abs(self.power_budget[line.id]-self.total_power(line))
-                return (self.total_power(line) == last or howfar < self.defaults('p_tolerance'))
+                return howfar < self.defaults['p_tol']
         else:
             #if called without a line, assume operation on the bundle
             if (self.l_last == self.l).all(): 
@@ -176,7 +176,7 @@ class OSB(Algorithm):
             for b_combo in b_combinator:
                 b_combo=np.asarray(b_combo)
                 #The lagrangian value for this bit combination
-                lk=self._l_k(b_combo,gamma,lambdas,k)
+                lk=self._l_k(b_combo,lambdas,k)
                 #utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
                 if lk >= lk_max:
                     lk_max=lk
@@ -185,7 +185,7 @@ class OSB(Algorithm):
             utility.log.setLevel(logging.DEBUG)
 
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
-            self.p[k]=self.bundle.calc_psd(b_max,gamma,k,self.p)
+            self.p[k]=self.bundle.calc_psd(b_max,k)
             (k==224) and utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepower=%s]"%(k,str(b_max),str(lambdas),str(self.total_power(self.bundle.lines[0]))))
             self.b[k]=b_max
 
@@ -195,13 +195,13 @@ class OSB(Algorithm):
     L_k; Return the Lagrangian given a bit-loading combination and tone
     Effectively the cost function
     """
-    def _l_k(self,bitload,gamma,lambdas,k):
+    def _l_k(self,bitload,lambdas,k):
         #If anything is dialed off, theres no point in calculating this
         if (bitload <= 0).any():
             return -self.defaults['maxval']
         #use a local p for later parallelism
         #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))
-        p=self.bundle.calc_psd(bitload,gamma,k,self.p)
+        p=self.bundle.calc_psd(bitload,k)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']

@@ -5,7 +5,7 @@ Class that describes the DSL bundle object
 #Global imports
 import sys
 import cmath
-import numpy
+import numpy as np
 import pydot
 import pyparsing
 import scipy.special as ss
@@ -31,6 +31,7 @@ class Bundle(object):
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
+        self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
         
 
 
@@ -73,14 +74,14 @@ class Bundle(object):
     """
     def calc_channel_matrix(self):
         #Initialise the gains
-        self.xtalk_gain = numpy.zeros((self.N,self.N,self.K))
+        self.xtalk_gain = np.zeros((self.N,self.N,self.K))
         for k in range(self.K):                         #For Each Tone
             for x,lx in enumerate(self.lines):          #Between Every xtalker
                 for v,lv in enumerate(self.lines):      # and every victim
                     if x == v:                          #If you're talking to yourself, do lazy transfer_fn
-                        lx.gain[k] = self.xtalk_gain[x][v][k] = lx.transfer_fn(freq_on_tone(k))
+                        lx.gain[k] = self.xtalk_gain[x][v][k] = lx.transfer_fn(self.freq[k])
                     else:                               #Otherwise look at XT
-                        self.xtalk_gain[x][v][k] = self.calc_fext_xtalk_gain(lx,lv,freq_on_tone(k),"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
+                        self.xtalk_gain[x][v][k] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                     #log.debug("Set channel %d,%d,%d to %g",x,v,k,self.xtalk_gain[x,v,k])
     
     """
@@ -243,7 +244,7 @@ class Bundle(object):
     def calculate_snr(self):
         for line in self.lines:
             line.sanity()
-            noise = numpy.zeros(self.K)
+            noise = np.zeros(self.K)
             
             for tone in xrange(self.K):
                 
@@ -291,34 +292,34 @@ class Bundle(object):
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
     """
-    def calc_psd(self,bitload,gamma,k,power):
+    def calc_psd(self,bitload,k):
         #Generate Matrices (See Intro.pdf 2.23)
-        A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
-        B=numpy.asmatrix(numpy.zeros(self.N))
+        A=np.asmatrix(np.zeros((self.N,self.N)))
+        B=np.asmatrix(np.zeros(self.N))
         for v in range(self.N):
             for x in range(self.N):
                 if v==x: 
                     A[v,x]=1
                 else:
-                    A[v,x]=(-self._f(x,bitload)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+                    A[v,x]=(-self._f(bitload[x])*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
         for i in range(self.N):
-            B[0,i]=self._f(i,bitload)*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
+            B[0,i]=self._f(bitload[i])*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
             
         #Transpose B to be single-column matrix (1xN.NxN)
         B=B.T               
         #assert(B.shape==(self.N,1))
         #log.debug("A,B:%s,%s"%(str(A),str(B)))
         #Everyone loves linear algebra...dont they?
-        if (True): #QR or regular way?
-            q,r = numpy.linalg.qr(A)
-            assert numpy.allclose(A,numpy.dot(q,r))
-            p= numpy.dot(q.T,B)
-            P=numpy.dot(numpy.linalg.inv(r),p)
+        if (False): #QR or regular way?
+            q,r = np.linalg.qr(A)
+            assert np.allclose(A,np.dot(q,r))
+            p= np.dot(q.T,B)
+            P=np.dot(np.linalg.inv(r),p)
         else:
-            P=numpy.linalg.solve(A,B)
+            P=np.linalg.solve(A,B)
         
         #Because I'm paranoid
-        #assert numpy.allclose(B,(numpy.dot(A,P))), "Turns out linear algebra is hard"
+        #assert np.allclose(B,(np.dot(A,P))), "Turns out linear algebra is hard"
         
         #Useful debugging
         if k == 0 and False: 
@@ -352,12 +353,10 @@ class Bundle(object):
     f(line,k)=\Gamma(2^{b_n(k)} -1)
     :from psd_vector.c
     """
-    def _f(self,lineid,bitload,gamma=GAMMA):
-        assert isinstance(bitload,numpy.ndarray) and len(bitload)>0,"WTF is this bitload? %s,%s"%(str(bitload),type(bitload))
+    def _f(self,bitload,gamma=GAMMA):
+        assert isinstance(bitload,np.int64),"WTF is this bitload? %s,%s"%(str(bitload),type(bitload))
         #assert(isinstance(gamma,float))
-        g=gamma #TODO gamma values from symerr.c ? initially 9.95 for osb  
-        b=bitload[lineid]
-        result=pow(10,(g+3)/10)*(pow(2,b)-1)
+        result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
         #log.debug("f:%f,g:%f,b:%d"%(result,g,b))
         return result #TODO initially, b=0, so this doesnt work
     """    

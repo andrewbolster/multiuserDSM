@@ -187,11 +187,12 @@ def TodB(input):
         log.error("Caught Exception on TodB(%f)"%input)
         return 0
 
-def freq_on_tone(K): #TODO
+def freq_on_tone(K): #TODO Memoize
         """
         Assume ADSL downstream for now
         """
-        return K * 4312.5 + 140156.25;
+        #return K * 4312.5 + 140156.25;
+        assert False==True, "Someone Tried to use freq_on_tone"
 
 def complex2str(complex):
     return '{0:.3f}{1:+.3f}i'.format(complex.real,complex.imag)
@@ -237,7 +238,7 @@ def psd2str(psd):
 if __name__ == "__main__":
 
     test_len=3000
-    test_f=freq_on_tone(0)
+    test_f= 140156.25 #first channel for ADSL Downstream
     test_result=0.000853
     
     mine=do_transfer_function(test_len,test_f)
