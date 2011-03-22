@@ -35,6 +35,7 @@ class Bundle(object):
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
         self._psd_cache = {}
+        self._f_cache = {}
         self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
         
 
@@ -345,7 +346,12 @@ class Bundle(object):
     #TODO Memoize
     """
     def _f(self,bitload,gamma=GAMMA):
-        result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
+        key = "%d-%f"%(bitload,gamma)
+        if key in self._f_cache:
+            return self._f_cache[key]
+        else:
+            result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
+            self._f_cache[key]=result
         return result #TODO initially, b=0, so this doesnt work
     """    
     Pretty Print channel Matrix
