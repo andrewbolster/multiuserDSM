@@ -9,7 +9,6 @@ import cmath
 import numpy as np
 import pyparsing
 import scipy.special as ss
-import scipy.weave as weave
 import pylab as pl
 import pprint
 import itertools
@@ -309,9 +308,9 @@ class Bundle(object):
                 if v==x: 
                     A[v,x]=1
                 else:
-                    A[v,x]=(-1.0*self._f(bitload[v])*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+                    A[v,x]=(-1.0*pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
         for i in range(self.N):
-            B[0,i]=self._f(bitload[i])*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
+            B[0,i]=pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[i])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
         
         B=B.T
 
@@ -347,8 +346,13 @@ class Bundle(object):
     #TODO Memoize
     """
     def _f(self,bitload,gamma=GAMMA):
-        code="""return_val=pow(10,(gamma+3)/10)*(pow(2,bitload)-1);"""
-        return weave.inline(code,['gamma','bitload'],type_converters=weave.converters.blitz,compiler='gcc')
+        key = "%d-%f"%(bitload,gamma)
+        if key in self._f_cache:
+            return self._f_cache[key]
+        else:
+            result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
+            self._f_cache[key]=result
+        return result #TODO initially, b=0, so this doesnt work
     """    
     Pretty Print channel Matrix
     #TODO I've got no idea how to display this....
