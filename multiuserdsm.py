@@ -9,7 +9,7 @@ from osb import OSB
 import cProfile
 
 log.info("Starting Up...")
-
+profiling=True
 parser = OptionParser()
 
 parser.add_option("-n","--network", dest="network", help="read network configuration from FILE",metavar="NETWORK",default="test.net")
@@ -24,5 +24,8 @@ if __name__ == "__main__":
     Perform algorithm selection and option passing
     """
     algo = OSB(bundle)
-    cProfile.run('algo.run()','osbprof')
+    if profiling:
+        cProfile.run('algo.run()','profiles/'+options.scenarioname)
+    else:
+        algo.run()
     algo.tofile(options.scenarioname)

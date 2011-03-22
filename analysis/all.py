@@ -376,7 +376,7 @@ class Bundle(object):
             
             for tone in xrange(self.K):
                 
-                noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
+                noise = line.calc_fext_noise(tone) + dbmhz_to_watts(line.noise)
                 line.cnr[tone] = line.gain[tone]/noise
                 #log.debug("b%d,b%e,g%e"%(line.b[tone],(pow(2,line.b[tone])-1),(self.gamma_hat/line.cnr[tone])))
                 line.p[tone] = watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone])) #TODO gamma_hat/cnr[tone] functionalise
@@ -430,7 +430,7 @@ class Bundle(object):
         #Generate B Matrix (same reference)
         B=numpy.asmatrix(numpy.zeros(self.N))
         for i,line in enumerate(self.lines):
-            B[0,i]=-self._f(line,k)*(dbmhz_to_watts(-140)+line.alien_xtalk(k))/self._h2(lineb,linea,k)
+            B[0,i]=-self._f(line,k)*(dbmhz_to_watts(-140))/self._h2(lineb,linea,k)
         
         #Yeah, lets twist again!
         B=B.T

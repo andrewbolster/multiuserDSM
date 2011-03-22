@@ -16,12 +16,14 @@ class graphgen():
         Set up some data
         """
         self.scenario=scenario
+        self.dest="graphs/"
         self.importdata()
     
     def importdata(self):
-        self.p=np.load(self.scenario+"-power.npy")
-        self.b=np.load(self.scenario+"-bitrate.npy")
-        self.cm=np.load(self.scenario+"-channelmatrix.npy")
+        data="raw_results/"
+        self.p=np.load(data+self.scenario+"-power.npy")
+        self.b=np.load(data+self.scenario+"-bitrate.npy")
+        self.cm=np.load(data+self.scenario+"-channelmatrix.npy")
     
     def graph_p(self):
         pl.close()
@@ -32,7 +34,7 @@ class graphgen():
         pl.ylabel("Power (dbmhz)")
         pl.title("Plot of per-tone power assignments for %d lines"%self.p.shape[1])
         pl.ylim([self.noisefloor,0])
-        pl.savefig(self.scenario+'-power.png')
+        pl.savefig(self.dest+self.scenario+'-power.png')
         
     def graph_b(self):
         pl.close()
@@ -42,20 +44,20 @@ class graphgen():
         pl.xlabel("Subchannel Index")
         pl.ylabel("Bitloading")
         pl.title("Plot of per-tone bit assignments for %d lines"%self.p.shape[1])
-        pl.savefig(self.scenario+'-bitrate.png')
+        pl.savefig(self.dest+self.scenario+'-bitrate.png')
         
     def graph_cm(self):
         pl.close()
         channels=range(self.cm.shape[2])
         for x in range(self.cm.shape[0]):
             for v in range(self.cm.shape[1]):
-                pl.plot(channels,map(utility.TodB,self.cm[x,v,:]),label="%d,%d"%(x,v)) #this may be the wrong slicing style
+                pl.plot(channels,self.cm[x,v,:],label="%d,%d"%(x,v)) #this may be the wrong slicing style
         pl.xlabel("Subchannel Index")
         pl.ylabel("Gain")
         pl.yscale("log")
         pl.legend()
         pl.title("Plot of inter-line crosstalk gains for %d lines"%self.p.shape[1])
-        pl.savefig(self.scenario+'-channelmatrix.png')      
+        pl.savefig(self.dest+self.scenario+'-channelmatrix.png')      
         
 
 if __name__ == '__main__':

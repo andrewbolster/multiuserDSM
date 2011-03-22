@@ -290,12 +290,14 @@ class Bundle(object):
     """
     def calc_psd(self,bitload,k):
         #Caching implementation (AMK)
+        """
         key = str(bitload)+str(k)
         try:
             ret = self._psd_cache[key]
             return ret
         except:
             pass
+        """
         
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
@@ -332,7 +334,7 @@ class Bundle(object):
 
         P=mat2arr(P[0])
 
-        self._psd_cache[key]=P        
+        #self._psd_cache[key]=P        
         return P 
 
 
@@ -366,7 +368,7 @@ class Bundle(object):
     Print CM to file
     """
     def tofile(self,filename):
-        np.save(filename+'-channelmatrix', self.xtalk_gain)
+        np.save("raw_results/"+filename+'-channelmatrix', self.xtalk_gain)
         
     """
     Print Channel Matrix to screen

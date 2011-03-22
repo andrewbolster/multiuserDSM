@@ -179,5 +179,5 @@ class Algorithm(object):
     Print Channel Matrix, Power and Bitrates to file after generation
     """
     def tofile(self,filename):
-        np.save(filename+'-power', self.p)
-        np.save(filename+'-bitrate',self.b)
+        np.save("raw_results/"+filename+'-power', self.p)
+        np.save("raw_results/"+filename+'-bitrate',self.b)

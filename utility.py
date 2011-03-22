@@ -3,7 +3,7 @@
 __author__="bolster"
 __date__ ="$02-Dec-2010 18:48:38$"
 
-import math, cmath, numpy, scipy.special as sps
+import math, cmath, numpy, sys, scipy.special as sps
 import functools,cPickle
 
 import logging
@@ -124,15 +124,11 @@ def do_transfer_function(length,freq,type=3, measure="m"):
 
     Zs = complex(100,0)
     Zl = complex(100,0)
-    #log.debug("w:%.3f",w)
-    #log.debug("R:%e L:%e G:%e C:%e",_R(freq),_L(freq),_G(freq),_C(freq))
-    #log.debug("Z:%s Y:%s Z0:%s Gamma:%s GammaD:%s",complex2str(Z),complex2str(Y),complex2str(Z0),complex2str(gamma),complex2str(gammad))
     upper = Z0 * ( 1/cmath.cosh(gammad)) #sech=1/cosh
     lower = Zs * ( (Z0/Zl) + cmath.tanh(gammad) ) + Z0 * ( 1+ (Z0/Zl)*cmath.tanh(gammad) )
 
     H = upper/lower
     H*=H
-    #log.debug("Returned Transfer Function: %g",cmath.polar(H)[0])
     return cmath.polar(H)[0]        #polar returns (abs(h),real(h))
 
 def _R(freq):
@@ -183,7 +179,7 @@ def TodB(input):
         return 10*math.log10(input)
     except ValueError:
         log.error("Caught Exception on TodB(%f)"%input)
-        return float("-inf")
+        return -140 #FIXME Either make it dynamic across the package or use something like -inf; 
 
 def freq_on_tone(K): #TODO Memoize
         """
