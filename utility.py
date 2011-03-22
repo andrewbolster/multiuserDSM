@@ -204,6 +204,7 @@ def get_GAMMA(Pe,M):
 
 #Combination Generator with replacements
 def combinations(iterable, r,type=int):
+    #FIXME Creation of a iterable for every tone for every loop is pointless
     # combinations_with_replacement('ABC', 2) --> AA AB AC BB BC CC
     pool = tuple(iterable)
     n = len(pool)

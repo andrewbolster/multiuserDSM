@@ -7,6 +7,7 @@ import numpy as np
 import math
 import sys
 import logging
+import multiprocessing as mp
 
 #Local Imports
 from bundle import Bundle
@@ -42,6 +43,9 @@ class OSB(Algorithm):
         #rate targeting #TODO
         self.rate_targets=np.tile(self.defaults['rate_target'], self.bundle.N)
         self.power_budget=np.tile(self.defaults['p_budget'], self.bundle.N)
+        
+        #Create multithreading pool
+        threadpool=mp.Pool(mp.cpu_count())
 
         
         self.preamble()
@@ -170,13 +174,13 @@ class OSB(Algorithm):
     :from OSB_original.pdf paper
     """   
     def optimise_p(self,lambdas):
-        line123=False
         #for each subchannel
         for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
             lk_max=-self.defaults['maxval']
             b_max=[]
             #for each bit combination
             b_combinator=utility.combinations(range(self.MAXBITSPERTONE), self.bundle.N)
+            
             for b_combo in b_combinator:
                 b_combo=np.asarray(b_combo)
                 #The lagrangian value for this bit combination
@@ -189,8 +193,6 @@ class OSB(Algorithm):
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,k)
             self.b[k]=b_max
-
-
         #Now we have b hopefully optimised
             
     """
@@ -214,15 +216,9 @@ class OSB(Algorithm):
         #bw=\sum_i^N{bitload_i*w_i}
         #lp=\sum_i^N{l_i*p_i}
         
-        if (True): #Are you feeling fancy?
-            bw=np.add.reduce(bitload*self.w)
-            lp=np.add.reduce(lambdas*p)
-            
-        else: #BORING
-            bw=lp=0
-            for lineid in range(self.bundle.N):
-                bw+=bitload[lineid]*float(self.w[lineid])
-                lp+=lambdas[lineid]*p[lineid]
+        #After profiling, np.reduce is faster than looping
+        bw=np.add.reduce(bitload*self.w)
+        lp=np.add.reduce(lambdas*p)
         
         lk=bw-lp
         

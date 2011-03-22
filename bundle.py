@@ -12,7 +12,7 @@ import scipy.special as ss
 import pylab as pl
 import pprint
 import itertools
-import joblib #http://packages.python.org/joblib/installing.html
+import hashlib
 from tempfile import mkdtemp
 from math import pow,log10,sqrt
 
@@ -290,14 +290,13 @@ class Bundle(object):
     """
     def calc_psd(self,bitload,k):
         #Caching implementation (AMK)
-        """
-        key = str(bitload)+str(k)
+        
+        key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
         try:
             ret = self._psd_cache[key]
             return ret
         except:
             pass
-        """
         
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
@@ -315,13 +314,7 @@ class Bundle(object):
         B=B.T
 
         #Everyone loves linear algebra...dont they?
-        if (False): #QR or regular way?
-            q,r = np.linalg.qr(A)
-            assert np.allclose(A,np.dot(q,r))
-            p= np.dot(q.T,B)
-            P=np.dot(np.linalg.inv(r),p)
-        else:
-            P=np.linalg.solve(A,B)
+        P=np.linalg.solve(A,B)
         
         #Useful debugging
         """
@@ -334,7 +327,7 @@ class Bundle(object):
 
         P=mat2arr(P[0])
 
-        #self._psd_cache[key]=P        
+        self._psd_cache[key]=P        
         return P 
 
 
