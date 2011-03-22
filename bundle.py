@@ -34,8 +34,7 @@ class Bundle(object):
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
-        self._psd_cache = {}
-        self._f_cache = {}
+        self._psd_cache = {'hits':0,'misses':0}
         self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
         
 
@@ -295,6 +294,7 @@ class Bundle(object):
         key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
         try:
             ret = self._psd_cache[key]
+            self._psd_cache['hits']+=1
             return ret
         except:
             pass
@@ -304,13 +304,12 @@ class Bundle(object):
         B=np.asmatrix(np.zeros(self.N))
         
         for v in range(self.N): #victims
+            B[0,v]=pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
             for x in range(self.N): #xtalkers
                 if v==x: 
                     A[v,x]=1
                 else:
                     A[v,x]=(-1.0*pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
-        for i in range(self.N):
-            B[0,i]=pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[i])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
         
         B=B.T
 
@@ -328,7 +327,9 @@ class Bundle(object):
 
         P=mat2arr(P[0])
 
-        self._psd_cache[key]=P        
+        self._psd_cache[key]=P   
+        self._psd_cache['misses']+=1
+     
         return P 
 
 

@@ -200,9 +200,6 @@ class OSB(Algorithm):
     Effectively the cost function
     """
     def _l_k(self,bitload,lambdas,k):
-        #If anything is dialed off, theres no point in calculating this
-        if (bitload < 0).any():
-            return -self.defaults['maxval']
         #use a local p for later parallelism
         p=self.bundle.calc_psd(bitload,k)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
