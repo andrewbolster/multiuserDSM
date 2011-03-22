@@ -114,7 +114,6 @@ class OSB(Algorithm):
                 while not self._l_converged(line,last):
                     self.l[lineid]=(l_max+l_min)/2
                     self.optimise_p(self.l)
-                    utility.log.debug("After optimise_p(), total p:%.5f"%(self.total_power(line)))                    
                     linepower=self.total_power(line)
                     if linepower > self.power_budget[lineid]:
                         l_min=self.l[lineid]
@@ -174,7 +173,6 @@ class OSB(Algorithm):
         line123=False
         #for each subchannel
         for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
-            (k==128) and line123 and utility.log.setLevel(logging.DEBUG)
             lk_max=-self.defaults['maxval']
             b_max=[]
             #for each bit combination
@@ -190,9 +188,7 @@ class OSB(Algorithm):
 
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,k)
-            utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepowers=%s]"%(k,str(b_max),str(lambdas),str(map(self.total_power,self.bundle.lines))))
             self.b[k]=b_max
-            (k==128) and line123 and utility.log.setLevel(logging.INFO)
 
 
         #Now we have b hopefully optimised
@@ -206,12 +202,10 @@ class OSB(Algorithm):
         if (bitload < 0).any():
             return -self.defaults['maxval']
         #use a local p for later parallelism
-        #utility.log.debug("bitload,w,k,p:%s,%s,%s,%s"%(str(bitload),str(self.w),str(k),str(self.total_power())))
         p=self.bundle.calc_psd(bitload,k)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
         if (p < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
-        #utility.log.error("%d:%s:P<0:%s"%(k,str(bitload),utility.psd2str(p)))
 
         # p is a matrix of power values required on each line[k] to support bitload[line] bits
         # l is the current lambda array #TODO parallelise?
@@ -232,7 +226,6 @@ class OSB(Algorithm):
         
         lk=bw-lp
         
-        utility.log.debug("LK:%s,BW:%s,LP:%s,B:%s,P:%s,W:%s,L:%s"%(str(lk),str(bw),str(lp),str(bitload),str(p),str(self.w),str(lambdas)))
 
         return lk
        

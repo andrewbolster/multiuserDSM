@@ -88,8 +88,7 @@ class Bundle(object):
                         lx.gain[k] = self.xtalk_gain[x][v][k] = lx.transfer_fn(self.freq[k])
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[x][v][k] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
-                    #log.debug("Set channel %d,%d,%d to %g",x,v,k,self.xtalk_gain[x,v,k])
-    
+                   
     """
     Check Normalised XT Gains and xtalk symmetry 
     :from channel_matrix.c
@@ -204,10 +203,6 @@ class Bundle(object):
         H = h1*h2*h3
         
         gain = H * self.fext(freq, shared_length)
-        log.debug("A:%d,B:%d,D1:%d,D2:%d"%(A,B,D1,D2))
-        log.debug("H1:%f,H2:%f,H3:%f"%(head_length,shared_length,tail_length))
-        log.debug("Returned xtalk_gain: %g: H1:%g,H2:%g,H3:%g,FXT:%g",gain,h1,h2,h3,self.fext(freq, shared_length))
-
         return gain  
     
     """
@@ -258,7 +253,6 @@ class Bundle(object):
                 noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
                 line.cnr[tone] = line.gain[tone]/noise #gain calculated from xtalk_gain generation
                 line.snr[tone] = dbmhz_to_watts(line.p[tone])*noise
-                log.debug("%d,%e,%e,%e,%e,"%(tone,line.calc_fext_noise(tone),line.gain[tone],line.cnr[tone],line.snr[tone]))
                 
                 line.gamma_m[tone] = TodB(line.snr[tone]/pow(2,line.b[tone]-1))
                 
@@ -317,8 +311,7 @@ class Bundle(object):
             B[0,i]=self._f(bitload[i])*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
         
         B=B.T
-        #assert(B.shape==(self.N,1))
-        #log.debug("A,B:%s,%s"%(str(A),str(B)))
+
         #Everyone loves linear algebra...dont they?
         if (False): #QR or regular way?
             q,r = np.linalg.qr(A)
@@ -328,20 +321,17 @@ class Bundle(object):
         else:
             P=np.linalg.solve(A,B)
         
-        #Because I'm paranoid
-        assert np.allclose(B,(np.dot(A,P))), "Turns out linear algebra is hard"
-        
         #Useful debugging
+        """
         log.debug("A:\n%s"%str(A))
         log.debug("B:\n%s"%str(B))
         log.debug("P:\n%s"%str(P))
+        """
         
         P=P.T
 
-        #assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
         P=mat2arr(P[0])
-        log.debug("P[0]:%s%s"%(str(mat2arr(P[0])),type(mat2arr(P[0]))))
-        #FIXME This should just return [p0 p1 p2...] not [[px...]]
+
         self._psd_cache[key]=P        
         return P 
 
@@ -361,7 +351,6 @@ class Bundle(object):
     """
     def _f(self,bitload,gamma=GAMMA):
         result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
-        #log.debug("f:%f,g:%f,b:%d"%(result,g,b))
         return result #TODO initially, b=0, so this doesnt work
     """    
     Pretty Print channel Matrix
