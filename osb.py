@@ -8,6 +8,7 @@ import math
 import sys
 import logging
 import multiprocessing as mp
+import hashlib
 
 #Local Imports
 from bundle import Bundle
@@ -45,7 +46,7 @@ class OSB(Algorithm):
         self.power_budget=np.tile(self.defaults['p_budget'], self.bundle.N)
         
         #Create multithreading pool
-        threadpool=mp.Pool(mp.cpu_count())
+        self.threadpool=mp.Pool(mp.cpu_count())
 
         
         self.preamble()
@@ -174,8 +175,23 @@ class OSB(Algorithm):
     :from OSB_original.pdf paper
     """   
     def optimise_p(self,lambdas):
+        #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
+        
         #for each subchannel
-        for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
+        jobs=[]
+        kstep=self.bundle.K+1/(mp.cpu_count()*2)
+        for k in range(mp.cpu_count()): #Loop in osb_bb.c:optimise_p
+            kmax=min((k+1)*kstep,self.bundle.K)
+            p=(mp.Process(self.optimise_p_k(lambdas, k,kmax)))
+            jobs.append(p)
+            p.start()
+        for job in jobs:
+            job.join()
+        #Now we have b hopefully optimised
+            
+    def optimise_p_k(self,lambdas,K,Kmax):
+        for k in range(K,Kmax):
+            utility.log.debug("Launched channel %d search"%k)
             lk_max=-self.defaults['maxval']
             b_max=[]
             #for each bit combination
@@ -189,21 +205,19 @@ class OSB(Algorithm):
                     lk_max=lk
                     b_max=b_combo
             #By now we have b_max[k]
-
+    
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,k)
             self.b[k]=b_max
-        #Now we have b hopefully optimised
-            
+        #end for
     """
     L_k; Return the Lagrangian given a bit-loading combination and tone
     Effectively the cost function
     """
     def _l_k(self,bitload,lambdas,k):
-        #use a local p for later parallelism
-        p=self.bundle.calc_psd(bitload,k)
+        P=self.bundle.calc_psd(bitload,k)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
-        if (p < 0).any(): #TODO Spectral Mask
+        if (P < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
 
         # p is a matrix of power values required on each line[k] to support bitload[line] bits
@@ -215,7 +229,7 @@ class OSB(Algorithm):
         
         #After profiling, np.reduce is faster than looping
         bw=np.add.reduce(bitload*self.w)
-        lp=np.add.reduce(lambdas*p)
+        lp=np.add.reduce(lambdas*P)
         
         lk=bw-lp
         
