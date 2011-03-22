@@ -6,6 +6,8 @@ import sys
 import utility
 import math
 import numpy as np
+import pylab as pl
+import time
 
 
 
@@ -17,6 +19,7 @@ class Algorithm(object):
     MAXPOWER = None
     MAXBITSPERTONE = 15
     name="Default Algorithm Name; You should never see this!"
+    stats={}
 
         
     def __init__(self,bundle):
@@ -28,6 +31,7 @@ class Algorithm(object):
         self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
         self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))     
         utility.log.info("Lets get this party started!")
+        self.stats['start']=time.time()
     
     def postscript(self):
         self.b=utility.mat2arr(self.b)
@@ -35,7 +39,10 @@ class Algorithm(object):
             line.p=self.p[:,line.id]
             line.b=self.b[:,line.id]
         self.bundle.calculate_snr() #move into postscript?
-        utility.log.info("All Done Here")
+        self.stats['end']=time.time()
+        self.stats['duration']=self.stats['end']-self.stats['start']
+
+        utility.log.info("All Done Here, took %f"%self.stats['duration'])
         
     #FIXME I'm fairly sure nothing below here is layed out properly yet; am_load_ra is used in SOME algos...
     def am_load_ra(self,line):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, RR_OSB
@@ -164,3 +171,13 @@ class Algorithm(object):
             if (line.p[tone] < line.MINPSD) and (line.b[tone] != 0):
                 utility.log.debug("Changing p from %e to MINPSD"%line.p[tone])
                 line.p[tone] = line.MINPSD
+                
+    """
+    Print Power and Bitrate settings to file
+    """
+    """
+    Print Channel Matrix, Power and Bitrates to file after generation
+    """
+    def tofile(self,filename):
+        np.save(filename+'-power', self.p)
+        np.save(filename+'-bitrate',self.b)

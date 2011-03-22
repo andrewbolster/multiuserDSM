@@ -4,12 +4,12 @@ Class that describes the DSL bundle object
 
 #Global imports
 import sys
+import re
 import cmath
 import numpy as np
-import pydot
 import pyparsing
 import scipy.special as ss
-import pylab
+import pylab as pl
 import pprint
 import itertools
 import joblib #http://packages.python.org/joblib/installing.html
@@ -28,7 +28,7 @@ class Bundle(object):
     UGAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
     gamma_hat = pow(10,(UGAMMA+MARGIN-C_G)/10)
     
-    def __init__(self,network_file,K=512,rates_file=None, weights_file=None):
+    def __init__(self,network_file,K=512,scenarioname="NoScenario",rates_file=None, weights_file=None):
         self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
@@ -45,8 +45,13 @@ class Bundle(object):
         try:
             with open(network_file,"r") as nf:
                 for n,line in enumerate(nf):
-                    # nt and lt are network termination (CO or RT) and line termination (CPE)
-                    nt,lt = line.split(",")
+                    if '#' in line: #not used yet but could be handy later
+                        scenarioline=re.split('#|:|,',line)
+                        for key in range(1,len(scenarioline),2): 
+                            self.scenariooptions[scenarioline[key]]=scenarioline[key+1]
+                    else:
+                        # nt and lt are network termination (CO or RT) and line termination (CPE)
+                        nt,lt = line.split(",")
                     self.lines.append(Line(nt,lt,n,self))
 
             self.N = len(self.lines)
@@ -61,14 +66,11 @@ class Bundle(object):
         log.info("Calculating the channel matrix")
         #The real work begins
         self.calc_channel_matrix()
-        
-        log.info("Printing xtalk_gain")
-        self.print_xtalk()
-        self.print_xtalk_onetone(0)
 
         #self.graph_channel_matrix()
         log.info("Running self check:")
         self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
+        self.tofile(scenarioname)
         
 
 
@@ -304,17 +306,17 @@ class Bundle(object):
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
         B=np.asmatrix(np.zeros(self.N))
+        
         for v in range(self.N): #victims
             for x in range(self.N): #xtalkers
                 if v==x: 
                     A[v,x]=1
                 else:
-                    A[v,x]=(-self._f(bitload[x])*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+                    A[v,x]=(-1.0*self._f(bitload[v])*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
         for i in range(self.N):
             B[0,i]=self._f(bitload[i])*(dbmhz_to_watts(-140)/self.xtalk_gain[i][i][k])    
-            
-        #Transpose B to be single-column matrix (1xN.NxN)
-        B=B.T               
+        
+        B=B.T
         #assert(B.shape==(self.N,1))
         #log.debug("A,B:%s,%s"%(str(A),str(B)))
         #Everyone loves linear algebra...dont they?
@@ -327,24 +329,19 @@ class Bundle(object):
             P=np.linalg.solve(A,B)
         
         #Because I'm paranoid
-        #assert np.allclose(B,(np.dot(A,P))), "Turns out linear algebra is hard"
+        assert np.allclose(B,(np.dot(A,P))), "Turns out linear algebra is hard"
         
         #Useful debugging
-        if k == 0 and False: 
-            log.debug("A:\n%s"%str(A))
-            log.debug("B:\n%s"%str(B))
-            log.debug("P:\n%s"%str(P))
+        log.debug("A:\n%s"%str(A))
+        log.debug("B:\n%s"%str(B))
+        log.debug("P:\n%s"%str(P))
         
         P=P.T
 
         #assert(P.shape==(1,self.N)),"Non-single-row P:%s"%str(P.shape)
         P=mat2arr(P[0])
-        #assert (P>0).any(),"Zero or Negative P\n%s"%str(P) #TODO Spectral Mask?
-        #log.debug("P[0]:%s%s"%(str(mat2arr(P[0])),type(mat2arr(P[0]))))
+        log.debug("P[0]:%s%s"%(str(mat2arr(P[0])),type(mat2arr(P[0]))))
         #FIXME This should just return [p0 p1 p2...] not [[px...]]
-        for i in range(self.N):
-            if (abs(P[i]) < 4.31e-14):
-                P[i]=0
         self._psd_cache[key]=P        
         return P 
 
@@ -360,6 +357,7 @@ class Bundle(object):
     F- Gamma function - 
     f(line,k)=\Gamma(2^{b_n(k)} -1)
     :from psd_vector.c
+    #TODO Memoize
     """
     def _f(self,bitload,gamma=GAMMA):
         result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
@@ -371,15 +369,15 @@ class Bundle(object):
     """
     def graph_channel_matrix(self):
         
-        pylab.contourf(self.xtalk_gain[...,0])
-        pylab.figure()
-        pylab.show
+        pl.contourf(self.xtalk_gain[...,0])
+        pl.figure()
+        pl.show
     
     """
-    Print Channel Matrix to file after generation
+    Print CM to file
     """
-    def print_cm(self,filename):
-        f=open(filename,'w')
+    def tofile(self,filename):
+        np.save(filename+'-channelmatrix', self.xtalk_gain)
         
     """
     Print Channel Matrix to screen

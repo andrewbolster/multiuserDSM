@@ -183,7 +183,7 @@ def TodB(input):
         return 10*math.log10(input)
     except ValueError:
         log.error("Caught Exception on TodB(%f)"%input)
-        return 0
+        return float("-inf")
 
 def freq_on_tone(K): #TODO Memoize
         """

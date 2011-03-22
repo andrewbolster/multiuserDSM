@@ -29,7 +29,7 @@ class OSB(Algorithm):
                        'l':1.0,             #From osb_bb.c::bisect_l() (modified from 0)
                        'l_min':0.0,
                        'l_max':1.0,
-                       'w':10.0, #same behaviour for any real value
+                       'w':1.0, #same behaviour for any real value
                        'w_max':100,
                        'w_min':0,
                        'p_budget':0.110,    #watts #from scenarios.c (0.110
@@ -71,8 +71,15 @@ class OSB(Algorithm):
     """
     def _bisect_l(self):
         utility.log.info("Beginning Bisection")
-        p_now = np.zeros(self.bundle.N)
+        self.p_total = np.zeros(self.bundle.N)
+        self.p_total_last = np.tile(1.0,self.bundle.N)
+
         while not self._l_converged():
+            #Send across last-run's values as last
+            self.l_last = self.l
+            self.p_total_last=self.p_total
+            self.p_total=map(self.total_power,self.bundle.lines)
+                     
             for lineid,line in enumerate(self.bundle.lines):
                 l_min=self.defaults['l_min']
                 l_max=self.defaults['l_max']
@@ -85,14 +92,14 @@ class OSB(Algorithm):
                     linepower=self.total_power(line)
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
                     if ( linepower > self.power_budget[lineid]): 
-                        utility.log.info("Missed power budget:linepower:%s,lastdrop:%s,budget:%s"%(str(linepower),str((lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
+                        utility.log.info("Missed power budget:linepower:%.5f,lastdrop:%.3f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
                         lastpower=linepower                      
                         if (self.l[lineid] < 1):
                             self.l[lineid]=1 #0*2=0
                         else:
                             self.l[lineid]*=2
                     else:
-                        utility.log.info("Satisfied power budget:linepower:%s,budget:%s"%(str(linepower),str(self.power_budget[lineid])))
+                        utility.log.info("Satisfied power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
                         break
                 #this value is the highest that satisfies the power budget
                 l_max=self.l[lineid]
@@ -107,19 +114,18 @@ class OSB(Algorithm):
                 while not self._l_converged(line,last):
                     self.l[lineid]=(l_max+l_min)/2
                     self.optimise_p(self.l)
-                    utility.log.debug("After optimise_p(), total p:%s"%str(self.total_power(line)))                    
+                    utility.log.debug("After optimise_p(), total p:%.5f"%(self.total_power(line)))                    
                     linepower=self.total_power(line)
                     if linepower > self.power_budget[lineid]:
                         l_min=self.l[lineid]
                     else:
                         l_max=self.l[lineid]
                     last=linepower
+                utility.log.info("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
+
             #End line loop
-            p_now=np.asmatrix(map(self.total_power,self.bundle.lines))
-            self.l_last_last = self.l_last
-            self.l_last = self.l
+            
         #End while loop
-        utility.log.info("And Were Done!")
             
                     
                     
@@ -136,14 +142,11 @@ class OSB(Algorithm):
                 howfar = abs(self.power_budget[line.id]-thispower)
                 return howfar < self.defaults['p_tol'] or thispower==last
         else: #if called without a line, assume operation on the bundle
-            if (self.l_last == self.l).all(): 
+            if (self.l_last == self.l).all():
                 #Optimisation done since all values the same as last time
                 assert (self.l > 0).all()
-                utility.log.info("Last = L")
-                if (self.l_last_last == self.l_last).all():
-                    utility.log.info("LastLast = Last")
-                    return True
-                else: return False
+                utility.log.info("This = Last")
+                return True
             else:
                 #TODO Need to add rate checking in here for rate mode
                 return False
@@ -168,8 +171,10 @@ class OSB(Algorithm):
     :from OSB_original.pdf paper
     """   
     def optimise_p(self,lambdas):
+        line123=False
         #for each subchannel
         for k in range(self.bundle.K): #Loop in osb_bb.c:optimise_p
+            (k==128) and line123 and utility.log.setLevel(logging.DEBUG)
             lk_max=-self.defaults['maxval']
             b_max=[]
             #for each bit combination
@@ -178,7 +183,6 @@ class OSB(Algorithm):
                 b_combo=np.asarray(b_combo)
                 #The lagrangian value for this bit combination
                 lk=self._l_k(b_combo,lambdas,k)
-                #utility.log.debug("LK/LK_max/combo/b_max:%s %s %s %s"%(lk,lk_max,b_combo,b_max))
                 if lk >= lk_max:
                     lk_max=lk
                     b_max=b_combo
@@ -186,8 +190,10 @@ class OSB(Algorithm):
 
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,k)
-            (k==224) and utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepower=%s]"%(k,str(b_max),str(lambdas),str(self.total_power(self.bundle.lines[0]))))
+            utility.log.debug("Max[k=%d][bmax=%s][l=%s][linepowers=%s]"%(k,str(b_max),str(lambdas),str(map(self.total_power,self.bundle.lines))))
             self.b[k]=b_max
+            (k==128) and line123 and utility.log.setLevel(logging.INFO)
+
 
         #Now we have b hopefully optimised
             
@@ -214,7 +220,7 @@ class OSB(Algorithm):
         #bw=\sum_i^N{bitload_i*w_i}
         #lp=\sum_i^N{l_i*p_i}
         
-        if (False): #Are you feeling fancy?
+        if (True): #Are you feeling fancy?
             bw=np.add.reduce(bitload*self.w)
             lp=np.add.reduce(lambdas*p)
             
@@ -226,9 +232,7 @@ class OSB(Algorithm):
         
         lk=bw-lp
         
-        (k==0) and utility.log.debug("LK:%s,BW:%s,LP:%s,B:%s,P:%s,W:%s,L:%s"%(str(lk),str(bw),str(lp),str(bitload),str(p),str(self.w),str(lambdas)))
+        utility.log.debug("LK:%s,BW:%s,LP:%s,B:%s,P:%s,W:%s,L:%s"%(str(lk),str(bw),str(lp),str(bitload),str(p),str(self.w),str(lambdas)))
 
-        
-        assert(isinstance(lk,np.float64))
         return lk
        
