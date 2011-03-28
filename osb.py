@@ -1,6 +1,6 @@
-"""
+'''
 Algorithm Modules
-"""
+'''
 
 #Global Imports
 import numpy as np
@@ -17,9 +17,9 @@ from line import Line
 import utility
 
 class OSB(Algorithm):
-    """
+    '''
     Optimum Spectrum Balancing
-    """
+    '''
     def run(self):
         self.name = "OSB"
         #Aimed-for rates per-line
@@ -70,10 +70,10 @@ class OSB(Algorithm):
         self.postscript()
         return
     
-    """
+    '''
     Lambda Bisection
     :from osb_bb.c
-    """
+    '''
     def _bisect_l(self):
         utility.log.info("Beginning Bisection")
         self.p_total = np.zeros(self.bundle.N)
@@ -133,10 +133,10 @@ class OSB(Algorithm):
             
                     
                     
-    """
+    '''
     l converged
     Decides whether the line/bundle is done
-    """
+    '''
     def _l_converged(self,line=False,last=False):
         if isinstance(line,Line): #if called with a line
             if last == False: 
@@ -155,9 +155,9 @@ class OSB(Algorithm):
                 #TODO Need to add rate checking in here for rate mode
                 return False
             
-    """
+    '''
     Total Power: return a line's planned total power
-    """
+    '''
     def total_power(self,line=False):
         if isinstance(line,Line):
             #swap the tone and line dimensions for cleanliness
@@ -170,10 +170,10 @@ class OSB(Algorithm):
     
     
                 
-    """
+    '''
     Optimise Power (aka optimise_s)
     :from OSB_original.pdf paper
-    """   
+    '''   
     def optimise_p(self,lambdas):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
         
@@ -210,10 +210,10 @@ class OSB(Algorithm):
             self.p[k]=self.bundle.calc_psd(b_max,k)
             self.b[k]=b_max
         #end for
-    """
+    '''
     L_k; Return the Lagrangian given a bit-loading combination and tone
     Effectively the cost function
-    """
+    '''
     def _l_k(self,bitload,lambdas,k):
         P=self.bundle.calc_psd(bitload,k)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value

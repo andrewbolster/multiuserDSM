@@ -10,7 +10,7 @@ import logging
 
 # Log everything, and send it to stderr.
 log = logging.getLogger('multiuserdsm')
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
@@ -75,9 +75,9 @@ t=2 #Type 3 in transferfn.c
 
 CHANNEL_BANDWIDTH = 4312.5 #from include/multiuser_load.h
 
-"""
+'''
 Fancy memoise decorator to make my life easy
-"""
+'''
 def memoize(fctn):
     memory = {}
     @functools.wraps(fctn)
@@ -90,19 +90,19 @@ def memoize(fctn):
         memo.__doc__ = "\n".join([memo.__doc__,"This function is memoized."])
     return memo   
 
-"""
+'''
 Let the transfer function default to type 2;
     Allows for easy default change later
     Allows for easy 'case-based' changes
-"""
+'''
 def do_transfer_function(length,freq,type=3, measure="m"):
-    """
+    '''
     Z=impedance/l, Y=admittance/l
     Z=R+jwL, Y=G+jwC
     Z0=Characteristic Impedence, gamma=propagation constant
     Z0=sqrt(Z/Y), gamma=sqrt(Z*Y)
     Should Use PyGSL, but start off with cmath
-    """
+    '''
     
     #Length must be in KM
     if measure == "m":
@@ -132,9 +132,9 @@ def do_transfer_function(length,freq,type=3, measure="m"):
     return cmath.polar(H)[0]        #polar returns (abs(h),real(h))
 
 def _R(freq):
-    """
+    '''
     Return R Parameter for transfer function
-    """
+    '''
     c_partial = math.pow(material[t]["a_c"]*freq*freq+math.pow(material[t]["r_0c"],4),(0.25))
 
     try:
@@ -145,9 +145,9 @@ def _R(freq):
         return c_partial
     
 def _L(freq):
-    """
+    '''
     Return L Parameter for transfer function
-    """
+    '''
     upper=(material[t]["l_0"]+material[t]["l_inf"]*math.pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
     lower=(1+math.pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
     return (upper/lower)
@@ -158,9 +158,9 @@ def _C(freq):
 def _G(freq):
     return material[t]["g_0"]*math.pow(freq,material[t]["g_e"])
 
-"""
+'''
 Mathematical Utilities
-"""
+'''
 def dbmhz_to_watts(psd):
     return UndB(psd)*1e-3*CHANNEL_BANDWIDTH
 
@@ -182,9 +182,9 @@ def TodB(input):
         return -140 #FIXME Either make it dynamic across the package or use something like -inf; 
 
 def freq_on_tone(K): #TODO Memoize
-        """
+        '''
         Assume ADSL downstream for now
-        """
+        '''
         #return K * 4312.5 + 140156.25;
         assert False==True, "Someone Tried to use freq_on_tone"
 

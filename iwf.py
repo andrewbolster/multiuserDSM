@@ -1,6 +1,6 @@
-"""
+'''
 Algorithm Modules
-"""
+'''
 
 #Global Imports
 import numpy
@@ -12,18 +12,18 @@ from algorithm import Algorithm
 import utility
 
 class IWF(Algorithm):
-    """
+    '''
     Iterative Water Filling
-    """
+    '''
     
     def __init__(self):
         self.name = "IWF"
         
         assert self.bundle is Bundle # "You dun goofed the Bundle!"
         
-        """
+        '''
         Set initial values for power
-        """
+        '''
         if self.bundle.type == "ADSL_DOWNSTREAM":
             p_initial = 0.111
         else:
@@ -38,9 +38,9 @@ class IWF(Algorithm):
         self.preamble()
 
         iterations = rate_iterations = 0
-        """
+        '''
         Iteratively Execute am_load_X and check rate targets
-        """
+        '''
         while iterations < 30 and rate_iterations < 10:
             while self.bundle.check_all_margins(2):
                 for i,line in enumerate(self.bundle.lines):
@@ -54,9 +54,9 @@ class IWF(Algorithm):
             #assume the best
             targets_met=True
             
-            """
+            '''
             Target Checking
-            """
+            '''
             for i,line in enumerate(self.bundle.lines): #TODO List Comprehension/Reduce?
                 if line.rate_target == None:
                     continue

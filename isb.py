@@ -1,6 +1,6 @@
-"""
+'''
 Algorithm Modules
-"""
+'''
 
 #Global Imports
 import numpy
@@ -11,9 +11,9 @@ from bundle import Bundle
 from algorithm import Algorithm
 
 class ISB(Algorithm):
-    """
+    '''
     Iterative Spectrum Balancing
-    """
+    '''
     def __init__(self):
         self.name = "ISB"
         self.preamble

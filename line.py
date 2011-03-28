@@ -1,6 +1,6 @@
-"""
+'''
 Class that describes a DSL Line object
-"""
+'''
 #Global Imports
 import numpy
 
@@ -36,9 +36,9 @@ class Line(object):
         
         
     def __str__(self):
-        """
+        '''
         Super cool graphics
-        """
+        '''
         s = ""
         s += "-" * (self.nt / 250)
         s += "|"
@@ -46,28 +46,28 @@ class Line(object):
         s += "|"
         return s
     
-    """
+    '''
     Return the RLCG Parameterised Transfer Function
-    """   
+    '''   
     def transfer_fn(self, freq):
         #C Version uses bundle as a linked list of lines so most of this function is redundant.
         return utility.do_transfer_function(abs(self.length), freq ,measure="m", type=self.type)
     
-    """
+    '''
     Line Sanity Check
     :from snr.c check_line_sanity
     Called from bundle
-    """
+    '''
     def sanity(self):
         assert (self.b >= 0).all(), utility.log.error("Tone less than zero")
         assert (self.gain >= 0).all(), utility.log.error("Gain less than zero")
         utility.log.debug("Line %d is sane"%self.id)
         return
     
-    """
+    '''
     Calculate Far End XT noise on a channel in watts
     :from snr.c
-    """
+    '''
     def calc_fext_noise(self,k):
         noise=0
         for xtalker in self.bundle.lines:
@@ -79,15 +79,15 @@ class Line(object):
                 utility.log.debug("linepower:%g"% self.p[k])
         return noise
     
-    """
+    '''
     Return AlienXT noise
     :from snr.c
-    """
+    '''
     def alien_xtalk(self,channel): #TODO
         return 0
     
-    """
+    '''
     Return current rate on line
-    """
+    '''
     def rate(self):
         return sum(self.b)

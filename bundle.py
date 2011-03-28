@@ -1,6 +1,6 @@
-"""
+'''
 Class that describes the DSL bundle object
-"""
+'''
 
 #Global imports
 import sys
@@ -13,6 +13,7 @@ import pylab as pl
 import pprint
 import itertools
 import hashlib
+import os
 from tempfile import mkdtemp
 from math import pow,log10,sqrt
 
@@ -39,9 +40,9 @@ class Bundle(object):
         
 
 
-        """
+        '''
         Try to open and parse the network configuration file
-        """
+        '''
         try:
             with open(network_file,"r") as nf:
                 for n,line in enumerate(nf):
@@ -74,10 +75,10 @@ class Bundle(object):
         
 
 
-    """
+    '''
     Calculates the bundle channel gain matrix, generating xtalk_gain[][][]
     :from channel_matrix.c
-    """
+    '''
     def calc_channel_matrix(self):
         #Initialise the gains
         self.xtalk_gain = np.zeros((self.N,self.N,self.K))
@@ -89,25 +90,25 @@ class Bundle(object):
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[x][v][k] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                    
-    """
+    '''
     Check Normalised XT Gains and xtalk symmetry 
     :from channel_matrix.c
     Normalised Gains arn't really needed but its just as easy to keep it in
     XTalk symmetry needs to be checked because if all the lines are NOT the same
     the xtalk_gain matrix can NOT be symmetric in the [i,j] axis
-    """
+    '''
     def check_xtalk_gains(self):
         yeses=0
-        """ Original Way to do it
+        ''' Original Way to do it
         for k in self.K:            #tone
             for x,lineX in enumerate(self.lines):    #xtalker
                 for v,lineV in enumerate(self.lines):#victim
                     if x==v: continue
                     if self.xtalk_gain[x,v,k]/lineV.gain[k] > 0.5:
                         yeses+=1
-        """
+        '''
         
-        """Lets turn this on its head"""
+        '''Lets turn this on its head'''
         for v,victim in enumerate(self.lines):
             #listcomprehension for x,v,k on xtalk_gains and gain[k]
             gainratio=[self.xtalk_gain[x,v,k]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
@@ -131,7 +132,7 @@ class Bundle(object):
             
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
     
-    """
+    '''
     Calculate Far End XT Gain
     :from channel_matrix.c 
     Uses:
@@ -167,7 +168,7 @@ class Bundle(object):
     H3:victim after xtalker(1,2,3)
     H4:victim before xtalker(3,6)
     
-    """
+    '''
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
                
         if dir == "DOWNSTREAM":                 #If DOWNSTREAM, swap  and negate nt/lt's
@@ -187,7 +188,7 @@ class Bundle(object):
         h1 = self.insertion_loss(head_length, freq)
         h2 = self.insertion_loss(shared_length, freq)
         h3 = self.insertion_loss(tail_length, freq)
-        """
+        '''
         This _H takes away the biggest pain of the fext gain cases; 
         H1 > 0 in cases 1,3,4,6,7
         H2 active in all cases, but using max(v.nt,x.lt)
@@ -199,19 +200,19 @@ class Bundle(object):
         I think AMK's Case1/9 fext(length) is wrong. Should be the
         common length between the victim and xtalker, not the combined
         length
-        """
+        '''
         H = h1*h2*h3
         
         gain = H * self.fext(freq, shared_length)
         return gain  
     
-    """
+    '''
     Calculate FEXT for given Freq and Length in m
     Uses:
         UndB
     Model from BT's simulation parameters document cp38-2 http://www.niccstandards.org.uk/files/current/NICC%20ND%201513%20(2010-01).pdf
     :from channel_matrix.c
-    """
+    '''
     def fext(self,freq,length):
        
         x=-55   #This is different from the NICC Model  #FUDGE
@@ -224,24 +225,24 @@ class Bundle(object):
         except ZeroDivisionError:
             return 0
         
-    """
+    '''
     Calculate Insertion Loss
     :from transfer_fn.c
-    """    
+    '''    
     def insertion_loss(self,length,freq): #TODO: Reintroduce factor removed from C version?
-        """
+        '''
         insertion loss makes more sense in the bundle as most of the time,
         it is looking at a common length between two lines
-        """
+        '''
         if length > 0:
             return do_transfer_function(length,freq,measure="km")
         else: 
             return 1 #Leads straight into multiplication; so ends up x*0=0 otherwise
     
-    """
+    '''
     Calculate snr statistics for all lines in bundle
     :from snr.c
-    """
+    '''
     def calculate_snr(self):
         for line in self.lines:
             line.sanity()
@@ -261,36 +262,35 @@ class Bundle(object):
             line.b_total = sum(line.b)
             log.info("Line:%d,Power:%fW,Rate:%dbps"%(line.id,line.p_total,line.b_total))
             
-            """
+            '''
             With This whole Fractional thing; 
             Are b/_b ever different? If its a fractional line is b[k] ever needed?
-            """
-    """
+            '''
+    '''
     Calculate Symbol Error Rate on line
     :from symerr.c
-    """
+    '''
     def _calc_sym_err(self,line,k): #TODO
         
         M=pow(2,line.b[k])
                
         return 1 - (1 - (1 - 1/sqrt(M))*ss.erf(sqrt((3*line.snr[k])/(2*(M-1)))))
     
-    """
+    '''
     Checks inter-service margins
     :from snr.c
     #I suspect this can be ignored
-    """
+    '''
     def check_all_margins(self,gap):
         pass
             
     
-    """
+    '''
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
-    """
+    '''
     def calc_psd(self,bitload,k):
         #Caching implementation (AMK)
-        
         key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
         try:
             ret = self._psd_cache[key]
@@ -302,6 +302,8 @@ class Bundle(object):
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
         B=np.asmatrix(np.zeros(self.N))
+        
+        log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
         
         for v in range(self.N): #victims
             B[0,v]=pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
@@ -317,11 +319,12 @@ class Bundle(object):
         P=np.linalg.solve(A,B)
         
         #Useful debugging
-        """
+        '''
         log.debug("A:\n%s"%str(A))
         log.debug("B:\n%s"%str(B))
         log.debug("P:\n%s"%str(P))
-        """
+        '''
+        
         
         P=P.T
 
@@ -333,19 +336,19 @@ class Bundle(object):
         return P 
 
 
-    """
+    '''
     Transfer function lookup - |h_{i,j}|^2
     This more or less does nothing but return xtalk_gain but is closer to the math
-    """
+    '''
     def _h2(self,line1,line2,channel):
         return self.xtalk_gain[line1.id][line2.id][channel]
     
-    """
+    '''
     F- Gamma function - 
     f(line,k)=\Gamma(2^{b_n(k)} -1)
     :from psd_vector.c
     #TODO Memoize
-    """
+    '''
     def _f(self,bitload,gamma=GAMMA):
         key = "%d-%f"%(bitload,gamma)
         if key in self._f_cache:
@@ -354,25 +357,28 @@ class Bundle(object):
             result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
             self._f_cache[key]=result
         return result #TODO initially, b=0, so this doesnt work
-    """    
+    '''    
     Pretty Print channel Matrix
     #TODO I've got no idea how to display this....
-    """
+    '''
     def graph_channel_matrix(self):
         
         pl.contourf(self.xtalk_gain[...,0])
         pl.figure()
         pl.show
     
-    """
+    '''
     Print CM to file
-    """
+    '''
     def tofile(self,filename):
-        np.save("raw_results/"+filename+'-channelmatrix', self.xtalk_gain)
+        resultsdir="raw_results/"
+        if not os.path.isdir(resultsdir):
+            os.makedirs(resultsdir)
+        np.save(resultsdir+filename+'-channelmatrix', self.xtalk_gain)
         
-    """
+    '''
     Print Channel Matrix to screen
-    """
+    '''
     def print_xtalk(self):
         for tone in range(self.K):
             print("\n%d:"%(tone)),
@@ -380,9 +386,9 @@ class Bundle(object):
                 for v in range(self.N):
                     print("%e"%self.xtalk_gain[x][v][tone]), 
     
-    """
+    '''
     Print Channel Matrix to screen
-    """
+    '''
     def print_xtalk_onetone(self,tone):
         print("\n%d:"%(tone))
         for x in range(self.N):

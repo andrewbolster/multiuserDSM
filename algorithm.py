@@ -1,6 +1,6 @@
-"""
+'''
 Algorithm Parent module 
-"""
+'''
 
 import sys
 import utility
@@ -12,9 +12,9 @@ import time
 
 
 class Algorithm(object):
-    """
+    '''
     Algorithm Constants; usually set within child classes
-    """
+    '''
     MAXRATE = None #Need to set this for load_fm and ISB
     MAXPOWER = None
     MAXBITSPERTONE = 15
@@ -26,7 +26,11 @@ class Algorithm(object):
         self.bundle=bundle
 
     def preamble(self):
-        #Stuff that needs to be done for any algorithm
+        '''
+        Stuff that needs to be done for any algorithm, including 
+        *initialisation of power and bitloading matrices
+        *timing information
+        '''
         #Power and bitloading are dim(KxN)
         self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
         self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))     
@@ -34,6 +38,13 @@ class Algorithm(object):
         self.stats['start']=time.time()
     
     def postscript(self):
+        '''
+        Stuff that should be done for any algorithm, including
+        *downtyping of b -> ndarray
+        *reassignment of relevent p's and b's to line values
+        *SNR et al calculations
+        *Timing statistics
+        '''
         self.b=utility.mat2arr(self.b)
         for line in self.bundle.lines:
             line.p=self.p[:,line.id]
@@ -87,22 +98,22 @@ class Algorithm(object):
     
     def am_load_fm(self,line,half=0):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, Single_IWF
         #half:(-1:bottom,0:both,1:top)
-        """
+        '''
         Initialise Everything
-        """
+        '''
         line.b = np.zeros(self.bundle.K)
         tone_full = np.tile(False,self.bundle.K)     #set all tones to full
         p_total=0
         b_total=0
                
-        """
+        '''
         Calculate Initial bit/tone costs
-        """
+        '''
         delta_p=self._calc_delta_p(line,tone_full)
         
-        """
+        '''
         Deal with Halves
-        """ #Why is there a check on K==512?
+        ''' #Why is there a check on K==512?
         if ( half == 1 ): #Top Half
             for tone in range(self.bundle.K/2):
                 tone_full[tone] = True
@@ -118,7 +129,7 @@ class Algorithm(object):
             b_total += 1            #Keep track of yer bits!
             p_total += delta_p[tone]
             
-            """Rate/Power/Bit Checking"""
+            '''Rate/Power/Bit Checking'''
             if (b_total == self.MAXRATE):
                 utility.log.debug("n:%d,k:%d - rate-satisfied"%(line.id,tone))
                 break #I'm done          
@@ -146,11 +157,11 @@ class Algorithm(object):
             utility.log.error("Could not reach target data rate. Desired:",self.MAXRATE," Achieved:",b_total)                
         return b_total
     
-    """
+    '''
     Calculate cost of additional bit on all the tones in a line
     :from am_load.c (implicit)
     Optimised from original version (Thank you wolframalpha)
-    """
+    '''
     def _calc_delta_p(self,line,tone_full):
         delta_p=np.zeros(self.bundle.K)
         for tone in self.bundle.K:
@@ -160,11 +171,11 @@ class Algorithm(object):
                 delta_p[tone] = 100
         return delta_p
                 
-    """
+    '''
     Update PSD's for this line
     :from am_load.c (implicit)
     Potentially integratable into calculatesnr?
-    """
+    '''
     def update_psds(self,line):
         for tone in self.bundle.K:
             line.p[tone] = utility.watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone]))
@@ -172,12 +183,12 @@ class Algorithm(object):
                 utility.log.debug("Changing p from %e to MINPSD"%line.p[tone])
                 line.p[tone] = line.MINPSD
                 
-    """
+    '''
     Print Power and Bitrate settings to file
-    """
-    """
+    '''
+    '''
     Print Channel Matrix, Power and Bitrates to file after generation
-    """
+    '''
     def tofile(self,filename):
         np.save("raw_results/"+filename+'-power', self.p)
         np.save("raw_results/"+filename+'-bitrate',self.b)

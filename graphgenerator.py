@@ -12,9 +12,9 @@ class graphgen():
     scenario=""
     noisefloor = -140
     def __init__(self,scenario):
-        """
+        '''
         Set up some data
-        """
+        '''
         self.scenario=scenario
         self.dest="graphs/"
         self.importdata()
