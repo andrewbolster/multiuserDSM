@@ -39,7 +39,7 @@ class MIPB(Algorithm):
                          }
         dim2=(self.bundle.K,self.bundle.N)
         
-        self.spectral_mask=0.0 #FIXME Need a value for this.
+        self.spectral_mask=util.dbmhz_to_watts(-30) #from mipb.c _spectral_mask
         self.p_ave=0.0
         #Finished[tone,user]=False
         self.finished=np.tile(False,dim2)
@@ -60,49 +60,69 @@ class MIPB(Algorithm):
         self.preamble()
         hold_counter=0
         self.stepsize=self.defaults['min_sw']
-        while not self.converged():
-            self.load_bundle(self.w)
-            self.update_totals()
-            util.log.debug("After LoadBundle, lineb:%s"%self.line_b)
-            if self.oscillating():
-                self.stepsize/=2
-                util.log.error("Oscillation Detected, Decreased Stepsize to %lf"%self.stepsize)
-                util.log.info("Regressing W and B")
-                self.w=np.copy(self.w_last)
-                self.line_b=np.copy(self.line_b_last)
-            else:
-                self.line_b_last=np.copy(self.line_b)
-                self.w_last = np.copy(self.w)
-                if (hold_counter>0):
-                    util.log.info("Holding...")
-                    hold_counter-=1
+        if any(self.rate_targets):
+            util.log.info("Running with targets:%s"%str(self.rate_targets))
+
+            while not self.converged():
+                self.load_bundle(self.w)
+                self.update_totals()
+                util.log.info("After LoadBundle, lineb:%s"%self.line_b)
+                if self.oscillating():
+                    self.stepsize/=2
+                    util.log.error("Oscillation Detected, Decreased Stepsize to %lf"%self.stepsize)
+                    util.log.info("Regressing W and B")
+                    self.w=np.copy(self.w_last)
+                    self.line_b=np.copy(self.line_b_last)
                 else:
-                    self.stepsize+=self.stepsize #*=2
-                    util.log.debug("Increased stepsize to :%lf"%self.stepsize)
-            self.w=self.update_w(self.w)
+                    self.line_b_last=np.copy(self.line_b)
+                    self.w_last = np.copy(self.w)
+                    if (hold_counter>0):
+                        util.log.info("Holding...")
+                        hold_counter-=1
+                    else:
+                        self.stepsize+=self.stepsize #*=2
+                        util.log.info("Increased stepsize to :%lf"%self.stepsize)
+                self.w=self.update_w(self.w)
+        else: #No Rate Targets Given
+            util.log.info("No Target Given")
+            self.load_bundle(self.w) #w defaults to 1 anyway, so no effect
+        
+        self.postscript()
     
     def converged(self):
         '''
         Checks if we are within the rate-margin
-        since rate targets not implemented yet, returns false if the stepsize
-        the default, and true if its been changed
+        :I can see this being a problem if attempting parallelisation; non singular entry exit.
         '''
-        return (self.stepsize > 1)
-    
+        rate_tol = self.defaults['rate_tol']
+        for line in range(self.bundle.N):
+            if not self.rate_targets[line] == False : #If rate has been set
+                if abs(self.rate_targets[line]-self.line_b[line])>rate_tol:
+                    return False
+        return True
     
     def oscillating(self):
         '''
         Simple enough, return true if the results are oscillating
-        #FIXME Not implemented since rate_targets arn't implemented, re AMK
         '''
-        return False
+        osc_tol=self.defaults['osc_tol']
+        delta_b=(self.line_b-self.rate_targets)
+        delta_b_last=(self.line_b-self.rate_targets)
+        osc=0
+        osc += sum(delta_b>osc_tol and -delta_b_last>osc_tol) #Loads are spiking down
+        osc += sum(delta_b_last>osc_tol and -delta_b>osc_tol) #Loads are spiking up
+        util.log.info("Found %d oscillating channels"%osc)
+        return (osc>=2)
     
     def load_bundle(self,weights):
-        #Algorithm Specific Initialisation
+        '''
+        Apply the current weights and 'pour' power into the bundle
+        '''
         #mipb.c::load
         
         #Bring some variables into local scope to speed things up
         MAXBITSPERTONE = self.MAXBITSPERTONE
+        bit_inc=self.defaults['bit_inc']
         util.log.info("load_bundle:%s"%str(weights))
         
         #Initialise DeltaP
@@ -115,8 +135,8 @@ class MIPB(Algorithm):
             #Generate Cost Calculations and return mins = (k_min,user_min)
             mins=self.update_cost_matrix(weights)
             (k_min,n_min)=mins
-            util.log.debug("Made it through update with min cost of %lf"%(self.cost[mins]))
-            self.b[mins]+=self.defaults['bit_inc']
+            util.log.info("Made it through update with min cost of %lf"%(self.cost[mins]))
+            self.b[mins]+=bit_inc
             #Update the powers 
             self.update_power(mins)
             if self.b[mins] >= MAXBITSPERTONE:
@@ -159,9 +179,12 @@ class MIPB(Algorithm):
                 if not self.finished[kn]:
                     assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
                     if self.cost[kn]<min_cost:
-                        if not self._constraints_ok(*kn):
+                        util.log.info("Testing: %d,%d"%kn)
+                        if self._constraints_broken(*kn):
+                            util.log.info("And this one is done: %f>%f"%(self.cost[kn],min_cost))
                             self.finished[kn]=True
                         else:
+                            util.log.info("New Min: %f<%f"%(self.cost[kn],min_cost))
                             min_cost=self.cost[kn]
                             min=kn
             try:
@@ -170,18 +193,19 @@ class MIPB(Algorithm):
                 util.log.critical("No Cost Minimum Found")
                 raise StandardError                    
                     
-    def _constraints_ok(self,tone,line):
+    def _constraints_broken(self,tone,line):
         '''
         Check power, mask, constraints and return false if broken
         '''
         if (self.line_p + self.delta_p[tone,line] > self.power_budget).any():
-            return False
-        elif (self.p[tone,line] + self.delta_p[tone,line,line] > self.spectral_mask):
-            return False
-        else:
+            util.log.info("Power Broken")
             return True
-        
-        
+        elif (self.p[tone,line] + self.delta_p[tone,line,line] > self.spectral_mask):
+            util.log.info("Spectrum Broken")
+            return True
+        else:
+            return False
+          
     def _cost_function(self,(tone,line),weights):
         '''
         Cost function; returns the the current cost of adding a bit to this tone
@@ -189,10 +213,9 @@ class MIPB(Algorithm):
         Assumes that constraint test has already been applied to the bundle
         '''
         #Unless I'm being retarded, all that cost_function does is sum the deltap's along the last dimension...
-        #util.log.debug("Hello, I'm the Cost Function, trying to sum this:%s"%self.delta_p[tone,line,:])
+        #util.log.info("Hello, I'm the Cost Function, trying to sum this:%s"%self.delta_p[tone,line,:])
         return np.sum(self.delta_p[tone,line,:])*weights[line]
-                
-        
+                   
     def _calc_delta_p(self,tone,line):
         '''
         (re)Calculate the delta_p matrix for powers in the bundle
@@ -230,7 +253,26 @@ class MIPB(Algorithm):
     def update_w(self,weights):
         '''
         Update the weights assigned to each line
-        #FIXME not implemented yet
         '''
-        return weights
+        weights=map(self._update_single_w,range(self.bundle.N))
         
+        return weights
+    
+    def _update_single_w(self,line):
+        if not self.rate_targets[line]==False:
+            rate_tol = self.defaults['rate_tol']
+            stepsize=self.stepsize
+            diff = self.line_b[line]-self.rate_targets[line]
+            #If we're within tolerance, do nothing, otherwise...
+            if abs(diff)>rate_tol:
+                if diff < 0: #if b<r
+                    #I don't think this makes sense but implementing it for graphical test
+                    if (stepsize*(-diff))>self.w[line]: #if updated weight is going to be non positive
+                        return self.w[line]*0.9
+                #if b>r or update !>w
+                return self.w[line]+(stepsize*(-diff))
+                #I reckon the entire thing could be replaced by
+                return max(self.w[line]+(stepsize*(-diff)),self.w[line]*0.9)
+            else:
+                return self.w[line]
+                

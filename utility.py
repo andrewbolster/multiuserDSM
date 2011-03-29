@@ -10,12 +10,17 @@ import logging
 
 # Log everything, and send it to stderr.
 log = logging.getLogger('multiuserdsm')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
 log.addHandler(h)
+
+#Directories
+rawdir="raw_results/"
+profdir="profiles/"
+graphdir="graphs/"
 
 
 material=[{ # awg 26
@@ -171,14 +176,14 @@ def UndB(input):
     try:
         return math.pow(10,input/10)
     except ValueError:
-        log.error("Caught Exception on UndB(%f)"%input)
+        log.debug("Caught Exception on UndB(%f)"%input)
         raise ValueError
 
 def TodB(input):
     try:
         return 10*math.log10(input)
     except ValueError:
-        log.error("Caught Exception on TodB(%f)"%input)
+        log.debug("Caught Exception on TodB(%f)"%input)
         return -140 #FIXME Either make it dynamic across the package or use something like -inf; 
 
 def freq_on_tone(K): #TODO Memoize

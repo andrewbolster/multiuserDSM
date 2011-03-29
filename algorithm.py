@@ -3,11 +3,12 @@ Algorithm Parent module
 '''
 
 import sys
-import utility
+import utility as util
 import math
 import numpy as np
 import pylab as pl
 import time
+import os
 
 
 
@@ -34,7 +35,7 @@ class Algorithm(object):
         #Power and bitloading are dim(KxN)
         self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
         self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))     
-        utility.log.info("Lets get this party started!")
+        util.log.info("Lets get this party started!")
         self.stats['start']=time.time()
     
     def postscript(self):
@@ -45,7 +46,7 @@ class Algorithm(object):
         *SNR et al calculations
         *Timing statistics
         '''
-        self.b=utility.mat2arr(self.b)
+        self.b=util.mat2arr(self.b)
         for line in self.bundle.lines:
             line.p=self.p[:,line.id]
             line.b=self.b[:,line.id]
@@ -53,7 +54,7 @@ class Algorithm(object):
         self.stats['end']=time.time()
         self.stats['duration']=self.stats['end']-self.stats['start']
 
-        utility.log.info("All Done Here, took %f"%self.stats['duration'])
+        util.log.info("All Done Here, took %f"%self.stats['duration'])
         
     #FIXME I'm fairly sure nothing below here is layed out properly yet; am_load_ra is used in SOME algos...
     def am_load_ra(self,line):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, RR_OSB
@@ -79,7 +80,7 @@ class Algorithm(object):
                 line.b[tone]-=1
                 p_total -=delta_p[tone]
                 break
-            elif (p[tone] > utility.dbmhz_to_watts(-20)): #if this tone is greater than the masking power
+            elif (p[tone] > util.dbmhz_to_watts(-20)): #if this tone is greater than the masking power
                 line.b[tone]-=1
                 p[tone]-=delta_p[tone]
                 p_total -= delta_p[tone]
@@ -87,7 +88,7 @@ class Algorithm(object):
             
             self._calc_delta_p(line,tone_full)
         else:
-            utility.log.info("All Tones are full!") #Breaking statement where min(delta_p) < 0
+            util.log.info("All Tones are full!") #Breaking statement where min(delta_p) < 0
         
         self.update_psds(line)
         
@@ -117,11 +118,11 @@ class Algorithm(object):
         if ( half == 1 ): #Top Half
             for tone in range(self.bundle.K/2):
                 tone_full[tone] = True
-                utility.log.debug("Top Half only")
+                util.log.debug("Top Half only")
         elif (half == -1): #Bottom Half
             for tone in range(self.bundle.K/2,self.bundle.K):
                 tone_full[tone] = True        
-                utility.log.debug("Bottom Half only")
+                util.log.debug("Bottom Half only")
         
         while (0 < min(delta_p)):
             tone = np.argmin(delta_p) #return the tone with the lowest bit-adding cost
@@ -131,13 +132,13 @@ class Algorithm(object):
             
             '''Rate/Power/Bit Checking'''
             if (b_total == self.MAXRATE):
-                utility.log.debug("n:%d,k:%d - rate-satisfied"%(line.id,tone))
+                util.log.debug("n:%d,k:%d - rate-satisfied"%(line.id,tone))
                 break #I'm done          
             if (line.b[tone] >= self.MAXBITSPERTONE):
                 tone_full[tone] = True
-                utility.log.info("n:%d,k:%d - tone full"%(line.id,tone))
+                util.log.info("n:%d,k:%d - tone full"%(line.id,tone))
             if (p_total > self.MAXPOWER):
-                utility.log.info("n:%d,k:%d - exceeded power budget, rolling back"%(line.id,tone))
+                util.log.info("n:%d,k:%d - exceeded power budget, rolling back"%(line.id,tone))
                 line.b[tone]-=1
                 b_total -=1
                 p_total -=delta_p[tone]
@@ -146,7 +147,7 @@ class Algorithm(object):
             #Recalculate bit/tone costs
             delta_p=self._calc_delta_p(line,tone_full)
         else:
-            utility.log.info("All Tones are full!") #Breaking statement where min(delta_p) <= 0
+            util.log.info("All Tones are full!") #Breaking statement where min(delta_p) <= 0
         
         #Update powers
         self.update_psds(line)
@@ -154,7 +155,7 @@ class Algorithm(object):
         line.service = np.zeros(self.bundle.K) #Still have no idea what this does, but reset it to zero anyway
         
         if b_total != self.MAXRATE: #This should be right as b_total is incrementally added
-            utility.log.error("Could not reach target data rate. Desired:",self.MAXRATE," Achieved:",b_total)                
+            util.log.error("Could not reach target data rate. Desired:",self.MAXRATE," Achieved:",b_total)                
         return b_total
     
     '''
@@ -178,9 +179,9 @@ class Algorithm(object):
     '''
     def update_psds(self,line):
         for tone in self.bundle.K:
-            line.p[tone] = utility.watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone]))
+            line.p[tone] = util.watts_to_dbmhz((pow(2,line.b[tone])-1)*(self.gamma_hat/line.cnr[tone]))
             if (line.p[tone] < line.MINPSD) and (line.b[tone] != 0):
-                utility.log.debug("Changing p from %e to MINPSD"%line.p[tone])
+                util.log.debug("Changing p from %e to MINPSD"%line.p[tone])
                 line.p[tone] = line.MINPSD
                 
     '''
@@ -190,5 +191,6 @@ class Algorithm(object):
     Print Channel Matrix, Power and Bitrates to file after generation
     '''
     def tofile(self,filename):
-        np.save("raw_results/"+filename+'-power', self.p)
-        np.save("raw_results/"+filename+'-bitrate',self.b)
+        assert os.path.isdir(util.rawdir)==True, "No "
+        np.save(util.rawdir+filename+'-power', self.p)
+        np.save(util.rawdir+filename+'-bitrate',self.b)

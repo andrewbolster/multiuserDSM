@@ -6,7 +6,8 @@ Created on 21 Mar 2011
 
 import numpy as np
 import pylab as pl
-import utility
+import utility as util
+import os
 
 class graphgen():
     scenario=""
@@ -16,20 +17,21 @@ class graphgen():
         Set up some data
         '''
         self.scenario=scenario
-        self.dest="graphs/"
+        self.dest=util.graphdir
+        
         self.importdata()
     
     def importdata(self):
-        data="raw_results/"
-        self.p=np.load(data+self.scenario+"-power.npy")
-        self.b=np.load(data+self.scenario+"-bitrate.npy")
-        self.cm=np.load(data+self.scenario+"-channelmatrix.npy")
+        assert os.path.isdir(util.rawdir), "No Path, Dunno wut happened there...%s"%util.graphdir
+        self.p=np.load(util.rawdir+self.scenario+"-power.npy")
+        self.b=np.load(util.rawdir+self.scenario+"-bitrate.npy")
+        self.cm=np.load(util.rawdir+self.scenario+"-channelmatrix.npy")
     
     def graph_p(self):
         pl.close()
         channels=range(self.p.shape[0])
         for line in range(self.p.shape[1]):
-            pl.plot(channels,map(utility.watts_to_dbmhz,self.p[:,line])) #this may be the wrong slicing style
+            pl.plot(channels,map(util.watts_to_dbmhz,self.p[:,line])) #this may be the wrong slicing style
         pl.xlabel("Subchannel Index")
         pl.ylabel("Power (dbmhz)")
         pl.title("Plot of per-tone power assignments for %d lines"%self.p.shape[1])
@@ -57,12 +59,16 @@ class graphgen():
         pl.yscale("log")
         pl.legend()
         pl.title("Plot of inter-line crosstalk gains for %d lines"%self.p.shape[1])
-        pl.savefig(self.dest+self.scenario+'-channelmatrix.png')      
+        pl.savefig(self.dest+self.scenario+'-channelmatrix.png')
         
+    def graph_all(self,graphdir=util.graphdir):
+        if not os.path.isdir(graphdir):
+            os.makedirs(graphdir)    
+        self.graph_p()
+        self.graph_b()
+        self.graph_cm()
+    
 
 if __name__ == '__main__':
     g=graphgen("OSB-3k_5k-near_far")
-    g.graph_p()
-    g.graph_b()
-    g.graph_cm()
-    
+    g.graph_all()

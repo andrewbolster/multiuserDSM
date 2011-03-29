@@ -371,7 +371,7 @@ class Bundle(object):
     Print CM to file
     '''
     def tofile(self,filename):
-        resultsdir="raw_results/"
+        resultsdir=rawdir
         if not os.path.isdir(resultsdir):
             os.makedirs(resultsdir)
         np.save(resultsdir+filename+'-channelmatrix', self.xtalk_gain)

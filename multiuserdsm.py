@@ -7,6 +7,7 @@ from bundle import Bundle
 from utility import *
 from osb import OSB
 from mipb import MIPB
+from graphgenerator import graphgen
 import cProfile,os
 
 log.info("Starting Up...")
@@ -26,10 +27,13 @@ if __name__ == "__main__":
     '''
     algo = MIPB(bundle)
     if profiling:
-        profiledir="profiles/"
-        if not os.path.isdir(profiledir):
-            os.makedirs(profiledir)
-        cProfile.run('algo.run()',profiledir+options.scenarioname)
+        if not os.path.isdir(profdir):
+            os.makedirs(profdir)
+        cProfile.run('algo.run()',profdir+options.scenarioname)
     else:
         algo.run()
     algo.tofile(options.scenarioname)
+    
+    g=graphgen(options.scenarioname)
+    g.graph_all()
+    
