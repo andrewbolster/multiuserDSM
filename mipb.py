@@ -128,6 +128,8 @@ class MIPB(Algorithm):
         #Initialise DeltaP
         for kn in product(range(self.bundle.K),range(self.bundle.N)):
             self._calc_delta_p(*kn)
+            
+        assert 0==1, "DeltaP%s"%str(self.delta_p)
 
         while not (self.finished == True).all():
             util.log.info("Still not finished")
