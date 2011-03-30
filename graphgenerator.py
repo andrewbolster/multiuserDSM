@@ -31,11 +31,11 @@ class graphgen():
         pl.close()
         channels=range(self.p.shape[0])
         for line in range(self.p.shape[1]):
-            pl.plot(channels,map(util.watts_to_dbmhz,self.p[:,line])) #this may be the wrong slicing style
+            yvals=np.ma.masked_invalid(map(util.watts_to_dbmhz,self.p[:,line]))
+            pl.plot(channels,yvals) #this may be the wrong slicing style
         pl.xlabel("Subchannel Index")
         pl.ylabel("Power (dbmhz)")
         pl.title("Plot of per-tone power assignments for %d lines"%self.p.shape[1])
-        pl.ylim([self.noisefloor,0])
         pl.savefig(self.dest+self.scenario+'-power.png')
         
     def graph_b(self):
@@ -44,7 +44,7 @@ class graphgen():
         for line in range(self.b.shape[1]):
             pl.plot(channels,self.b[:,line]) #this may be the wrong slicing style
         pl.xlabel("Subchannel Index")
-        pl.ylabel("Bitloading")
+        pl.ylabel("Bits/Frame")
         pl.title("Plot of per-tone bit assignments for %d lines"%self.p.shape[1])
         pl.savefig(self.dest+self.scenario+'-bitrate.png')
         

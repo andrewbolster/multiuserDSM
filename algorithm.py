@@ -10,6 +10,8 @@ import pylab as pl
 import time
 import os
 
+from bundle import Bundle
+
 
 
 class Algorithm(object):
@@ -24,6 +26,7 @@ class Algorithm(object):
 
         
     def __init__(self,bundle):
+        assert isinstance(bundle,Bundle), "Did you give me a bundle to use?"
         self.bundle=bundle
 
     def preamble(self):

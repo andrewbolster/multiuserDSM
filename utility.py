@@ -3,7 +3,7 @@
 __author__="bolster"
 __date__ ="$02-Dec-2010 18:48:38$"
 
-import math, cmath, numpy, sys, scipy.special as sps
+import math, cmath, numpy as np, sys, scipy.special as sps
 import functools,cPickle
 
 import logging
@@ -184,7 +184,7 @@ def TodB(input):
         return 10*math.log10(input)
     except ValueError:
         log.debug("Caught Exception on TodB(%f)"%input)
-        return -140 #FIXME Either make it dynamic across the package or use something like -inf; 
+        return -np.inf #FIXME Either make it dynamic across the package or use something like -inf; 
 
 def freq_on_tone(K): #TODO Memoize
         '''
@@ -228,11 +228,11 @@ def combinations(iterable, r,type=int):
         
 #since numpy matrixes are a pain to convert to arrays
 def mat2arr(matrix):
-    return numpy.squeeze(numpy.asarray(matrix))
+    return np.squeeze(np.asarray(np.copy(matrix)))
 
 #makes things human
 def psd2str(psd):
-    assert(isinstance(psd,numpy.ndarray))
+    assert(isinstance(psd,np.ndarray))
     return str(map(watts_to_dbmhz,psd))
 
 if __name__ == "__main__":
