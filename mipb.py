@@ -142,7 +142,7 @@ class MIPB(Algorithm):
 
             try:
                 #Generate Cost Calculations and return mins = (k_min,user_min)
-                mins=self.update_cost_matrix(weights)
+                mins=self.update_cost_matrix_experimental(weights)
                 (k_min,n_min)=mins
                 util.log.debug("Made it through update with min cost of %lf"%(self.cost[mins]))
                 util.log.info("%f%% There"%((util.watts_to_dbmhz(self.defaults['p_budget'])*100)/util.watts_to_dbmhz(self.line_p[mins[1]])))
@@ -181,9 +181,9 @@ class MIPB(Algorithm):
         if not isinstance(tone,bool):
             #In this case, update was called with a tone to update, so
             self.update_cost_function(weights,tone)
-            # n in range(self.bundle.N):
-            #    self.cost[tone,n]=self._cost_function((tone,n),weights)
-            #return
+            for n in range(self.bundle.N):
+                self.cost[tone,n]=self._cost_function((tone,n),weights)
+            return
         else:
             #recalculate costs matrix
             for kn in product(range(self.bundle.K),range(self.bundle.N)):
@@ -241,12 +241,62 @@ class MIPB(Algorithm):
             return self.defaults['maxval']
         return dp_sum*weights[line]
     
+    def update_cost_matrix_experimental(self,weights,tone=False):
+        '''
+        Update cost matrix and return a tuple of the minimum bit addition (tone,user)
+        if not given a tone, assume operation of (min_cost/init_cost_matrix)
+        if given a tone, assume operation of (recalc_costs)
+        Raises NameError on no min found/all tones full
+
+        '''
+        min_cost=float(sys.maxint)
+        
+        '''
+        Since the 'cost function' is simply the sum of delta_p's, does it not 
+        make more sense to do this as all together?
+        '''    
+        if not isinstance(tone,bool):
+            #In this case, update was called with a tone to update, so
+            self.update_cost_function(weights, tone)
+            return
+        else:
+            #recalculate costs matrix
+            for k in range(self.bundle.K):
+                self.update_cost_function(weights,k)
+            #TODO This could be replaced with a few ndarray operations
+            for kn in product(range(self.bundle.K),range(self.bundle.N)):
+                if not self.finished[kn]:
+                    #assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
+                    if self.cost[kn]<min_cost:
+                        util.log.debug("Testing: %d,%d"%kn)
+                        if self._constraints_broken(*kn):
+                            util.log.debug("And this one is done: %f<%f"%(self.cost[kn],min_cost))
+                            self.finished[kn]=True
+                        else:
+                            util.log.debug("New Min: %f<%f"%(self.cost[kn],min_cost))
+                            min_cost=self.cost[kn]
+                            min=kn
+            try:
+                return min
+            except NameError:
+                util.log.info("No Cost Minimum Found, raising NameError to notify parent")
+                raise NameError 
+    
     def update_cost_function(self,weights,tone=False):
         '''
         Experimental Single-shot cost generation
         #NOT TESTED
         '''
-        pass
+        dp_sum=np.sum(self.delta_p[tone],axis=1)
+        self.cost[tone]=weights*dp_sum
+        for n in range(self.bundle.N):
+            if dp_sum[n] <=0:
+                #Implies no solution on this tone
+                util.log.critical("No solution on tone,line:(%d,%d)"%(tone,n))
+                self.finished[tone,n]=True
+                self.cost[tone,n]=self.defaults['maxval']
+
+        return
         
         
     def _calc_delta_p(self,tone,line):
