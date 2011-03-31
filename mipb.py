@@ -136,8 +136,6 @@ class MIPB(Algorithm):
         #Initialise DeltaP (and cost matrix?)
         for kn in product(range(self.bundle.K),range(self.bundle.N)):
             self._calc_delta_p(*kn)
-            
-        assert 1==1, "DeltaP\n%s"%str(self.delta_p)
 
         while not (self.finished == True).all():
             util.log.debug("LineP:\n%s"%self.line_p)
@@ -153,7 +151,7 @@ class MIPB(Algorithm):
                 self.update_power(mins)                
                 if self.b[mins] == MAXBITSPERTONE:
                     self.finished[mins]=True
-                assert (self.b[mins] <= MAXBITSPERTONE), "You cannot break the laws of physics! %d:%d,%d"%(self.b[mins],mins[0:2])
+                #assert (self.b[mins] <= MAXBITSPERTONE), "You cannot break the laws of physics! %d:%d,%d"%(self.b[mins],mins[0:2])
                 #according to mipb.c, greedy invokes update_wp(), not implemented here as per AMK
                 
                 #Recalculate delta-p's for all lines wrt this bit/power change
@@ -195,7 +193,7 @@ class MIPB(Algorithm):
             #TODO This could be replaced with a few ndarray operations
             for kn in product(range(self.bundle.K),range(self.bundle.N)):
                 if not self.finished[kn]:
-                    assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
+                    #assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
                     if self.cost[kn]<min_cost:
                         util.log.debug("Testing: %d,%d"%kn)
                         if self._constraints_broken(*kn):
