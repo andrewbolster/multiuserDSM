@@ -159,7 +159,7 @@ class MIPB(Algorithm):
                 #FIXME PARALLELISE
                 for line in range(self.bundle.N):
                     self._calc_delta_p(k_min,line)
-                self.update_cost_matrix(weights,k_min) #I think this is duplication wrt update_cost_matrix
+                #self.update_cost_matrix(weights,k_min) #I think this is duplication wrt update_cost_matrix
             except NameError:
                 util.log.info("All Done (Hopefully)")
         #end while tones not full loop
@@ -174,8 +174,6 @@ class MIPB(Algorithm):
         '''
         min_cost=float(sys.maxint)
         
-        
-            
         '''
         Since the 'cost function' is simply the sum of delta_p's, does it not 
         make more sense to do this as all together?
@@ -183,9 +181,10 @@ class MIPB(Algorithm):
         
         if not isinstance(tone,bool):
             #In this case, update was called with a tone to update, so
-            for n in range(self.bundle.N):
-                self.cost[tone,n]=self._cost_function((tone,n),weights)
-            return
+            self.update_cost_function(weights,tone)
+            # n in range(self.bundle.N):
+            #    self.cost[tone,n]=self._cost_function((tone,n),weights)
+            #return
         else:
             #recalculate costs matrix
             for kn in product(range(self.bundle.K),range(self.bundle.N)):
@@ -242,7 +241,15 @@ class MIPB(Algorithm):
             self.finished[tone,line]=True
             return self.defaults['maxval']
         return dp_sum*weights[line]
-                   
+    
+    def update_cost_function(self,weights,tone=False):
+        '''
+        Experimental Single-shot cost generation
+        #NOT TESTED
+        '''
+        pass
+        
+        
     def _calc_delta_p(self,tone,line):
         '''
         (re)Calculate the delta_p matrix for powers in the bundle
