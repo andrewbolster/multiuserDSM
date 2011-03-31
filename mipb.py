@@ -159,7 +159,6 @@ class MIPB(Algorithm):
                 #FIXME PARALLELISE
                 for line in range(self.bundle.N):
                     self._calc_delta_p(k_min,line)
-                #self.update_cost_matrix(weights,k_min) #I think this is duplication wrt update_cost_matrix
             except NameError:
                 util.log.info("All Done (Hopefully)")
         #end while tones not full loop

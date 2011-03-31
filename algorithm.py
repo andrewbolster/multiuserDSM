@@ -197,3 +197,20 @@ class Algorithm(object):
         assert os.path.isdir(util.rawdir)==True, "No "
         np.save(util.rawdir+filename+'-power', self.p)
         np.save(util.rawdir+filename+'-bitrate',self.b)
+        
+    def test_compliance(self,alt_scenario):
+        '''
+        Test Compliance checks the calculated bit and power values against a previous scenario.
+        Will not work for non-determinitic algorithms (duh)
+        '''
+        assert os.path.isdir(util.rawdir), "No Path, Dunno wut happened there...%s"%util.graphdir
+        alt_p=np.load(util.rawdir+alt_scenario+"-power.npy")
+        alt_b=np.load(util.rawdir+alt_scenario+"-bitrate.npy")
+        alt_cm=np.load(util.rawdir+alt_scenario+"-channelmatrix.npy")
+        
+        if not np.equal(alt_cm,self.bundle.xtalk_gain).all():
+            util.log.critical("Channel Matrix is broken")
+        if not np.equal(alt_p,self.p).all():
+            util.log.critical("P is broken")
+        if not np.equal(alt_b,self.b).all():
+            util.log.critical("B is broken")
