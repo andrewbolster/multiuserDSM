@@ -176,9 +176,7 @@ class MIPB(Algorithm):
         '''
         min_cost=float(sys.maxint)
         
-        #recalculate costs matrix
-        for kn in product(range(self.bundle.K),range(self.bundle.N)):
-            self.cost[kn]=self._cost_function(kn,weights)
+        
             
         '''
         Since the 'cost function' is simply the sum of delta_p's, does it not 
@@ -187,8 +185,13 @@ class MIPB(Algorithm):
         
         if not isinstance(tone,bool):
             #In this case, update was called with a tone to update, so
+            for n in range(self.bundle.N):
+                self.cost[tone,n]=self._cost_function((tone,n),weights)
             return
         else:
+            #recalculate costs matrix
+            for kn in product(range(self.bundle.K),range(self.bundle.N)):
+                self.cost[kn]=self._cost_function(kn,weights)
             #TODO This could be replaced with a few ndarray operations
             for kn in product(range(self.bundle.K),range(self.bundle.N)):
                 if not self.finished[kn]:
@@ -249,7 +252,7 @@ class MIPB(Algorithm):
         a global power setting, there is no need for a local old_p
         #FIXME Not Tested        
         '''
-        _b=util.mat2arr(np.copy(self.b[tone]))
+        _b=util.mat2arr(self.b[tone])
         _b[line]+=1
         new_p=self.bundle.calc_psd(_b,tone)
         

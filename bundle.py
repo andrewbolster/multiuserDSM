@@ -260,7 +260,7 @@ class Bundle(object):
             #line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in xrange(self.K)] #TODO _calc_sym_err
             line.p_total = sum(map(dbmhz_to_watts,line.p))
             line.b_total = sum(line.b)
-            log.info("Line:%d,Power:%fW,Rate:%dbps"%(line.id,line.p_total,line.b_total))
+            log.info("Line:%d,Power:%fW,Rate:%dbpf"%(line.id,line.p_total,line.b_total))
             
             '''
             With This whole Fractional thing; 
