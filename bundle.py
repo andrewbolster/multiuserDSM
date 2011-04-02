@@ -51,9 +51,15 @@ class Bundle(object):
                         for key in range(1,len(scenarioline),2): 
                             self.scenariooptions[scenarioline[key]]=scenarioline[key+1]
                     else:
-                        # nt and lt are network termination (CO or RT) and line termination (CPE)
-                        nt,lt = line.split(",")
-                    self.lines.append(Line(nt,lt,n,self))
+                        try:
+                            # nt and lt are network termination (CO or RT) and line termination (CPE)
+                            nt,lt,rate= line.split(",")
+                            self.lines.append(Line(nt,lt,int(rate),n,self))
+
+                        except ValueError:
+                            nt,lt=line.split(",")
+                            self.lines.append(Line(nt,lt,False,n,self))
+
 
             self.N = len(self.lines)
             log.info("Read %d Lines",self.N)

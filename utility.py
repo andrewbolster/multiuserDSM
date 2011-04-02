@@ -235,6 +235,11 @@ def psd2str(psd):
     assert(isinstance(psd,np.ndarray))
     return str(map(watts_to_dbmhz,psd))
 
+#Class overload for cost values
+class CostValue(object):
+    def __set__(self,obj,val):
+        self.val= val if val > 0 else sys.maxint
+
 if __name__ == "__main__":
 
     test_len=3000

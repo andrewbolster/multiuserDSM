@@ -37,7 +37,8 @@ class Algorithm(object):
         '''
         #Power and bitloading are dim(KxN)
         self.p=np.zeros((self.bundle.K,self.bundle.N)) #per tone per user power in watts
-        self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))     
+        self.b=np.asmatrix(np.zeros((self.bundle.K,self.bundle.N)))
+        self.rate_targets = np.asarray([line.rate_target for line in self.bundle.lines]) 
         util.log.info("Lets get this party started!")
         self.stats['start']=time.time()
     
@@ -58,6 +59,22 @@ class Algorithm(object):
         self.stats['duration']=self.stats['end']-self.stats['start']
 
         util.log.info("All Done Here, took %f"%self.stats['duration'])
+        
+
+    def eta(self,how_done,start=False):
+        '''
+        Takes a 'work done' value from the child algo in the range 0-1 and log.info's the estimated time left
+        Can also work out eta's for algorithm sub-processes when giving a non-global start time 
+        '''
+        if start == False:
+            #Not given any start time, work of algo time
+            start = self.stats['start']
+        time_done=time.time()-start
+        try:
+            eta=time_done/how_done
+            util.log.info("ETA:%s,%f"%(str(eta),how_done))
+        except ZeroDivisionError:
+            pass
         
     #FIXME I'm fairly sure nothing below here is layed out properly yet; am_load_ra is used in SOME algos...
     def am_load_ra(self,line):  #am_load.c used in IWF, Multiuser_greedy, RR_IWF, RR_OSB

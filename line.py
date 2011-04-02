@@ -8,7 +8,7 @@ import numpy
 import utility
 
 class Line(object):
-    def __init__(self,nt,lt,id,bundle):
+    def __init__(self,nt,lt,rate,id,bundle):
         self.MINPSD=-60     #from am_load.c
         
         # nt and lt are network termination (CO or RT) and line termination (CPE)
@@ -16,6 +16,7 @@ class Line(object):
         self.nt = int(nt)
         self.lt = int(lt)
         self.length = abs(self.nt - self.lt)
+        self.rate_target=rate
         self.gain = numpy.zeros(bundle.K) 
         self.p = numpy.tile(-36.5,bundle.K) #PSD of this line, initial value
         self.id = id #could this be removed as an array of lines?

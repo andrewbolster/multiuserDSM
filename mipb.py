@@ -35,7 +35,9 @@ class MIPB(Algorithm):
                          'p_budget':0.110,    #watts #from mipb.c _p_budget[user]=
                          'w':1.0,
                          'w_min':0.0,
-                         'min_sw':1e-4
+                         'min_sw':1e-4,
+                         'rate_tol':10,
+                         'osc_tol':5
                          }
         
         self.spectral_mask=util.dbmhz_to_watts(-30) #from mipb.c _spectral_mask
@@ -53,7 +55,6 @@ class MIPB(Algorithm):
         
         self.line_b=np.zeros(self.bundle.N)
         self.line_b_last=np.copy(self.line_b)
-        self.rate_targets=np.tile(self.defaults['rate_target'], self.bundle.N)
 
         
         self.preamble()
@@ -103,13 +104,14 @@ class MIPB(Algorithm):
     def oscillating(self):
         '''
         Simple enough, return true if the results are oscillating
+        #FIXME Parallelize
         '''
         osc_tol=self.defaults['osc_tol']
         delta_b=(self.line_b-self.rate_targets)
         delta_b_last=(self.line_b-self.rate_targets)
         osc=0
-        osc += sum(delta_b>osc_tol and -delta_b_last>osc_tol) #Loads are spiking down
-        osc += sum(delta_b_last>osc_tol and -delta_b>osc_tol) #Loads are spiking up
+        osc += sum(True for n in range(self.bundle.N) if (delta_b[n]>osc_tol and -delta_b_last[n]>osc_tol) ) #Loads are spiking down
+        osc += sum(True for n in range(self.bundle.N) if (delta_b_last[n]>osc_tol and -delta_b[n]>osc_tol) ) #Loads are spiking up        
         util.log.info("Found %d oscillating channels"%osc)
         return (osc>=2)
     
@@ -127,7 +129,7 @@ class MIPB(Algorithm):
         #reset data for new weight run
         self.delta_p=np.zeros((self.bundle.K,self.bundle.N,self.bundle.N))
         self.finished=np.tile(False,(self.bundle.K,self.bundle.N))                
-        self.cost=np.zeros((self.bundle.K,self.bundle.N))
+        self.cost=np.zeros((self.bundle.K,self.bundle.N),util.CostValue)
         self.p=np.zeros((self.bundle.K,self.bundle.N))
         self.b=np.zeros((self.bundle.K,self.bundle.N))
         self.line_p=np.zeros(self.bundle.N) #aka _p_used
@@ -139,13 +141,13 @@ class MIPB(Algorithm):
 
         while not (self.finished == True).all():
             util.log.debug("LineP:\n%s"%self.line_p)
-
+            done=np.sum(self.finished.flatten())/(self.bundle.K*self.bundle.N)
+            (done) and util.log.info("Finished: %f%%"%(done*100))
             try:
                 #Generate Cost Calculations and return mins = (k_min,user_min)
-                mins=self.update_cost_matrix_experimental(weights)
+                mins=self.update_cost_matrix(weights)
                 (k_min,n_min)=mins
                 util.log.debug("Made it through update with min cost of %lf"%(self.cost[mins]))
-                util.log.info("%f%% There"%((util.watts_to_dbmhz(self.defaults['p_budget'])*100)/util.watts_to_dbmhz(self.line_p[mins[1]])))
                 self.b[mins]+=bit_inc
                 #Update the powers 
                 self.update_power(mins)                
@@ -160,52 +162,8 @@ class MIPB(Algorithm):
                 for line in range(self.bundle.N):
                     self._calc_delta_p(k_min,line)
             except NameError:
-                util.log.info("All Done (Hopefully)")
-        #end while tones not full loop
-    
-    def update_cost_matrix(self,weights,tone=False):
-        '''
-        Update cost matrix and return a tuple of the minimum bit addition (tone,user)
-        if not given a tone, assume operation of (min_cost/init_cost_matrix)
-        if given a tone, assume operation of (recalc_costs)
-        Raises NameError on no min found/all tones full
-
-        '''
-        min_cost=float(sys.maxint)
-        
-        '''
-        Since the 'cost function' is simply the sum of delta_p's, does it not 
-        make more sense to do this as all together?
-        '''    
-        
-        if not isinstance(tone,bool):
-            #In this case, update was called with a tone to update, so
-            self.update_cost_function(weights,tone)
-            for n in range(self.bundle.N):
-                self.cost[tone,n]=self._cost_function((tone,n),weights)
-            return
-        else:
-            #recalculate costs matrix
-            for kn in product(range(self.bundle.K),range(self.bundle.N)):
-                self.cost[kn]=self._cost_function(kn,weights)
-            #TODO This could be replaced with a few ndarray operations
-            for kn in product(range(self.bundle.K),range(self.bundle.N)):
-                if not self.finished[kn]:
-                    #assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
-                    if self.cost[kn]<min_cost:
-                        util.log.debug("Testing: %d,%d"%kn)
-                        if self._constraints_broken(*kn):
-                            util.log.debug("And this one is done: %f<%f"%(self.cost[kn],min_cost))
-                            self.finished[kn]=True
-                        else:
-                            util.log.debug("New Min: %f<%f"%(self.cost[kn],min_cost))
-                            min_cost=self.cost[kn]
-                            min=kn
-            try:
-                return min
-            except NameError:
-                util.log.info("No Cost Minimum Found, raising NameError to notify parent")
-                raise NameError                    
+                pass #Completed this run, all tones full
+        #end while tones not full loop               
                     
     def _constraints_broken(self,tone,line):
         '''
@@ -214,34 +172,17 @@ class MIPB(Algorithm):
         #Check Power
         for xline in range(self.bundle.N):
             if (self.line_p[xline] + self.delta_p[tone,line,xline] > self.power_budget[xline]):
-                util.log.info("Power Broken: %g + %g > %g,(%d,%d)"%(self.line_p[xline],self.delta_p[tone,line,xline],self.power_budget[xline],tone,line))
+                util.log.debug("Power Broken: %g + %g > %g,(%d,%d)"%(self.line_p[xline],self.delta_p[tone,line,xline],self.power_budget[xline],tone,line))
                 return True
             
         #Check Spectral Mask
         if (self.p[tone,line] + self.delta_p[tone,line,line] > self.spectral_mask):
-            util.log.info("Spectrum Broken")
+            util.log.debug("Spectrum Broken")
             return True
         else: #If we got this far, all is well.
             return False
-          
-    def _cost_function(self,(tone,line),weights):
-        '''
-        Cost function; returns the the current cost of adding a bit to this tone
-        line combination.
-        Assumes that constraint test has already been applied to the bundle
-        #FIXME Once DP>0 issue fixed, remove all this down to single return statement
-        '''
-        #Unless I'm being retarded, all that cost_function does is sum the deltap's along the last dimension...
-        #util.log.info("Hello, I'm the Cost Function, trying to sum this:%s"%self.delta_p[tone,line,:])
-        dp_sum=np.sum(self.delta_p[tone,line,:])
-        if dp_sum <=0:
-            #Implies no solution on this tone
-            util.log.critical("No solution on tone,line:(%d,%d)"%(tone,line))
-            self.finished[tone,line]=True
-            return self.defaults['maxval']
-        return dp_sum*weights[line]
     
-    def update_cost_matrix_experimental(self,weights,tone=False):
+    def update_cost_matrix(self,weights,tone=False):
         '''
         Update cost matrix and return a tuple of the minimum bit addition (tone,user)
         if not given a tone, assume operation of (min_cost/init_cost_matrix)
@@ -270,7 +211,7 @@ class MIPB(Algorithm):
                     if self.cost[kn]<min_cost:
                         util.log.debug("Testing: %d,%d"%kn)
                         if self._constraints_broken(*kn):
-                            util.log.debug("And this one is done: %f<%f"%(self.cost[kn],min_cost))
+                            util.log.info("And this one is done: %f<%f"%(self.cost[kn],min_cost))
                             self.finished[kn]=True
                         else:
                             util.log.debug("New Min: %f<%f"%(self.cost[kn],min_cost))
@@ -285,19 +226,16 @@ class MIPB(Algorithm):
     def update_cost_function(self,weights,tone=False):
         '''
         Experimental Single-shot cost generation
-        #NOT TESTED
         '''
         dp_sum=np.sum(self.delta_p[tone],axis=1)
-        self.cost[tone]=weights*dp_sum
-        for n in range(self.bundle.N):
-            if dp_sum[n] <=0:
-                #Implies no solution on this tone
-                util.log.critical("No solution on tone,line:(%d,%d)"%(tone,n))
-                self.finished[tone,n]=True
-                self.cost[tone,n]=self.defaults['maxval']
-
+        dp_sum=map(lambda x: x if x >= 0 else self.defaults['maxval'],dp_sum)
+        try:
+            self.cost[tone]=np.multiply(weights,dp_sum)
+        except:
+            util.log.info("Weights:\n%s\ndp_sum:\n%s"%(str(weights),str(dp_sum)))
+            raise
+            
         return
-        
         
     def _calc_delta_p(self,tone,line):
         '''
@@ -354,8 +292,8 @@ class MIPB(Algorithm):
                         return self.w[line]*0.9
                 #if b>r or update !>w
                 return self.w[line]+(stepsize*(-diff))
-                #I reckon the entire thing could be replaced by
-                return max(self.w[line]+(stepsize*(-diff)),self.w[line]*0.9)
+                #TODOI reckon the entire thing could be replaced by
+                #return max(self.w[line]+(stepsize*(-diff)),self.w[line]*0.9)
             else:
                 return self.w[line]
                 
