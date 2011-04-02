@@ -5,6 +5,7 @@ Created on 22 Mar 2011
 '''
 #Global Imports
 import numpy as np
+import pylab as pl
 import sys
 from itertools import product
 
@@ -35,7 +36,7 @@ class MIPB(Algorithm):
                          'p_budget':0.110,    #watts #from mipb.c _p_budget[user]=
                          'w':1.0,
                          'w_min':0.0,
-                         'min_sw':1e-4,
+                         'min_sw':1e-3,
                          'rate_tol':10,
                          'osc_tol':5
                          }
@@ -66,7 +67,7 @@ class MIPB(Algorithm):
             while not self.converged():
                 self.load_bundle(self.w)
                 self.update_totals()
-                util.log.info("After LoadBundle, lineb:%s"%self.line_b)
+                util.log.info("After LoadBundle, w:%slineb:%s"%(self.w,self.line_b))
                 if self.oscillating():
                     self.stepsize/=2
                     util.log.error("Oscillation Detected, Decreased Stepsize to %lf"%self.stepsize)
@@ -124,7 +125,6 @@ class MIPB(Algorithm):
         #Bring some variables into local scope to speed things up
         MAXBITSPERTONE = self.MAXBITSPERTONE
         bit_inc=self.defaults['bit_inc']
-        util.log.info("load_bundle:%s"%str(weights))
         
         #reset data for new weight run
         self.delta_p=np.zeros((self.bundle.K,self.bundle.N,self.bundle.N))
@@ -141,8 +141,6 @@ class MIPB(Algorithm):
 
         while not (self.finished == True).all():
             util.log.debug("LineP:\n%s"%self.line_p)
-            done=np.sum(self.finished.flatten())/(self.bundle.K*self.bundle.N)
-            (done) and util.log.info("Finished: %f%%"%(done*100))
             try:
                 #Generate Cost Calculations and return mins = (k_min,user_min)
                 mins=self.update_cost_matrix(weights)
@@ -198,44 +196,49 @@ class MIPB(Algorithm):
         '''    
         if not isinstance(tone,bool):
             #In this case, update was called with a tone to update, so
-            self.update_cost_function(weights, tone)
+            self.update_tone_cost(weights, tone)
             return
         else:
             #recalculate costs matrix
             for k in range(self.bundle.K):
-                self.update_cost_function(weights,k)
+                self.update_tone_cost(weights,k)
             #TODO This could be replaced with a few ndarray operations
             for kn in product(range(self.bundle.K),range(self.bundle.N)):
                 if not self.finished[kn]:
                     #assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
                     if self.cost[kn]<min_cost:
-                        util.log.debug("Testing: %d,%d"%kn)
-                        if self._constraints_broken(*kn):
-                            util.log.info("And this one is done: %f<%f"%(self.cost[kn],min_cost))
-                            self.finished[kn]=True
-                        else:
-                            util.log.debug("New Min: %f<%f"%(self.cost[kn],min_cost))
-                            min_cost=self.cost[kn]
-                            min=kn
+                        util.log.debug("New Min: %f<%f"%(self.cost[kn],min_cost))
+                        min_cost=self.cost[kn]
+                        min=kn
             try:
                 return min
             except NameError:
                 util.log.info("No Cost Minimum Found, raising NameError to notify parent")
                 raise NameError 
     
-    def update_cost_function(self,weights,tone=False):
+    def update_tone_cost(self,weights,tone):
         '''
         Experimental Single-shot cost generation
         '''
-        dp_sum=np.sum(self.delta_p[tone],axis=1)
-        dp_sum=map(lambda x: x if x >= 0 else self.defaults['maxval'],dp_sum)
+        N=self.bundle.N
+        tonecost=np.zeros(N)
         try:
-            self.cost[tone]=np.multiply(weights,dp_sum)
-        except:
-            util.log.info("Weights:\n%s\ndp_sum:\n%s"%(str(weights),str(dp_sum)))
-            raise
+            for line in range(N):
+                #Check some blocking conditions first
+                if self._constraints_broken(tone, line) or self.finished[tone,line]:
+                    tonecost[line]=self.defaults['maxval']
+                else:
+                    for xline in range(N):
+                        if line==xline:
+                            tonecost[line]+=weights[line]*self.delta_p[tone,line,xline]
+                        if weights[line]<1:
+                            tonecost[line]+=(1-weights[line])*self.delta_p[tone,line,xline]
+            self.cost[tone]=tonecost
             
-        return
+        except:
+            util.log.info("W:%s,DP:%s"%(str(weights),str(dp_sum)))
+            raise
+        #Fancy Functional stuff won't work with ratetarget==false
         
     def _calc_delta_p(self,tone,line):
         '''
@@ -249,7 +252,13 @@ class MIPB(Algorithm):
         new_p=self.bundle.calc_psd(_b,tone)
         
         #This could be very wrong
-        self.delta_p[tone,line]=new_p-self.p[tone,:] #update delta_p in a slice rather than looping
+        for xline in range(self.bundle.N):
+            if new_p[xline]<0:
+                self.delta_p[tone,line,xline]=self.defaults['maxval']
+                self.finished[xline]=True
+            else:
+                self.delta_p[tone,line,xline]=new_p[xline]-self.p[tone,xline]  #update delta_p in a slice rather than looping
+            
         
     def update_power(self,(tone,line)):
         '''
@@ -276,24 +285,27 @@ class MIPB(Algorithm):
         Update the weights assigned to each line
         '''
         weights=map(self._update_single_w,range(self.bundle.N))
-        
         return weights
     
     def _update_single_w(self,line):
+        util.log.info("Weight on Line:%d,%f"%(line,self.w[line]))
+        current=self.w[line]
         if not self.rate_targets[line]==False:
             rate_tol = self.defaults['rate_tol']
             stepsize=self.stepsize
             diff = self.line_b[line]-self.rate_targets[line]
             #If we're within tolerance, do nothing, otherwise...
             if abs(diff)>rate_tol:
-                if diff < 0: #if b<r
-                    #I don't think this makes sense but implementing it for graphical test
-                    if (stepsize*(-diff))>self.w[line]: #if updated weight is going to be non positive
-                        return self.w[line]*0.9
+                #if diff < 0: #if b<r
+                #    #I don't think this makes sense but implementing it for graphical test
+                #    if (stepsize*(diff))>self.w[line]: #if updated weight is going to be non positive
+                #        return self.w[line]*0.9
                 #if b>r or update !>w
-                return self.w[line]+(stepsize*(-diff))
+                #return self.w[line]+(stepsize*(-diff))
                 #TODOI reckon the entire thing could be replaced by
-                #return max(self.w[line]+(stepsize*(-diff)),self.w[line]*0.9)
+                return max(current+(stepsize*(diff)),current*0.9)
             else:
-                return self.w[line]
+                return current
+        else:
+            return current#Keep the line unweighted
                 

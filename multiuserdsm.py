@@ -1,6 +1,8 @@
 '''
 The main module for the multiuserdsm framework
 '''
+import matplotlib
+matplotlib.use("Agg")
 
 from optparse import OptionParser
 from bundle import Bundle

@@ -6,7 +6,6 @@ Created on 21 Mar 2011
 
 import numpy as np
 import matplotlib
-matplotlib.use("Agg")
 import pylab as pl
 import utility as util
 import os
