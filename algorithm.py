@@ -220,6 +220,7 @@ class Algorithm(object):
         Test Compliance checks the calculated bit and power values against a previous scenario.
         Will not work for non-determinitic algorithms (duh)
         '''
+        util.log.info("Testing against %s"%alt_scenario)
         assert os.path.isdir(util.rawdir), "No Path, Dunno wut happened there...%s"%util.graphdir
         alt_p=np.load(util.rawdir+alt_scenario+"-power.npy")
         alt_b=np.load(util.rawdir+alt_scenario+"-bitrate.npy")

@@ -139,19 +139,18 @@ class MIPB(Algorithm):
         for kn in product(range(self.bundle.K),range(self.bundle.N)):
             self._calc_delta_p(*kn)
 
+        self.update_cost_matrix(weights)
+
         while not (self.finished == True).all():
             util.log.debug("LineP:\n%s"%self.line_p)
-            try:
-                #Generate Cost Calculations and return mins = (k_min,user_min)
-                mins=self.update_cost_matrix(weights)
+            
+            
+            #and return mins = (k_min,user_min)
+            mins=self.min_tone_cost()
+            if mins: #If a minimum is found
                 (k_min,n_min)=mins
-                util.log.debug("Made it through update with min cost of %lf"%(self.cost[mins]))
                 self.b[mins]+=bit_inc
-                #Update the powers 
-                self.update_power(mins)                
-                if self.b[mins] == MAXBITSPERTONE:
-                    self.finished[mins]=True
-                #assert (self.b[mins] <= MAXBITSPERTONE), "You cannot break the laws of physics! %d:%d,%d"%(self.b[mins],mins[0:2])
+                assert (self.b[mins] <= MAXBITSPERTONE), "You cannot break the laws of physics! %d:%d,%d"%(self.b[mins],mins[0],mins[1])
                 #according to mipb.c, greedy invokes update_wp(), not implemented here as per AMK
                 
                 #Recalculate delta-p's for all lines wrt this bit/power change
@@ -159,7 +158,12 @@ class MIPB(Algorithm):
                 #FIXME PARALLELISE
                 for line in range(self.bundle.N):
                     self._calc_delta_p(k_min,line)
-            except NameError:
+                #Update the powers 
+                self.update_power(mins)
+                self.update_cost_matrix(weights, k_min)  
+            else:
+                util.log.info("%s"%self.cost)
+                #assert (self.finished == True).all(), "No min, but not finished"
                 pass #Completed this run, all tones full
         #end while tones not full loop               
                     
@@ -170,12 +174,12 @@ class MIPB(Algorithm):
         #Check Power
         for xline in range(self.bundle.N):
             if (self.line_p[xline] + self.delta_p[tone,line,xline] > self.power_budget[xline]):
-                util.log.debug("Power Broken: %g + %g > %g,(%d,%d)"%(self.line_p[xline],self.delta_p[tone,line,xline],self.power_budget[xline],tone,line))
+                #util.log.info("Power Broken: %g + %g > %g,(%d,%d),b=%d"%(self.line_p[xline],self.delta_p[tone,line,xline],self.power_budget[xline],tone,line,self.b[tone,line]))
                 return True
             
         #Check Spectral Mask
         if (self.p[tone,line] + self.delta_p[tone,line,line] > self.spectral_mask):
-            util.log.debug("Spectrum Broken")
+            #util.log.info("Spectrum Broken: %g + %g > %g,(%d,%d),b=%d"%(self.p[tone,line],self.delta_p[tone,line,line],self.spectral_mask,tone,line,self.b[tone,line]))
             return True
         else: #If we got this far, all is well.
             return False
@@ -188,33 +192,15 @@ class MIPB(Algorithm):
         Raises NameError on no min found/all tones full
 
         '''
-        min_cost=float(sys.maxint)
         
-        '''
-        Since the 'cost function' is simply the sum of delta_p's, does it not 
-        make more sense to do this as all together?
-        '''    
         if not isinstance(tone,bool):
             #In this case, update was called with a tone to update, so
             self.update_tone_cost(weights, tone)
-            return
         else:
             #recalculate costs matrix
             for k in range(self.bundle.K):
                 self.update_tone_cost(weights,k)
-            #TODO This could be replaced with a few ndarray operations
-            for kn in product(range(self.bundle.K),range(self.bundle.N)):
-                if not self.finished[kn]:
-                    #assert self.cost[kn] > 0, "Non-positive cost value for (k,n):(%d,%d)"%kn
-                    if self.cost[kn]<min_cost:
-                        util.log.debug("New Min: %f<%f"%(self.cost[kn],min_cost))
-                        min_cost=self.cost[kn]
-                        min=kn
-            try:
-                return min
-            except NameError:
-                util.log.info("No Cost Minimum Found, raising NameError to notify parent")
-                raise NameError 
+            #util.log.info("%s"%str(self.cost))
     
     def update_tone_cost(self,weights,tone):
         '''
@@ -225,20 +211,38 @@ class MIPB(Algorithm):
         try:
             for line in range(N):
                 #Check some blocking conditions first
-                if self._constraints_broken(tone, line) or self.finished[tone,line]:
+                if self._constraints_broken(tone, line) or self.b[tone,line]>=self.MAXBITSPERTONE:
+                    self.finished[tone,line]=True
+                
+                if self.finished[tone,line]:
                     tonecost[line]=self.defaults['maxval']
                 else:
                     for xline in range(N):
                         if line==xline:
-                            tonecost[line]+=weights[line]*self.delta_p[tone,line,xline]
-                        if weights[line]<1:
-                            tonecost[line]+=(1-weights[line])*self.delta_p[tone,line,xline]
+                            tonecost[line]+=weights[line]*self.delta_p[tone,line,line]
+                        elif weights[xline]<1:
+                            tonecost[line]+=(1-weights[xline])*self.delta_p[tone,line,xline]
             self.cost[tone]=tonecost
+            #util.log.info("Cost on tone %d\n%s"%(tone,str(self.cost[tone])))
             
         except:
-            util.log.info("W:%s,DP:%s"%(str(weights),str(dp_sum)))
+            util.log.info("W:%s,DP:%s"%(str(weights),str(self.cost[tone])))
             raise
         #Fancy Functional stuff won't work with ratetarget==false
+        
+    def min_tone_cost(self):
+        #TODO This could be replaced with a few ndarray operations
+        min_cost=float(sys.maxint)
+        for kn in product(range(self.bundle.K),range(self.bundle.N)):
+            if self.cost[kn]<min_cost:
+                #util.log.info("New Min: (%.3d,%.3d):%f<%f"%(kn[0],kn[1],self.cost[kn],min_cost))
+                min_cost=self.cost[kn]
+                min=kn
+        try:
+            return min
+        except NameError:
+            util.log.info("No Cost Minimum Found")
+            return False
         
     def _calc_delta_p(self,tone,line):
         '''
@@ -252,12 +256,19 @@ class MIPB(Algorithm):
         new_p=self.bundle.calc_psd(_b,tone)
         
         #This could be very wrong
+        '''
+        self.delta_p[tone,line]=new_p-self.p[tone,:]
+        '''
         for xline in range(self.bundle.N):
             if new_p[xline]<0:
-                self.delta_p[tone,line,xline]=self.defaults['maxval']
-                self.finished[xline]=True
+                for xxline in range(self.bundle.N):
+                    #Eliminate anyone else from talking to this line.
+                    ##I Don't Think This Makes Any Sense...
+                    self.delta_p[tone,line,xxline]=self.defaults['maxval']
             else:
                 self.delta_p[tone,line,xline]=new_p[xline]-self.p[tone,xline]  #update delta_p in a slice rather than looping
+                
+        #'''
             
         
     def update_power(self,(tone,line)):

@@ -19,7 +19,8 @@ parser = OptionParser()
 parser.add_option("-n","--network", dest="network", help="read network configuration from FILE",metavar="NETWORK",default="test.net")
 parser.add_option("-K","--tones", dest="K", help="specify number of DMTCHANNELS",metavar="K",default=224)
 parser.add_option("-S","--scenario", dest="scenarioname", help="specify scenario name (for file IO)",metavar="SCENARIONAME",default="defaultscenario")
-parser.add_option("-A","--altscenario", dest="altscenario", help="specify an existing scenario of check against", metavar="ALTSCENARIO", default="defaultscenario")
+parser.add_option("-A","--altscenario", dest="altscenario", help="specify an existing scenario of check against", metavar="ALTSCENARIO")
+parser.add_option("-G","--nographing",dest="graphing", action="store_false",help="disable graphing", default=True)
 
 (options,args) = parser.parse_args()
 bundle = Bundle(options.network,options.K,options.scenarioname)
@@ -36,7 +37,11 @@ if __name__ == "__main__":
     else:
         algo.run()
     algo.tofile(options.scenarioname)
-    algo.test_compliance(options.altscenario)
-    g=graphgen(options.scenarioname)
-    g.graph_all()
+    
+    if options.altscenario:
+        algo.test_compliance(options.altscenario)
+    
+    if options.graphing:
+        g=graphgen(options.scenarioname)
+        g.graph_all()
     
