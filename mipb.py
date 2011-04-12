@@ -36,7 +36,7 @@ class MIPB(Algorithm):
                          'p_budget':0.110,    #watts #from mipb.c _p_budget[user]=
                          'w':1.0,
                          'w_min':0.0,
-                         'min_sw':1e-3,
+                         'min_sw':1e-4,
                          'rate_tol':10,
                          'osc_tol':5
                          }
@@ -67,7 +67,7 @@ class MIPB(Algorithm):
             while not self.converged():
                 self.load_bundle(self.w)
                 self.update_totals()
-                util.log.info("After LoadBundle, w:%slineb:%s"%(self.w,self.line_b))
+                util.log.info("After LoadBundle, b:%s"%(self.line_b))
                 if self.oscillating():
                     self.stepsize/=2
                     util.log.error("Oscillation Detected, Decreased Stepsize to %lf"%self.stepsize)
@@ -98,7 +98,7 @@ class MIPB(Algorithm):
         rate_tol = self.defaults['rate_tol']
         for line in range(self.bundle.N):
             if not self.rate_targets[line] == False : #If rate has been set
-                if abs(self.rate_targets[line]-self.line_b[line])>rate_tol:
+                if self.rate_targets[line]>=self.line_b[line]:
                     return False
         return True
     
@@ -299,24 +299,37 @@ class MIPB(Algorithm):
         return weights
     
     def _update_single_w(self,line):
-        util.log.info("Weight on Line:%d,%f"%(line,self.w[line]))
         current=self.w[line]
+        ratio=0.0
         if not self.rate_targets[line]==False:
             rate_tol = self.defaults['rate_tol']
             stepsize=self.stepsize
-            diff = self.line_b[line]-self.rate_targets[line]
+            diff = self.rate_targets[line]-self.line_b[line]
+            ratio= diff/self.rate_targets[line]
             #If we're within tolerance, do nothing, otherwise...
             if abs(diff)>rate_tol:
-                #if diff < 0: #if b<r
-                #    #I don't think this makes sense but implementing it for graphical test
-                #    if (stepsize*(diff))>self.w[line]: #if updated weight is going to be non positive
-                #        return self.w[line]*0.9
-                #if b>r or update !>w
-                #return self.w[line]+(stepsize*(-diff))
+                '''
+                if diff > 0: #if b<r
+                    #I don't think this makes sense but implementing it for graphical test
+                    if (stepsize*(diff))>self.w[line]: #if updated weight is going to be non positive
+                        return self.w[line]*0.9
+                    else:
+                        return self.w[line]+stepsize*(diff)
+                else:
+                    return self.w[line]+stepsize*(-diff)
+                '''
+                #TODO Need To Talk To AMK about this; I think its better. And its certainly faster.
+                if ratio>0:
+                    new= current*(ratio)
+                else:
+                    new= current*(1+-ratio) 
                 #TODOI reckon the entire thing could be replaced by
-                return max(current+(stepsize*(diff)),current*0.9)
+                #return max(current-(stepsize*(diff)),current*0.9)
             else:
-                return current
+                new= current
         else:
-            return current#Keep the line unweighted
+            new= current#Keep the line unweighted
+        util.log.info("Weight on Line:%d,%f,ratio:%.3f"%(line,new,ratio))
+
+        return new
                 

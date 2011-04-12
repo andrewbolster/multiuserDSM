@@ -12,7 +12,7 @@ import scipy.special as ss
 import pylab as pl
 import pprint
 import itertools
-import hashlib
+import hashlib, murmur
 import os
 from tempfile import mkdtemp
 from math import pow,log10,sqrt
@@ -295,14 +295,16 @@ class Bundle(object):
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
     '''
-    def calc_psd(self,bitload,k):
+    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=False):
         #Caching implementation (AMK)
         key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
+        
         try:
             ret = self._psd_cache[key]
             self._psd_cache['hits']+=1
             return ret
         except:
+            (not precompute) and log.info("Calculating PSD Outside of PreCompute")
             pass
         
         #Generate Matrices (See Intro.pdf 2.23)
@@ -311,15 +313,24 @@ class Bundle(object):
         
         log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
         
+        #=======================================================================
+        # for v in range(self.N): #victims
+        #    B[0,v]=pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
+        #    for x in range(self.N): #xtalkers
+        #        if v==x: 
+        #            A[v,x]=1
+        #        else:
+        #            A[v,x]=(-1.0*pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+        #=======================================================================
         for v in range(self.N): #victims
-            B[0,v]=pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
+            B[0,v]=pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
             for x in range(self.N): #xtalkers
-                if v==x: 
-                    A[v,x]=1
-                else:
-                    A[v,x]=(-1.0*pow(10,(self.GAMMA+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+                A[v,x]=(-1.0*pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
         
+        #Matrix Post-Process
         B=B.T
+        for x in range(self.N):
+            A[x,x]=1
 
         #Everyone loves linear algebra...dont they?
         P=np.linalg.solve(A,B)
