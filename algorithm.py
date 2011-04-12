@@ -50,11 +50,16 @@ class Algorithm(object):
         *SNR et al calculations
         *Timing statistics
         '''
+        #Recalculate P from Bitloads to be careful
+        for k in range(self.bundle.K):
+            self.p[k,:]=self.bundle.calc_psd(self.b[k,:],k)
+        
         self.b=util.mat2arr(self.b)
         for line in self.bundle.lines:
-            line.p=self.p[:,line.id]
             line.b=self.b[:,line.id]
-        self.bundle.calculate_snr() #move into postscript?
+            line.p=self.p[:,line.id]
+        
+        self.bundle.calculate_snr()
         self.stats['end']=time.time()
         self.stats['duration']=self.stats['end']-self.stats['start']
 

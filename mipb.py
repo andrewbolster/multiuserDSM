@@ -265,13 +265,13 @@ class MIPB(Algorithm):
             self.delta_p[tone,line]=new_p-self.p[tone,:]
             '''
             for xline in range(self.bundle.N):
-                #if new_p[xline]<0:
-                    #for xxline in range(self.bundle.N):
+                if new_p[xline]<0:
+                    for xxline in range(self.bundle.N):
                         #Eliminate anyone else from talking to this line.
                         ##I Don't Think This Makes Any Sense...
-                     #self.delta_p[tone,line]=np.tile(self.defaults['maxval'],self.bundle.N)
-                #else:
-                self.delta_p[tone,line,xline]=new_p[xline]-self.p[tone,xline]  #update delta_p in a slice rather than looping
+                        self.delta_p[tone,line]=np.tile(self.defaults['maxval'],self.bundle.N)
+                else:
+                    self.delta_p[tone,line,xline]=new_p[xline]-self.p[tone,xline]  #update delta_p in a slice rather than looping
                     
         #'''
             
@@ -284,7 +284,6 @@ class MIPB(Algorithm):
         this_delta=0.0
         for xline in range(self.bundle.N):
             this_delta=self.delta_p[tone,line,xline]
-            assert this_delta != self.defaults['maxval'], "Trying to update bad global power on line %d"%xline
             self.p[tone,xline]+=this_delta
             self.line_p[xline]+=this_delta
             self.p_ave+=this_delta/self.bundle.N
