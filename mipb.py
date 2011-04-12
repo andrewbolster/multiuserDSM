@@ -136,15 +136,13 @@ class MIPB(Algorithm):
         self.line_b=np.zeros(self.bundle.N)
         
         #Initialise DeltaP (and cost matrix?)
-        for kn in product(range(self.bundle.K),range(self.bundle.N)):
-            self._calc_delta_p(*kn)
+        for k in range(self.bundle.K):
+            self._calc_delta_p(k)
 
         self.update_cost_matrix(weights)
 
         while not (self.finished == True).all():
             util.log.debug("LineP:\n%s"%self.line_p)
-            
-            
             #and return mins = (k_min,user_min)
             mins=self.min_tone_cost()
             if mins: #If a minimum is found
@@ -156,8 +154,7 @@ class MIPB(Algorithm):
                 #Recalculate delta-p's for all lines wrt this bit/power change
                 #NB mins[0] -> min tone
                 #FIXME PARALLELISE
-                for line in range(self.bundle.N):
-                    self._calc_delta_p(k_min,line)
+                self._calc_delta_p(k_min)
                 #Update the powers 
                 self.update_power(mins)
                 self.update_cost_matrix(weights, k_min)  
@@ -232,42 +229,50 @@ class MIPB(Algorithm):
         
     def min_tone_cost(self):
         #TODO This could be replaced with a few ndarray operations
-        min_cost=float(sys.maxint)
-        for kn in product(range(self.bundle.K),range(self.bundle.N)):
-            if self.cost[kn]<min_cost:
-                #util.log.info("New Min: (%.3d,%.3d):%f<%f"%(kn[0],kn[1],self.cost[kn],min_cost))
-                min_cost=self.cost[kn]
-                min=kn
-        try:
-            return min
-        except NameError:
-            util.log.info("No Cost Minimum Found")
-            return False
         
-    def _calc_delta_p(self,tone,line):
+        #=======================================================================
+        # min_cost=float(sys.maxint)
+        # for kn in product(range(self.bundle.K),range(self.bundle.N)):
+        #    if self.cost[kn]<min_cost:
+        #        #util.log.info("New Min: (%.3d,%.3d):%f<%f"%(kn[0],kn[1],self.cost[kn],min_cost))
+        #        min_cost=self.cost[kn]
+        #        min=kn
+        #=======================================================================
+        min_cost=float(sys.maxint)
+
+        mindex=self.cost.argmin()
+        min=np.unravel_index(mindex,self.cost.shape)
+        if self.cost[min]<self.defaults['maxval']:
+            return min
+        else:
+            util.log.info("No Cost Minimum Found")
+            return False 
+        
+    def _calc_delta_p(self,tone):
         '''
         (re)Calculate the delta_p matrix for powers in the bundle
         Since this implementation os Bundle.calc_psd does not update
         a global power setting, there is no need for a local old_p
         #FIXME Not Tested        
         '''
-        _b=util.mat2arr(self.b[tone])
-        _b[line]+=1
-        new_p=self.bundle.calc_psd(_b,tone)
-        
-        #This could be very wrong
-        '''
-        self.delta_p[tone,line]=new_p-self.p[tone,:]
-        '''
-        for xline in range(self.bundle.N):
-            if new_p[xline]<0:
-                for xxline in range(self.bundle.N):
-                    #Eliminate anyone else from talking to this line.
-                    ##I Don't Think This Makes Any Sense...
-                    self.delta_p[tone,line,xxline]=self.defaults['maxval']
-            else:
+        for line in range(self.bundle.N):
+            _b=util.mat2arr(self.b[tone])
+            _b[line]+=1
+            new_p=self.bundle.calc_psd(_b,tone)
+            
+            #This could be very wrong
+            '''
+            self.delta_p[tone,line]=new_p-self.p[tone,:]
+            '''
+            for xline in range(self.bundle.N):
+                #if new_p[xline]<0:
+                    #for xxline in range(self.bundle.N):
+                        #Eliminate anyone else from talking to this line.
+                        ##I Don't Think This Makes Any Sense...
+                     #self.delta_p[tone,line]=np.tile(self.defaults['maxval'],self.bundle.N)
+                #else:
                 self.delta_p[tone,line,xline]=new_p[xline]-self.p[tone,xline]  #update delta_p in a slice rather than looping
-                
+                    
         #'''
             
         
@@ -279,6 +284,7 @@ class MIPB(Algorithm):
         this_delta=0.0
         for xline in range(self.bundle.N):
             this_delta=self.delta_p[tone,line,xline]
+            assert this_delta != self.defaults['maxval'], "Trying to update bad global power on line %d"%xline
             self.p[tone,xline]+=this_delta
             self.line_p[xline]+=this_delta
             self.p_ave+=this_delta/self.bundle.N
@@ -319,10 +325,13 @@ class MIPB(Algorithm):
                     return self.w[line]+stepsize*(-diff)
                 '''
                 #TODO Need To Talk To AMK about this; I think its better. And its certainly faster.
-                if ratio>0:
+                #Need to deal with if b -> 0, just reset the weight and hope it recovers
+                if ratio == 1:
+                    new=1
+                elif ratio>0:
                     new= current*(ratio)
                 else:
-                    new= current*(1+-ratio) 
+                    new=current*(1+-ratio)
                 #TODOI reckon the entire thing could be replaced by
                 #return max(current-(stepsize*(diff)),current*0.9)
             else:

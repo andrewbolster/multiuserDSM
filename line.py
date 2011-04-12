@@ -76,8 +76,6 @@ class Line(object):
                 continue   #stop hitting yourself!
             else:
                 noise += utility.dbmhz_to_watts(self.p[k])*self.bundle._h2(self,xtalker,k)
-                utility.log.debug("calc_fext_noiseh2:%g"%self.bundle._h2(self,xtalker,k))
-                utility.log.debug("linepower:%g"% self.p[k])
         return noise
     
     '''

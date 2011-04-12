@@ -257,7 +257,7 @@ class Bundle(object):
             log.debug("fext\tgain\tcnr\tsnr")
             for tone in xrange(self.K):
                 
-                noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + dbmhz_to_watts(line.noise)
+                noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + (line.noise)
                 line.cnr[tone] = line.gain[tone]/noise #gain calculated from xtalk_gain generation
                 line.snr[tone] = dbmhz_to_watts(line.p[tone])*noise
                 
@@ -295,7 +295,7 @@ class Bundle(object):
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
     '''
-    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=False):
+    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=True):
         #Caching implementation (AMK)
         key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
         

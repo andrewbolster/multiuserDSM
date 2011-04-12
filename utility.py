@@ -10,7 +10,7 @@ import logging
 
 # Log everything, and send it to stderr.
 log = logging.getLogger('multiuserdsm')
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
@@ -176,14 +176,17 @@ def UndB(input):
     try:
         return math.pow(10,input/10)
     except ValueError:
-        log.debug("Caught Exception on UndB(%f)"%input)
+        #log.debug("Caught Exception on UndB(%f)"%input)
         raise ValueError
+    except OverflowError:
+        log.info("Overflowed on UndB(%f)"%input)
+        raise OverflowError
 
 def TodB(input):
     try:
         return 10*math.log10(input)
     except ValueError:
-        log.debug("Caught Exception on TodB(%f)"%input)
+        #log.debug("Caught Exception on TodB(%f)"%input)
         return -np.inf #FIXME Either make it dynamic across the package or use something like -inf; 
 
 def freq_on_tone(K): #TODO Memoize

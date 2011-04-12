@@ -13,7 +13,7 @@ from graphgenerator import graphgen
 import cProfile,os
 
 log.info("Starting Up...")
-profiling=True
+profiling=False
 parser = OptionParser()
 
 parser.add_option("-n","--network", dest="network", help="read network configuration from FILE",metavar="NETWORK",default="test.net")
