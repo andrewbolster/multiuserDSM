@@ -28,49 +28,54 @@ class Bundle(object):
     GAMMA= 9.95
     UGAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
     gamma_hat = pow(10,(UGAMMA+MARGIN-C_G)/10)
+    NOISE=dbmhz_to_watts(-140)
     
-    def __init__(self,network_file,K=512,scenarioname="NoScenario",rates_file=None, weights_file=None):
+    def __init__(self,network_file="",K=224,scenarioname="NoScenario",cachefile=False):
         self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
-        self._psd_cache = {'hits':0,'misses':0}
+        self._psd_cache={}
+        try:
+            self._psd_cache=np.load(cachefile)
+        except:
+            self._psd_cache = {'hits':0,'misses':0}
+        finally:
+            self._psd_cache['hits']=0
+            self._psd_cache['misses']=0
         self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
         
-
-
-        '''
-        Try to open and parse the network configuration file
-        '''
+        #Try if network file is a pre-generated npy pickle
         try:
-            with open(network_file,"r") as nf:
-                for n,line in enumerate(nf):
-                    if '#' in line: #not used yet but could be handy later
-                        scenarioline=re.split('#|:|,',line)
-                        for key in range(1,len(scenarioline),2): 
-                            self.scenariooptions[scenarioline[key]]=scenarioline[key+1]
-                    else:
-                        try:
-                            # nt and lt are network termination (CO or RT) and line termination (CPE)
-                            nt,lt,rate= line.split(",")
-                            self.lines.append(Line(nt,lt,int(rate),n,self))
-
-                        except ValueError:
-                            nt,lt=line.split(",")
-                            self.lines.append(Line(nt,lt,False,n,self))
-
-
-            self.N = len(self.lines)
-            log.info("Read %d Lines",self.N)
-            
-
+            self.lines=np.load(network_file)
+        #Will throw IOError if file is not pickle; so assume is regular network file
         except IOError:
-            log.error("Cannot open the network file: %s",network_file)
-            sys.exit(1)
+            log.info("Reading fresh Network File %s"%network_file)
+            try:
+                with open(network_file,"r") as nf:
+                    for n,line in enumerate(nf):
+                        if '#' in line: #not used yet but could be handy later
+                            scenarioline=re.split('#|:|,',line)
+                            for key in range(1,len(scenarioline),2): 
+                                self.scenariooptions[scenarioline[key]]=scenarioline[key+1]
+                        else:
+                            try:
+                                # nt and lt are network termination (CO or RT) and line termination (CPE)
+                                nt,lt,rate= line.split(",")
+                                self.lines.append(Line(nt,lt,int(rate),n,self))
+    
+                            except ValueError:
+                                nt,lt=line.split(",")
+                                self.lines.append(Line(nt,lt,False,n,self))               
+            except IOError:
+                log.error("Cannot open the network file: %s",network_file)
+                sys.exit(1)
+        finally:
+            self.N = len(self.lines)
+            log.info("Successfully read %d lines from %s"%(self.N,network_file))
 
-
-        log.info("Calculating the channel matrix")
+        log.info("Calculating the channel matrix for %d channels"%self.K)
         #The real work begins
         self.calc_channel_matrix()
 
@@ -250,6 +255,10 @@ class Bundle(object):
     :from snr.c
     '''
     def calculate_snr(self):
+        #Cache Stats
+        log.info("Cache Hits:%d"%self._psd_cache['hits'])
+        log.info("Cache Mises:%d"%self._psd_cache['misses'])
+        
         for line in self.lines:
             line.sanity()
             noise = np.zeros(self.K)
@@ -295,7 +304,7 @@ class Bundle(object):
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
     '''
-    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=True):
+    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=True, noise=NOISE):
         #Caching implementation (AMK)
         key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
         
@@ -310,27 +319,18 @@ class Bundle(object):
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
         B=np.asmatrix(np.zeros(self.N))
+        XTG=self.xtalk_gain[:,:,k].copy()
+        
+        channelgap=pow(10,(gamma+3)/10)
         
         log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
-        
-        #=======================================================================
-        # for v in range(self.N): #victims
-        #    B[0,v]=pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
-        #    for x in range(self.N): #xtalkers
-        #        if v==x: 
-        #            A[v,x]=1
-        #        else:
-        #            A[v,x]=(-1.0*pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
-        #=======================================================================
         for v in range(self.N): #victims
-            B[0,v]=pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*(dbmhz_to_watts(-140)/self.xtalk_gain[v][v][k])                
             for x in range(self.N): #xtalkers
-                A[v,x]=(-1.0*pow(10,(gamma+3)/10)*(pow(2,bitload[v])-1)*self.xtalk_gain[x][v][k])/self.xtalk_gain[v][v][k]
+                A[v,x]=(-1.0*channelgap*(pow(2,bitload[v])-1)*XTG[x,v])/XTG[v,v]
+            B[0,v]=(channelgap*(pow(2,bitload[v])-1)*noise/XTG[v,v])                
+            A[v,v]=1
         
-        #Matrix Post-Process
         B=B.T
-        for x in range(self.N):
-            A[x,x]=1
 
         #Everyone loves linear algebra...dont they?
         P=np.linalg.solve(A,B)
@@ -341,8 +341,6 @@ class Bundle(object):
         log.debug("B:\n%s"%str(B))
         log.debug("P:\n%s"%str(P))
         '''
-        
-        
         P=P.T
 
         P=mat2arr(P[0])
@@ -385,13 +383,15 @@ class Bundle(object):
         pl.show
     
     '''
-    Print CM to file
+    Print CM and lines to file
     '''
     def tofile(self,filename):
         resultsdir=rawdir
         if not os.path.isdir(resultsdir):
             os.makedirs(resultsdir)
         np.save(resultsdir+filename+'-channelmatrix', self.xtalk_gain)
+        np.save(resultsdir+filename+'-lines', self.lines)
+        np.save(resultsdir+filename+'-cache', self.lines)
         
     '''
     Print Channel Matrix to screen

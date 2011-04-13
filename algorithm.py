@@ -62,8 +62,9 @@ class Algorithm(object):
         self.bundle.calculate_snr()
         self.stats['end']=time.time()
         self.stats['duration']=self.stats['end']-self.stats['start']
+        self.stats['hitratio']=self.bundle._psd_cache['hits']/(self.bundle._psd_cache['hits']+self.bundle._psd_cache['misses'])
 
-        util.log.info("All Done Here, took %f"%self.stats['duration'])
+        util.log.info("All Done Here, took %f, hit ratio of %.4f"%(self.stats['duration'],self.stats['hitratio']))
         
 
     def eta(self,how_done,start=False):

@@ -15,6 +15,19 @@ from algorithm import Algorithm
 from line import Line
 import utility as util
 
+try:
+    from gpu import GPU
+    using_gpu=True
+except:
+    util.log.info("Not using GPU")
+    using_gpu=False
+    
+if util.mp:
+    #Thread Stuffs
+    from multiprocessing import Process, Queue, cpu_count
+    from Queue import Empty
+ 
+
 class MIPB(Algorithm):
     '''
     Multiuser Incremental Power Balancing
@@ -36,7 +49,7 @@ class MIPB(Algorithm):
                          'p_budget':0.110,    #watts #from mipb.c _p_budget[user]=
                          'w':1.0,
                          'w_min':0.0,
-                         'min_sw':1e-4,
+                         'min_sw':1,
                          'rate_tol':10,
                          'osc_tol':5
                          }
@@ -56,7 +69,6 @@ class MIPB(Algorithm):
         
         self.line_b=np.zeros(self.bundle.N)
         self.line_b_last=np.copy(self.line_b)
-
         
         self.preamble()
         hold_counter=0
@@ -67,7 +79,7 @@ class MIPB(Algorithm):
             while not self.converged():
                 self.load_bundle(self.w)
                 self.update_totals()
-                util.log.info("After LoadBundle, b:%s"%(self.line_b))
+                util.log.info("After LoadBundle, b:%s:%d"%(self.line_b, sum(self.line_b)))
                 if self.oscillating():
                     self.stepsize/=2
                     util.log.error("Oscillation Detected, Decreased Stepsize to %lf"%self.stepsize)
@@ -81,7 +93,7 @@ class MIPB(Algorithm):
                         util.log.info("Holding...")
                         hold_counter-=1
                     else:
-                        self.stepsize+=self.stepsize #*=2
+                        self.stepsize+=1
                         util.log.info("Increased stepsize to :%lf"%self.stepsize)
                 self.w=self.update_w(self.w)
         else: #No Rate Targets Given
@@ -98,7 +110,7 @@ class MIPB(Algorithm):
         rate_tol = self.defaults['rate_tol']
         for line in range(self.bundle.N):
             if not self.rate_targets[line] == False : #If rate has been set
-                if self.rate_targets[line]>=self.line_b[line]:
+                if (self.rate_targets[line]-self.line_b[line])>0:
                     return False
         return True
     
@@ -137,7 +149,8 @@ class MIPB(Algorithm):
         
         #Initialise DeltaP (and cost matrix?)
         for k in range(self.bundle.K):
-            self._calc_delta_p(k)
+            self.update_delta_p(k)
+
 
         self.update_cost_matrix(weights)
 
@@ -154,7 +167,7 @@ class MIPB(Algorithm):
                 #Recalculate delta-p's for all lines wrt this bit/power change
                 #NB mins[0] -> min tone
                 #FIXME PARALLELISE
-                self._calc_delta_p(k_min)
+                self.update_delta_p(k_min)
                 #Update the powers 
                 self.update_power(mins)
                 self.update_cost_matrix(weights, k_min)  
@@ -180,6 +193,23 @@ class MIPB(Algorithm):
             return True
         else: #If we got this far, all is well.
             return False
+        
+    def update_delta_p(self,tone):
+        if util.mp:
+            self.update_delta_p_MP(tone)
+        else:
+            for line in range(self.bundle.N):
+                self.delta_p[tone,line]=self._calc_delta_p(line,k=tone)
+    
+    def update_delta_p_MP(self,tone):
+        queue=Queue()
+        for line in range(self.bundle.N):
+            queue.put(line)
+        threads = [Process(target=self._calc_delta_p, args=(queue,), kwargs={'k':tone}) for i in range(cpu_count())]
+        for p in threads:
+            p.start()
+        for p in threads:
+            p.join()
     
     def update_cost_matrix(self,weights,tone=False):
         '''
@@ -229,15 +259,6 @@ class MIPB(Algorithm):
         
     def min_tone_cost(self):
         #TODO This could be replaced with a few ndarray operations
-        
-        #=======================================================================
-        # min_cost=float(sys.maxint)
-        # for kn in product(range(self.bundle.K),range(self.bundle.N)):
-        #    if self.cost[kn]<min_cost:
-        #        #util.log.info("New Min: (%.3d,%.3d):%f<%f"%(kn[0],kn[1],self.cost[kn],min_cost))
-        #        min_cost=self.cost[kn]
-        #        min=kn
-        #=======================================================================
         min_cost=float(sys.maxint)
 
         mindex=self.cost.argmin()
@@ -248,33 +269,25 @@ class MIPB(Algorithm):
             util.log.info("No Cost Minimum Found")
             return False 
         
-    def _calc_delta_p(self,tone):
+    def _calc_delta_p(self,line,k=False):
         '''
         (re)Calculate the delta_p matrix for powers in the bundle
         Since this implementation os Bundle.calc_psd does not update
         a global power setting, there is no need for a local old_p
         #FIXME Not Tested        
         '''
-        for line in range(self.bundle.N):
-            _b=util.mat2arr(self.b[tone])
-            _b[line]+=1
-            new_p=self.bundle.calc_psd(_b,tone)
-            
-            #This could be very wrong
-            '''
-            self.delta_p[tone,line]=new_p-self.p[tone,:]
-            '''
-            for xline in range(self.bundle.N):
-                if new_p[xline]<0:
-                    for xxline in range(self.bundle.N):
-                        #Eliminate anyone else from talking to this line.
-                        ##I Don't Think This Makes Any Sense...
-                        self.delta_p[tone,line]=np.tile(self.defaults['maxval'],self.bundle.N)
-                else:
-                    self.delta_p[tone,line,xline]=new_p[xline]-self.p[tone,xline]  #update delta_p in a slice rather than looping
-                    
-        #'''
-            
+        _b=util.mat2arr(self.b[k])
+        _b[line]+=1
+        new_p=self.bundle.calc_psd(_b,k)
+        delta_p=np.zeros(self.bundle.N)
+        for xline in range(self.bundle.N):
+            if new_p[xline]<0:
+                #Eliminate anyone else from talking to this line.
+                ##I Don't Think This Makes Any Sense...
+                delta_p[xline]=self.defaults['maxval']
+            else:
+                delta_p[xline]=new_p[xline]-self.p[k,xline]
+        return delta_p
         
     def update_power(self,(tone,line)):
         '''
@@ -313,16 +326,6 @@ class MIPB(Algorithm):
             ratio= diff/self.rate_targets[line]
             #If we're within tolerance, do nothing, otherwise...
             if abs(diff)>rate_tol:
-                '''
-                if diff > 0: #if b<r
-                    #I don't think this makes sense but implementing it for graphical test
-                    if (stepsize*(diff))>self.w[line]: #if updated weight is going to be non positive
-                        return self.w[line]*0.9
-                    else:
-                        return self.w[line]+stepsize*(diff)
-                else:
-                    return self.w[line]+stepsize*(-diff)
-                '''
                 #TODO Need To Talk To AMK about this; I think its better. And its certainly faster.
                 #Need to deal with if b -> 0, just reset the weight and hope it recovers
                 if ratio == 1:
@@ -331,8 +334,6 @@ class MIPB(Algorithm):
                     new= current*(ratio)
                 else:
                     new=current*(1+-ratio)
-                #TODOI reckon the entire thing could be replaced by
-                #return max(current-(stepsize*(diff)),current*0.9)
             else:
                 new= current
         else:

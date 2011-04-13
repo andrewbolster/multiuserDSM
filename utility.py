@@ -22,6 +22,8 @@ rawdir="raw_results/"
 profdir="profiles/"
 graphdir="graphs/"
 
+mp=False
+
 
 material=[{ # awg 26
             "r_0c":286.17578,     # ohms/km
