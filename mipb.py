@@ -197,9 +197,25 @@ class MIPB(Algorithm):
     def update_delta_p(self,tone):
         if util.mp:
             self.update_delta_p_MP(tone)
+        elif True:
+            self.delta_p[tone]=self.update_delta_p_GPU(tone,self.bundle.N)
         else:
             for line in range(self.bundle.N):
                 self.delta_p[tone,line]=self._calc_delta_p(line,k=tone)
+
+    def update_delta_p_GPU(self,k,N):
+        _b=np.tile(util.mat2arr(self.b[k]),N).reshape(N,N)
+        delta_p=np.zeros((N,N))
+        for line in range(N):
+            _b[line,line]+=1
+            new_p=self.bundle.calc_psd(_b[line],k)
+            for xline in range(N):
+                #gpuarray.ifpositive
+                if new_p[xline]<0:
+                    delta_p[line,xline]=self.defaults['maxval']
+                else:
+                    delta_p[line,xline]=new_p[xline]-self.p[k,xline]
+        return delta_p
     
     def update_delta_p_MP(self,tone):
         queue=Queue()
@@ -210,6 +226,26 @@ class MIPB(Algorithm):
             p.start()
         for p in threads:
             p.join()
+    
+    def _calc_delta_p(self,line,k=False):
+        '''
+        (re)Calculate the delta_p matrix for powers in the bundle
+        Since this implementation os Bundle.calc_psd does not update
+        a global power setting, there is no need for a local old_p
+        #FIXME Not Tested        
+        '''
+        _b=util.mat2arr(self.b[k])
+        _b[line]+=1
+        new_p=self.bundle.calc_psd(_b,k)
+        delta_p=np.zeros(self.bundle.N)
+        for xline in range(self.bundle.N):
+            if new_p[xline]<0:
+                #Eliminate anyone else from talking to this line.
+                ##I Don't Think This Makes Any Sense...
+                delta_p[xline]=self.defaults['maxval']
+            else:
+                delta_p[xline]=new_p[xline]-self.p[k,xline]
+        return delta_p
     
     def update_cost_matrix(self,weights,tone=False):
         '''
@@ -225,7 +261,7 @@ class MIPB(Algorithm):
             self.update_tone_cost(weights, tone)
         else:
             #recalculate costs matrix
-            for k in range(self.bundle.K):
+            for k in xrange(self.bundle.K):
                 self.update_tone_cost(weights,k)
             #util.log.info("%s"%str(self.cost))
     
@@ -269,33 +305,13 @@ class MIPB(Algorithm):
             util.log.info("No Cost Minimum Found")
             return False 
         
-    def _calc_delta_p(self,line,k=False):
-        '''
-        (re)Calculate the delta_p matrix for powers in the bundle
-        Since this implementation os Bundle.calc_psd does not update
-        a global power setting, there is no need for a local old_p
-        #FIXME Not Tested        
-        '''
-        _b=util.mat2arr(self.b[k])
-        _b[line]+=1
-        new_p=self.bundle.calc_psd(_b,k)
-        delta_p=np.zeros(self.bundle.N)
-        for xline in range(self.bundle.N):
-            if new_p[xline]<0:
-                #Eliminate anyone else from talking to this line.
-                ##I Don't Think This Makes Any Sense...
-                delta_p[xline]=self.defaults['maxval']
-            else:
-                delta_p[xline]=new_p[xline]-self.p[k,xline]
-        return delta_p
-        
     def update_power(self,(tone,line)):
         '''
         Update power totals for all lines for this line change
         #FIXME Not Tested
         '''
         this_delta=0.0
-        for xline in range(self.bundle.N):
+        for xline in xrange(self.bundle.N):
             this_delta=self.delta_p[tone,line,xline]
             self.p[tone,xline]+=this_delta
             self.line_p[xline]+=this_delta
@@ -327,7 +343,7 @@ class MIPB(Algorithm):
             #If we're within tolerance, do nothing, otherwise...
             if abs(diff)>rate_tol:
                 #TODO Need To Talk To AMK about this; I think its better. And its certainly faster.
-                #Need to deal with if b -> 0, just reset the weight and hope it recovers
+                #Need to deal with if b -> 0, so reset to a middling weight to recover
                 if ratio == 1:
                     new=1
                 elif ratio>0:

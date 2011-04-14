@@ -36,14 +36,10 @@ class Bundle(object):
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
-        self._psd_cache={}
-        try:
-            self._psd_cache=np.load(cachefile)
-        except:
-            self._psd_cache = {'hits':0,'misses':0}
-        finally:
-            self._psd_cache['hits']=0
-            self._psd_cache['misses']=0
+        self._psd_cache = {'hits':0,'misses':0}
+        
+        assert cachefile==False, "Someone doesn't know what they're doing!"
+        
         self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
         
         #Try if network file is a pre-generated npy pickle
@@ -318,20 +314,18 @@ class Bundle(object):
         
         #Generate Matrices (See Intro.pdf 2.23)
         A=np.asmatrix(np.zeros((self.N,self.N)))
-        B=np.asmatrix(np.zeros(self.N))
+        B=np.asmatrix(np.zeros((self.N,1)))
         XTG=self.xtalk_gain[:,:,k].copy()
         
         channelgap=pow(10,(gamma+3)/10)
         
         log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
         for v in range(self.N): #victims
-            for x in range(self.N): #xtalkers
-                A[v,x]=(-1.0*channelgap*(pow(2,bitload[v])-1)*XTG[x,v])/XTG[v,v]
-            B[0,v]=(channelgap*(pow(2,bitload[v])-1)*noise/XTG[v,v])                
+            B[v,0]=(channelgap*(pow(2,bitload[v])-1)/XTG[v,v])
+            A[v]=-B[v,0]*XTG[:,v]
             A[v,v]=1
-        
-        B=B.T
-
+            B[v,0]*=noise
+    
         #Everyone loves linear algebra...dont they?
         P=np.linalg.solve(A,B)
         
@@ -358,26 +352,11 @@ class Bundle(object):
     def _h2(self,line1,line2,channel):
         return self.xtalk_gain[line1.id][line2.id][channel]
     
-    '''
-    F- Gamma function - 
-    f(line,k)=\Gamma(2^{b_n(k)} -1)
-    :from psd_vector.c
-    #TODO Memoize
-    '''
-    def _f(self,bitload,gamma=GAMMA):
-        key = "%d-%f"%(bitload,gamma)
-        if key in self._f_cache:
-            return self._f_cache[key]
-        else:
-            result=pow(10,(gamma+3)/10)*(pow(2,bitload)-1)
-            self._f_cache[key]=result
-        return result #TODO initially, b=0, so this doesnt work
     '''    
     Pretty Print channel Matrix
     #TODO I've got no idea how to display this....
     '''
     def graph_channel_matrix(self):
-        
         pl.contourf(self.xtalk_gain[...,0])
         pl.figure()
         pl.show
@@ -391,7 +370,6 @@ class Bundle(object):
             os.makedirs(resultsdir)
         np.save(resultsdir+filename+'-channelmatrix', self.xtalk_gain)
         np.save(resultsdir+filename+'-lines', self.lines)
-        np.save(resultsdir+filename+'-cache', self.lines)
         
     '''
     Print Channel Matrix to screen

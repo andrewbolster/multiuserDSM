@@ -54,6 +54,7 @@ if __name__ == "__main__":
     else:
         algo.run()
     algo.tofile(options.scenarioname)
+    bundle.tofile(options.scenarioname)
     
     if options.altscenario:
         algo.test_compliance(options.altscenario)

@@ -51,10 +51,11 @@ class Algorithm(object):
         *Timing statistics
         '''
         #Recalculate P from Bitloads to be careful
-        for k in range(self.bundle.K):
-            self.p[k,:]=self.bundle.calc_psd(self.b[k,:],k)
-        
         self.b=util.mat2arr(self.b)
+
+        for k in range(self.bundle.K):
+            self.p[k]=self.bundle.calc_psd(self.b[k],k)
+        
         for line in self.bundle.lines:
             line.b=self.b[:,line.id]
             line.p=self.p[:,line.id]
