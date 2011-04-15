@@ -98,7 +98,7 @@ class OSB(Algorithm):
                     linepower=self.total_power(line)
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
                     if ( linepower > self.power_budget[lineid]): 
-                        util.log.info("Missed power budget:linepower:%.5f,lastdrop:%.3f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
+                        util.log.info("Missed power budget:linepower:%.3f,lastdrop:%.0f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
                         lastpower=linepower                      
                         if (self.l[lineid] < 1):
                             self.l[lineid]=1 #0*2=0

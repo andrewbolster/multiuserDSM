@@ -318,6 +318,7 @@ class Bundle(object):
         XTG=self.xtalk_gain[:,:,k].copy()
         
         channelgap=pow(10,(gamma+3)/10)
+        F=[(channelgap*(pow(2,bitload[v]-1))) for v in range(self.N)]
         
         log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
         for v in range(self.N): #victims
@@ -325,8 +326,15 @@ class Bundle(object):
             A[v]=-B[v,0]*XTG[:,v]
             A[v,v]=1
             B[v,0]*=noise
+        '''
+            B[v,0]=((channelgap*pow(2,bitload[v]-1)*noise)/XTG[v,v]) #equiv f(b_v(k))*o / H_vv
+            for x in range(self.N):
+                A[v,x]=(-1.0*channelgap*(pow(2,bitload[v]-1))*XTG[x,v])/XTG[v,v]  #equiv -f(b_v(k))*H_xv/H_vv
+            A[v,v]=1          #equiv if i==j=>Aij=1
+        '''
     
         #Everyone loves linear algebra...dont they?
+        #FIXME This one line is the biggest stumbling block to parallelism
         P=np.linalg.solve(A,B)
         
         #Useful debugging

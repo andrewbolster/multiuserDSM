@@ -79,7 +79,7 @@ class MIPB(Algorithm):
             while not self.converged():
                 self.load_bundle(self.w)
                 self.update_totals()
-                util.log.info("After LoadBundle, b:%s:%d"%(self.line_b, sum(self.line_b)))
+                util.log.info("After %d LoadBundle, b:%s:%d"%(self.stepsize,self.line_b, sum(self.line_b)))
                 if self.oscillating():
                     self.stepsize/=2
                     util.log.error("Oscillation Detected, Decreased Stepsize to %lf"%self.stepsize)
@@ -94,7 +94,6 @@ class MIPB(Algorithm):
                         hold_counter-=1
                     else:
                         self.stepsize+=1
-                        util.log.info("Increased stepsize to :%lf"%self.stepsize)
                 self.w=self.update_w(self.w)
         else: #No Rate Targets Given
             util.log.info("No Target Given")
@@ -125,7 +124,8 @@ class MIPB(Algorithm):
         osc=0
         osc += sum(True for n in range(self.bundle.N) if (delta_b[n]>osc_tol and -delta_b_last[n]>osc_tol) ) #Loads are spiking down
         osc += sum(True for n in range(self.bundle.N) if (delta_b_last[n]>osc_tol and -delta_b[n]>osc_tol) ) #Loads are spiking up        
-        util.log.info("Found %d oscillating channels"%osc)
+        if (osc >0):
+            util.log.info("Found %d oscillating channels"%osc)
         return (osc>=2)
     
     def load_bundle(self,weights):
@@ -354,7 +354,7 @@ class MIPB(Algorithm):
                 new= current
         else:
             new= current#Keep the line unweighted
-        util.log.info("Weight on Line:%d,%f,ratio:%.3f"%(line,new,ratio))
+        util.log.debug("Weight on Line:%d,%f,ratio:%.3f"%(line,new,ratio))
 
         return new
                 
