@@ -149,65 +149,12 @@ __global__ void solve(float *A, float *B, int max){
   }
 }
 
-/*
-void notmain(){
-    //3x3 Matrix
-    //float a[]={1,-2,3,2,-5,12,0,2,-10};
-    float a[]={1,3,-2,3,5,6,2,4,3};
-    float b[]={5,7,8};
-    //float a[]={1,2,3,2,-1,1,3,4,-1};
-    //float b[]={14,3,8};
-    //float a[]={1,-2,1,0,2,2,-2,4,2};
-    //float b[]={1,4,2};
-    int sig;
-    puts("Declared Stuff");
-
-    //pivot array (not used currently)
-    int* p_pivot = (int *)malloc(sizeof(int)*MAT1);
-    int* q_pivot = (int *)malloc(sizeof(int)*MAT1);
-    puts("Starting Stuff");
-    for (unsigned int i=0; i<MAT1; i++){
-        p_pivot[i]=i;
-        q_pivot[i]=i;
-        printf("%.1lf|",b[i]);
-        for (unsigned int j=0;j<MAT1; j++){
-            printf("%.1lf,",a(i,j));
-        }
-        printf("|%d,%d",p_pivot[i],q_pivot[i]);
-        puts("");
-    }
-
-    h_pivot_decomp(&a[0],p_pivot,q_pivot);
-    puts("After Pivot");
-    for (unsigned int i=0; i<MAT1; i++){
-        printf("%.1lf|",b[i]);
-        for (unsigned int j=0;j<MAT1; j++){
-            printf("%.1lf,",a(i,j));
-        }
-        printf("|%d,%d",p_pivot[i],q_pivot[i]);
-        puts("");
-    }
-
-    h_solve(&a[0],&b[0],p_pivot,q_pivot);
-    puts("Finished Solve");
-
-    for (unsigned int i=0; i<MAT1; i++){
-        printf("%.1lf|",b[i]);
-        for (unsigned int j=0;j<MAT1; j++){
-            printf("%.1lf,",a(i,j));
-        }
-        puts("");
-    }
-}*/
-
-
-
 int main(){
   //What are you actually trying to do:
   //  generate 2 input matrixes, (NxN,Nx1) and 1 output (1xN)
   //  do this over matrixcount length for threadiding
   cudaSetDevice(0);
-  const unsigned int matrixcount=1;
+  const unsigned int matrixcount=224;
   const unsigned int matsize=MAT2*matrixcount;
   const unsigned int vecsize=MAT1*matrixcount;
   float a[]={1,3,-2,3,5,6,2,4,3};
