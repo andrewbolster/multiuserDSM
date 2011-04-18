@@ -24,6 +24,7 @@ graphdir="graphs/"
 
 mp=False
 
+useGPU=True
 
 material=[{ # awg 26
             "r_0c":286.17578,     # ohms/km

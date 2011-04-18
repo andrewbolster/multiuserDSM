@@ -133,11 +133,38 @@ __global__ void solve(float *A, float *B){
   }
 }
 
-__global__ void optimise_p(float *lambdas ){
+//Generate the A 'sausage' for a specified bitload
+//requires grid(N,1,1) block(K,N,1)
+__global__ void generateA(int *bitload, float *A, float *xtg){
+    //V as block index for per-block memory coalescing (talonmies)
+    int v=blockIdx.x;
+    int k=threadIdx.x;
+    int x=threadIdx.y;
+    
+    //block-shared bitload generation?
+    A[k*MAT2+v*MAT1+x]=-({{channelgap}}*((1<<bitload[v])-1)*xtg[k*MAT2+x*MAT1+v])/xtg[k*MAT2+v*MAT1+v];
+}
+
+//Repair the A diagonal
+//requires grid(K,1,1) block(N,1,1)
+__global__ void fixA(float *A){
     int k=blockIdx.x;
     int x=threadIdx.x;
-    int y=threadIdx.y;
-}  
+    A[k*MAT2+x*MAT1+x]=1;
+}
+
+//Generate the B matrix for a specified bitload
+//requires grid(N,1,1) block(K,1,1)
+__global__ void generateB(int *bitload, float *B, float *xtg){
+    //V as block index for per-block memory coalescing (talonmies)
+    int v=blockIdx.x;
+    int k=threadIdx.x;
+    
+    //block-shared bitload generation?
+    B[k*MAT1+v]=({{noise}}*{{channelgap}}*((1<<bitload[v])-1))/xtg[k*MAT2+v*MAT1+v];
+}
+
+  
 """)
 
 class GPU(object):
@@ -146,7 +173,11 @@ class GPU(object):
         self.bundle=bundle
         self.N=self.bundle.N
         self.K=self.bundle.K
-        r_solve=t_solve.render(matrixN=self.N, mbpt=15)
+        r_solve=t_solve.render(matrixN=self.N,
+                               mbpt=15,
+                               channelgap=pow(10,(bundle.get_GAMMA()+3)/10),
+                               noise=bundle.get_NOISE()
+                               )
         self.g_solve = SourceModule(r_solve)
         self.init=time()
         

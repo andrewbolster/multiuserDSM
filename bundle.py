@@ -22,7 +22,6 @@ from utility import *
 from line import Line
 from gpu import GPU
 
-
 class Bundle(object):
     MARGIN = 3.0   #Performance Margin db
     C_G = 0        #Coding Gain db
@@ -85,21 +84,29 @@ class Bundle(object):
         self.tofile(scenarioname)
         
 
+    '''
+    Return GAMMA and NOISE (for GPU stuff)
+    '''
+    def get_GAMMA(self,gamma=GAMMA):
+        return (gamma)
 
+    def get_NOISE(self,noise=NOISE):
+        return (noise)
+    
     '''
     Calculates the bundle channel gain matrix, generating xtalk_gain[][][]
     :from channel_matrix.c
     '''
     def calc_channel_matrix(self):
         #Initialise the gains
-        self.xtalk_gain = np.zeros((self.N,self.N,self.K))
+        self.xtalk_gain = np.zeros((self.K,self.N,self.N))
         for k in range(self.K):                         #For Each Tone
             for x,lx in enumerate(self.lines):          #Between Every xtalker
                 for v,lv in enumerate(self.lines):      # and every victim
                     if x == v:                          #If you're talking to yourself, do lazy transfer_fn
-                        lx.gain[k] = self.xtalk_gain[x][v][k] = lx.transfer_fn(self.freq[k])
+                        lx.gain[k] = self.xtalk_gain[k][x][v] = lx.transfer_fn(self.freq[k])
                     else:                               #Otherwise look at XT
-                        self.xtalk_gain[x][v][k] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
+                        self.xtalk_gain[k][x][v] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
                    
     '''
     Check Normalised XT Gains and xtalk symmetry 
@@ -122,7 +129,7 @@ class Bundle(object):
         '''Lets turn this on its head'''
         for v,victim in enumerate(self.lines):
             #listcomprehension for x,v,k on xtalk_gains and gain[k]
-            gainratio=[self.xtalk_gain[x,v,k]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
+            gainratio=[self.xtalk_gain[k,x,v]/victim.gain[k] for x in range(self.N) for k in range(self.K)]
             yeses+=len([1 for i in gainratio if i>0.5])
         
         #Check symmetry if all lines are the same
@@ -133,12 +140,12 @@ class Bundle(object):
             #Not all the lines are the same so the xtalk matrix cannot be symmetric
             log.info("Lines are different, xtalk should not be symmetric")
             for k in range(self.K):
-                assert (self.xtalk_gain[:,:,k].T!=self.xtalk_gain[:,:,k]).all()==False, "Xtalk Symmtric on tone %d"%k
+                assert (self.xtalk_gain[k,:,:].T!=self.xtalk_gain[k,:,:]).all()==False, "Xtalk Symmtric on tone %d"%k
 
         else:
             log.info("Lines are identical, xtalk should be symmetric")
             for k in range(self.K):
-                assert (self.xtalk_gain[:,:,k].T!=self.xtalk_gain[:,:,k]).any()==True, "Xtalk Not Symmtric on tone %d"%k
+                assert (self.xtalk_gain[k,:,:].T!=self.xtalk_gain[k,:,:]).any()==True, "Xtalk Not Symmtric on tone %d"%k
               
             
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
@@ -317,11 +324,14 @@ class Bundle(object):
             pass
         
         #Generate Matrices (See Intro.pdf 2.23)
-        #A=np.zeros((self.N,self.N)).astype(np.float32)
-        #B=np.zeros((self.N,1)).astype(np.float32)
-        A=np.zeros((self.N,self.N))
-        B=np.zeros((self.N,1))
-        XTG=self.xtalk_gain[:,:,k].copy()
+        if (useGPU):
+            A=np.zeros((self.N,self.N)).astype(np.float32)
+            B=np.zeros((self.N,1)).astype(np.float32)
+        else:
+            A=np.zeros((self.N,self.N))
+            B=np.zeros((self.N,1))
+        
+        XTG=self.xtalk_gain[k,:,:].copy()
         
         channelgap=pow(10,(gamma+3)/10)
         F=[(channelgap*(pow(2,bitload[v]-1))) for v in range(self.N)]
@@ -341,8 +351,10 @@ class Bundle(object):
     
         #Everyone loves linear algebra...dont they?
         #FIXME This one line is the biggest stumbling block to parallelism
-        P=np.linalg.solve(A,B)
-        #P=self.gpu.solve(A,B,224)
+        if (useGPU):
+            P=self.gpu.solve(A,B,224)
+        else:
+            P=np.linalg.solve(A,B)
         
         #Useful debugging
         
@@ -365,7 +377,7 @@ class Bundle(object):
     This more or less does nothing but return xtalk_gain but is closer to the math
     '''
     def _h2(self,line1,line2,channel):
-        return self.xtalk_gain[line1.id][line2.id][channel]
+        return self.xtalk_gain[channel][line1.id][line2.id]
     
     '''    
     Pretty Print channel Matrix
@@ -394,7 +406,7 @@ class Bundle(object):
             print("\n%d:"%(tone)),
             for x in range(self.N):
                 for v in range(self.N):
-                    print("%e"%self.xtalk_gain[x][v][tone]), 
+                    print("%e"%self.xtalk_gain[tone][x][v]), 
     
     '''
     Print Channel Matrix to screen
@@ -404,4 +416,6 @@ class Bundle(object):
         for x in range(self.N):
             print("")
             for v in range(self.N):
-                print("%e"%self.xtalk_gain[x][v][tone]),   
+                print("%e"%self.xtalk_gain[tone][x][v]),   
+                
+    

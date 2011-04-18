@@ -7,14 +7,14 @@ import numpy as np
 import math
 import sys
 import logging
-import multiprocessing as mp
+import multiprocessing
 import hashlib
 
 #Local Imports
 from bundle import Bundle
 from algorithm import Algorithm
 from line import Line
-import utility as util
+from utility import *
 
 class OSB(Algorithm):
     '''
@@ -46,7 +46,7 @@ class OSB(Algorithm):
         self.power_budget=np.tile(self.defaults['p_budget'], self.bundle.N)
         
         #Create multithreading pool
-        self.threadpool=mp.Pool(mp.cpu_count())
+        self.threadpool=multiprocessing.Pool(multiprocessing.cpu_count())
             
         self.preamble()
         #lambda values and weights are dim(N)
@@ -62,9 +62,9 @@ class OSB(Algorithm):
                               
         #TODO Implement rate region searching
         if (False and all(rate != self.defaults['rate_target'] for rate in self.rate_targets)):
-            util.log.info("Rate Region")
+            log.info("Rate Region")
         else:
-            util.log.info("Bisection")
+            log.info("Bisection")
             self._bisect_l();
         #init_lines() What the hell is this?
         self.postscript()
@@ -75,7 +75,7 @@ class OSB(Algorithm):
     :from osb_bb.c
     '''
     def _bisect_l(self):
-        util.log.info("Beginning Bisection")
+        log.info("Beginning Bisection")
         self.p_total = np.zeros(self.bundle.N)
         self.p_total_last = np.tile(1.0,self.bundle.N)
 
@@ -91,31 +91,31 @@ class OSB(Algorithm):
                 self.l[lineid]=self.defaults['l']
                 lastpower=self.defaults['maxval']                
                 #L-range hunting
-                util.log.info("Beginning l-range hunt;line:%d"%lineid)
+                log.info("Beginning l-range hunt;line:%d"%lineid)
                 while True: #FIXME there must be a better way of doing this
                     self.optimise_p(self.l)
                     linepower=self.total_power(line)
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
                     if ( linepower > self.power_budget[lineid]): 
-                        util.log.info("Missed power budget:linepower:%.3f,lastdrop:%.0f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
+                        log.info("Missed power budget:linepower:%.3f,lastdrop:%.0f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
                         lastpower=linepower                      
                         if (self.l[lineid] < 1):
                             self.l[lineid]=1 #0*2=0
                         else:
                             self.l[lineid]*=2
                     else:
-                        util.log.info("Satisfied power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
+                        log.info("Satisfied power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
                         break
                 #this value is the highest that satisfies the power budget
                 l_max=self.l[lineid]
                 #but we know this value doesn't, so use it as the minimum
                 l_min=self.l[lineid]/2.0
-                util.log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
+                log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
 
                 
                 #Actual optimisation
                 last=False #force _l_converged to do first loop
-                util.log.info("Beginning optimisation run;line:%d"%lineid)           
+                log.info("Beginning optimisation run;line:%d"%lineid)           
                 while not self._l_converged(line,last):
                     self.l[lineid]=(l_max+l_min)/2
                     self.optimise_p(self.l)
@@ -125,7 +125,7 @@ class OSB(Algorithm):
                     else:
                         l_max=self.l[lineid]
                     last=linepower
-                util.log.info("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
+                log.info("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
 
             #End line loop
             
@@ -149,7 +149,7 @@ class OSB(Algorithm):
             if (self.l_last == self.l).all():
                 #Optimisation done since all values the same as last time
                 assert (self.l > 0).all()
-                util.log.info("This = Last")
+                log.info("This = Last")
                 return True
             else:
                 #TODO Need to add rate checking in here for rate mode
@@ -179,10 +179,10 @@ class OSB(Algorithm):
         
         #for each subchannel
         jobs=[]
-        kstep=self.bundle.K+1/(mp.cpu_count()*2)
-        for k in range(mp.cpu_count()): #Loop in osb_bb.c:optimise_p
+        kstep=self.bundle.K+1/(multiprocessing.cpu_count()*2)
+        for k in range(multiprocessing.cpu_count()): #Loop in osb_bb.c:optimise_p
             kmax=min((k+1)*kstep,self.bundle.K)
-            p=(mp.Process(self.optimise_p_k(lambdas, k,kmax)))
+            p=(multiprocessing.Process(self.optimise_p_k(lambdas, k,kmax)))
             jobs.append(p)
             p.start()
         for job in jobs:
@@ -191,11 +191,11 @@ class OSB(Algorithm):
             
     def optimise_p_k(self,lambdas,K,Kmax):
         for k in range(K,Kmax):
-            util.log.debug("Launched channel %d search"%k)
+            log.debug("Launched channel %d search"%k)
             lk_max=-self.defaults['maxval']
             b_max=[]
             #for each bit combination
-            b_combinator=util.combinations(range(self.MAXBITSPERTONE), self.bundle.N)
+            b_combinator=combinations(range(self.MAXBITSPERTONE), self.bundle.N)
             
             for b_combo in b_combinator:
                 b_combo=np.asarray(b_combo)
