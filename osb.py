@@ -47,8 +47,7 @@ class OSB(Algorithm):
         
         #Create multithreading pool
         self.threadpool=mp.Pool(mp.cpu_count())
-
-        
+            
         self.preamble()
         #lambda values and weights are dim(N)
         self.l=np.tile(self.defaults['l'],(self.bundle.N))

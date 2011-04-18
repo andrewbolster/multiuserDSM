@@ -20,6 +20,7 @@ from math import pow,log10,sqrt
 #Local Imports
 from utility import *
 from line import Line
+from gpu import GPU
 
 
 class Bundle(object):
@@ -37,7 +38,7 @@ class Bundle(object):
         #Assuming that each bundle is going to be one medium
         self.K = int(K)                # the number of DMT channels
         self._psd_cache = {'hits':0,'misses':0}
-        
+                
         assert cachefile==False, "Someone doesn't know what they're doing!"
         
         self.freq=np.asarray([140156.25 + 4312.5 * i for i in range(self.K)])
@@ -70,6 +71,9 @@ class Bundle(object):
         finally:
             self.N = len(self.lines)
             log.info("Successfully read %d lines from %s"%(self.N,network_file))
+        
+        self.gpu=GPU(self)
+
 
         log.info("Calculating the channel matrix for %d channels"%self.K)
         #The real work begins
@@ -313,8 +317,10 @@ class Bundle(object):
             pass
         
         #Generate Matrices (See Intro.pdf 2.23)
-        A=np.asmatrix(np.zeros((self.N,self.N)))
-        B=np.asmatrix(np.zeros((self.N,1)))
+        #A=np.zeros((self.N,self.N)).astype(np.float32)
+        #B=np.zeros((self.N,1)).astype(np.float32)
+        A=np.zeros((self.N,self.N))
+        B=np.zeros((self.N,1))
         XTG=self.xtalk_gain[:,:,k].copy()
         
         channelgap=pow(10,(gamma+3)/10)
@@ -336,13 +342,14 @@ class Bundle(object):
         #Everyone loves linear algebra...dont they?
         #FIXME This one line is the biggest stumbling block to parallelism
         P=np.linalg.solve(A,B)
+        #P=self.gpu.solve(A,B,224)
         
         #Useful debugging
-        '''
+        
         log.debug("A:\n%s"%str(A))
         log.debug("B:\n%s"%str(B))
         log.debug("P:\n%s"%str(P))
-        '''
+        
         P=P.T
 
         P=mat2arr(P[0])
@@ -377,7 +384,7 @@ class Bundle(object):
         if not os.path.isdir(resultsdir):
             os.makedirs(resultsdir)
         np.save(resultsdir+filename+'-channelmatrix', self.xtalk_gain)
-        np.save(resultsdir+filename+'-lines', self.lines)
+        #np.save(resultsdir+filename+'-lines', self.lines)
         
     '''
     Print Channel Matrix to screen

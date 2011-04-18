@@ -12,6 +12,7 @@ import pycuda.autoinit
 import pycuda.driver as cuda
 import numpy
 from pycuda.compiler import SourceModule
+from pycuda.gpuarray import GPUArray
 from jinja2 import Template
 
 t_solve=Template("""
@@ -131,14 +132,22 @@ __global__ void solve(float *A, float *B){
     d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
   }
 }
+
+__global__ void optimise_p(float *lambdas ){
+    int k=blockIdx.x;
+    int x=threadIdx.x;
+    int y=threadIdx.y;
+}  
 """)
 
 class GPU(object):
-    def __init__(self,N):
+    def __init__(self,bundle):
         self.start=time()
-        r_solve=t_solve.render(matrixN=N)
+        self.bundle=bundle
+        self.N=self.bundle.N
+        self.K=self.bundle.K
+        r_solve=t_solve.render(matrixN=self.N, mbpt=15)
         self.g_solve = SourceModule(r_solve)
-        self.N=N;
         self.init=time()
         
     #In progress, ignore this.
@@ -152,23 +161,39 @@ class GPU(object):
         d_b=cuda.mem_alloc(b.nbytes)
         cuda.memcpy_htod(d_a,a)
         cuda.memcpy_htod(d_b,b)
+        h_b=np.empty_like(b)
         self.go=time()
         
-        #Go time
+        #Go solve
         go=self.g_solve.get_function("solve")
-        go(d_a,d_b,block=(max,1,1))
-        cuda.memcpy_dtoh(b,d_b)
+        go(d_a,d_b,block=(1,1,1))
+        cuda.memcpy_dtoh(h_b,d_b)
         self.done=time()
+        return h_b
+    
+    def calc_psd(self,bitload,channelgap,noise,xtalk_gain):
+        #all tones
+        d_bitload=gpuarray.to_gpu(bitload)
+        d_xtg=gpuarray.togpu(xtalk_gain)
+        d_a=gpuarray.empty((self.N,self.N,self.K))
+        d_b=gpuarray.empty((self.N,self.K))
+        a=channelgap*(pow(2,d_bitload)-1)*xtalk_gain
+        
+        
 
+    def optimise_p(self,lambdas,xtalk_gain):
+        pass
+        
         
     def gpu_test(self):
         self.test=time()
         matrixcount=224;
         a=np.tile(np.asarray([1,3,-2,3,5,6,2,4,3]),matrixcount).astype(np.float32)
         b=np.tile(np.asarray([5,7,8]),matrixcount).astype(np.float32)
-        self.solve(a, b, matrixcount)
+        b=self.solve(a, b, matrixcount)
         
         print("Times:\nInit:%f\nGo:%f\nExec:%f"%(self.init-self.start,self.go-self.test,self.done-self.go))
+        print b
         
 
 if __name__ == "__main__":
