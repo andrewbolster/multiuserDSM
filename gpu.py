@@ -15,7 +15,7 @@ from pycuda.compiler import SourceModule
 from pycuda.gpuarray import GPUArray
 from jinja2 import Template
 
-t_solve=Template("""
+t_kernels=Template("""
 #define MAT1 {{matrixN}}
 #define MAT2 MAT1*MAT1
 #define TINY 1.0e-40
@@ -133,6 +133,9 @@ __global__ void solve(float *A, float *B){
   }
 }
 
+//===============================================================================
+// CALC_PSD ACCESSORY FUNCTIONS for set bitload (largely useless)
+//===============================================================================
 //Generate the A 'sausage' for a specified bitload
 //requires grid(N,1,1) block(K,N,1)
 __global__ void generateA(int *bitload, float *A, float *xtg){
@@ -145,24 +148,79 @@ __global__ void generateA(int *bitload, float *A, float *xtg){
     A[k*MAT2+v*MAT1+x]=-({{channelgap}}*((1<<bitload[v])-1)*xtg[k*MAT2+x*MAT1+v])/xtg[k*MAT2+v*MAT1+v];
 }
 
-//Repair the A diagonal
-//requires grid(K,1,1) block(N,1,1)
-__global__ void fixA(float *A){
-    int k=blockIdx.x;
-    int x=threadIdx.x;
-    A[k*MAT2+x*MAT1+x]=1;
-}
-
 //Generate the B matrix for a specified bitload
 //requires grid(N,1,1) block(K,1,1)
-__global__ void generateB(int *bitload, float *B, float *xtg){
+__global__ void generateB(int *bitload, float *A, float *B, float *xtg){
     //V as block index for per-block memory coalescing (talonmies)
     int v=blockIdx.x;
     int k=threadIdx.x;
     
     //block-shared bitload generation?
     B[k*MAT1+v]=({{noise}}*{{channelgap}}*((1<<bitload[v])-1))/xtg[k*MAT2+v*MAT1+v];
+    //Repair A while we're here
+    A[k*MAT2+v*MAT1+v]=1;
 }
+
+//===============================================================================
+// CALC_PSD ACCESSORY FUNCTIONS for set channel (woo-hoo!)
+//===============================================================================
+//Generate the A dna B for all possible bitloads (in this offset)
+//requires grid(MBPT^(N-1),1,1) block(blockmax/N,N,1)
+//where MBPT^(N-1)>65535, use offset to continue
+//thread.y's collaboratively populate A and B for their id
+//This probably hammers memory...
+__global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int *offset){
+    //Don't need k as its sorted at the host stage for the creation of xtg
+    int y=threadIdx.y;
+    int myid=blockIdx.x*blockDim.x+threadIdx.x+*offset;
+    int bitbangval=myid;
+
+    int bitload[MAT1], i;
+    
+    //rebase myid to base (MBPT)
+    //Unfortunately theres no way around every thread working out its own bitload :( 
+    for (i=MAT1-1; i>=0; i--){
+        bitload[i]=bitbangval%{{maxbitspertone}};
+        bitbangval/={{maxbitspertone}};
+    }
+    //Generate a row of A for this permutation and victim y
+    for (i=0;i<MAT1;i++){
+        A[myid*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[i])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
+    }
+    //Generate an item of B
+    B[myid*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];   
+
+}
+
+//Solve all A and B psds together. 
+//requires grid(MBPT^N-2,1,1) block(N,N,1)
+__global__ void lk_max_permutations(float *A, float *B, int *offset, float *LK, float *lambdas, float *w){
+    //MyID is now effectively 3D
+    int id=blockIdx.x*blockDim.x*blockDim.y+threadIdx.x*blockDim.x+*offset;
+    int bitbangval=id;
+    int p_pivot[MAT1],q_pivot[MAT1];
+    float lk=0;
+    int bitload[MAT1], i;
+
+    
+    //generate bitload and pivots at the same time
+    for (i=MAT1-1; i>=0; i--){
+        bitload[i]=bitbangval%{{maxbitspertone}};
+        bitbangval/={{maxbitspertone}};
+        p_pivot[i]=q_pivot[i]=i;
+    }
+
+    //do the magic
+    d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
+    d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
+    
+    //At this point, B is populated with the P results.
+    for (i=0;i<MAT1;i++){
+        lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1]);
+    }
+    LK[id]=lk;
+}
+
 
   
 """)
@@ -173,12 +231,16 @@ class GPU(object):
         self.bundle=bundle
         self.N=self.bundle.N
         self.K=self.bundle.K
-        r_solve=t_solve.render(matrixN=self.N,
+        self.gamma=bundle.get_GAMMA()
+        self.noise=bundle.get_NOISE()
+        self.mbpt=bundle.get_MBPT()
+        r_kernels=t_kernels.render(matrixN=self.N,
                                mbpt=15,
-                               channelgap=pow(10,(bundle.get_GAMMA()+3)/10),
-                               noise=bundle.get_NOISE()
+                               channelgap=pow(10,(self.gamma+3)/10),
+                               noise=self.noise,
+                               maxbitspertone=self.mbpt
                                )
-        self.g_solve = SourceModule(r_solve)
+        self.kernels = SourceModule(r_kernels)
         self.init=time()
         
     #In progress, ignore this.
@@ -196,12 +258,62 @@ class GPU(object):
         self.go=time()
         
         #Go solve
-        go=self.g_solve.get_function("solve")
+        go=self.kernels.get_function("solve")
         go(d_a,d_b,block=(1,1,1))
         cuda.memcpy_dtoh(h_b,d_b)
         self.done=time()
         return h_b
     
+    def lkmax(self,lambdas,w,xtalk_gain):
+        #lk_prepare_permutations(float *A, float *B, float *xtg, int *offset)
+        #lk_max_permutations(float *A, float *B, int *offset, float *LK, float *lambdas, float *w)
+        #Number of expected permutations
+        Nc=pow(self.mbpt,self.N)
+        print Nc
+        
+        #FIXME need to add loop construct here if Nc > 65535
+        offset = 0
+        
+        #offset
+        d_offset=cuda.mem_alloc(np.float32().nbytes)
+        cuda.memcpy_htod(d_offset,np.float32(offset))
+        #A[Nc*N*N],
+        d_A=cuda.mem_alloc(np.empty((Nc,self.N,self.N)).astype(np.float32).nbytes)
+        #B[Nc*N]
+        d_B=cuda.mem_alloc(np.empty((Nc,self.N)).astype(np.float32).nbytes)
+        #XTG[N*N] (for this k, clear this after prepare)
+        d_XTG=cuda.mem_alloc(np.empty((self.N,self.N)).astype(np.float32).nbytes)
+        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+        
+        #Go prepare
+        prepare=self.kernels.get_function("lk_prepare_permutations")
+        gridsize=pow(self.mbpt,(self.N-1))
+        prepare(d_A,d_B,d_XTG,d_offset,grid=(gridsize,1),block=(512/self.N,self.N,1))
+        
+                
+        #Don't need this anymore
+        d_XTG.free()
+        
+        #lambdas
+        d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
+        cuda.memcpy_htod(d_lambdas,lambdas.astype(np.float32))
+        #w
+        d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
+        cuda.memcpy_htod(d_w,w.astype(np.float32))
+        #LK (where final LK values come to rest...)
+        d_lk=cuda.mem_alloc(np.empty((Nc)).astype(np.float32).nbytes)
+        
+        #Go Solve
+        gridsize=pow(self.mbpt,(self.N-2))
+        lkmax=self.kernels.get_function("lk_max_permutations")
+        lkmax(d_A,d_B,d_offset,d_lk,d_w, grid=(gridsize,1), block=(self.N,self.N,1))
+        
+        lk=np.empty((Nc)).astype(np.float32)
+        cuda.memcpy_dtoh(lk,d_lk)
+        
+        #If this works I'm gonna cry
+        assert 0!=0, "Got LK %s"%str(lk)        
+        
     def calc_psd(self,bitload,channelgap,noise,xtalk_gain):
         #all tones
         d_bitload=gpuarray.to_gpu(bitload)

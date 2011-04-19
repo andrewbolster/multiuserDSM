@@ -29,6 +29,7 @@ class Bundle(object):
     UGAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
     gamma_hat = pow(10,(UGAMMA+MARGIN-C_G)/10)
     NOISE=dbmhz_to_watts(-140)
+    MAXBITSPERTONE=15
     
     def __init__(self,network_file="",K=224,scenarioname="NoScenario",cachefile=False):
         self.N = 0                  #Filled in on loading file, here to remind me
@@ -92,6 +93,9 @@ class Bundle(object):
 
     def get_NOISE(self,noise=NOISE):
         return (noise)
+    
+    def get_MBPT(self,mbpt=MAXBITSPERTONE):
+        return mbpt
     
     '''
     Calculates the bundle channel gain matrix, generating xtalk_gain[][][]

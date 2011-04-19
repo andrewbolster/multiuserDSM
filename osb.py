@@ -176,18 +176,21 @@ class OSB(Algorithm):
     '''   
     def optimise_p(self,lambdas):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
-        
-        #for each subchannel
-        jobs=[]
-        kstep=self.bundle.K+1/(multiprocessing.cpu_count()*2)
-        for k in range(multiprocessing.cpu_count()): #Loop in osb_bb.c:optimise_p
-            kmax=min((k+1)*kstep,self.bundle.K)
-            p=(multiprocessing.Process(self.optimise_p_k(lambdas, k,kmax)))
-            jobs.append(p)
-            p.start()
-        for job in jobs:
-            job.join()
-        #Now we have b hopefully optimised
+        if (useGPU) :
+            for k in range(self.bundle.K):
+                self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain[k])
+        else:
+            #for each subchannel
+            jobs=[]
+            kstep=self.bundle.K+1/(multiprocessing.cpu_count()*2)
+            for k in range(multiprocessing.cpu_count()): #Loop in osb_bb.c:optimise_p
+                kmax=min((k+1)*kstep,self.bundle.K)
+                p=(multiprocessing.Process(self.optimise_p_k(lambdas, k,kmax)))
+                jobs.append(p)
+                p.start()
+            for job in jobs:
+                job.join()
+            #Now we have b hopefully optimised
             
     def optimise_p_k(self,lambdas,K,Kmax):
         for k in range(K,Kmax):
