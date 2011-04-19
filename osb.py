@@ -180,7 +180,7 @@ class OSB(Algorithm):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
         if (self.useGPU):
             for k in range(self.bundle.K):
-                self.optimise_p_k(lambdas,k,k+1)
+                #self.optimise_p_k(lambdas,k,k+1)
                 (self.p[k],self.b[k])=self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
         else:
             #for each subchannel

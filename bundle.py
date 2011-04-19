@@ -328,7 +328,7 @@ class Bundle(object):
             pass
         
         #Generate Matrices (See Intro.pdf 2.23)
-        if (False):
+        if (gpu):
             A=np.zeros((self.N,self.N)).astype(np.float32)
             B=np.zeros((self.N,1)).astype(np.float32)
         else:
@@ -354,6 +354,7 @@ class Bundle(object):
         #Everyone loves linear algebra...dont they?
         if (gpu):
             P=self.gpu.solve(A,B,224) #FIXME currently useless and disabled
+            log.info("Someone made me do single gpu work :( %d"%k)
         else:
             P=np.linalg.solve(A,B)
         
