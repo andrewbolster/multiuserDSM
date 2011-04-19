@@ -226,6 +226,8 @@ __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, f
             broken++;
         lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1+i]);
     }
+    
+    //If anything is broken return a failing value (around -inf)
     if (broken==0)
         LK[id]=lk;
     else
@@ -297,7 +299,6 @@ class GPU(object):
         prepare=self.kernels.get_function("lk_prepare_permutations")
         gridsize=pow(self.mbpt,(self.N))
         prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
-        cuda.memcpy_dtoh(A,d_A)
         
         #Don't need this anymore
         d_XTG.free()
@@ -325,13 +326,12 @@ class GPU(object):
         
         #if 
         if (lk[lk_maxid])<=np.float32(-sys.maxint/2):
-            print "BWAHAHAHAHAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
             raise ValueError
         P=B[lk_maxid]
         bitload=self.bitload_from_id(lk_maxid)
 
         #If this works I'm gonna cry
-        print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
+        #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
 
         return (P,bitload)
         

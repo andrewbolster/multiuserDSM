@@ -335,7 +335,7 @@ class Bundle(object):
             A=np.zeros((self.N,self.N))
             B=np.zeros((self.N,1))
         
-        XTG=self.xtalk_gain[k,:,:].copy()
+        XTG=self.xtalk_gain[k,:,:]
         
         channelgap=pow(10,(gamma+3)/10)
         
