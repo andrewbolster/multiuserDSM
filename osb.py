@@ -119,6 +119,8 @@ class OSB(Algorithm):
                 while not self._l_converged(line,last):
                     self.l[lineid]=(l_max+l_min)/2
                     self.optimise_p(self.l)
+                    #assert 1==0, "WIN"
+
                     linepower=self.total_power(line)
                     if linepower > self.power_budget[lineid]:
                         l_min=self.l[lineid]
@@ -178,7 +180,8 @@ class OSB(Algorithm):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
         if (useGPU) :
             for k in range(self.bundle.K):
-                self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain[k])
+                #self.optimise_p_k(lambdas,k,k+1)
+                (self.p[k],self.b[k])=self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
         else:
             #for each subchannel
             jobs=[]
@@ -212,6 +215,8 @@ class OSB(Algorithm):
             assert len(b_max)>0, "No Successful Lk's found,%s"%b_max
             self.p[k]=self.bundle.calc_psd(b_max,k)
             self.b[k]=b_max
+            #print "CPU LKmax %d:%s:%s:%s"%(k,str(lk_max),str(b_max),str(self.p[k]))
+
         #end for
     '''
     L_k; Return the Lagrangian given a bit-loading combination and tone

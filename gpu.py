@@ -8,6 +8,8 @@ import scipy.misc
 import multiprocessing
 from time import time
 
+import utility as util
+
 import pycuda.autoinit
 import pycuda.driver as cuda
 import numpy
@@ -18,6 +20,7 @@ from jinja2 import Template
 t_kernels=Template("""
 #define MAT1 {{matrixN}}
 #define MAT2 MAT1*MAT1
+#define FAILVALUE -INFINITY
 #define TINY 1.0e-40
 #define a(i,j) a[(i)*MAT1+(j)]
 
@@ -164,15 +167,15 @@ __global__ void generateB(int *bitload, float *A, float *B, float *xtg){
 //===============================================================================
 // CALC_PSD ACCESSORY FUNCTIONS for set channel (woo-hoo!)
 //===============================================================================
-//Generate the A dna B for all possible bitloads (in this offset)
-//requires grid(MBPT^(N-1),1,1) block(blockmax/N,N,1)
+//Generate the A and B for all possible bitloads (in this offset)
+//requires grid(MBPT^N,1,1) block(N,1,1)
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int *offset){
+__global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
-    int y=threadIdx.y;
-    int myid=blockIdx.x*blockDim.x+threadIdx.x+*offset;
+    int y=threadIdx.x;
+    int myid=blockIdx.x+(offset);
     int bitbangval=myid;
 
     int bitload[MAT1], i;
@@ -188,21 +191,23 @@ __global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int *off
         A[myid*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[i])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
     }
     //Generate an item of B
-    B[myid*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];   
-
+    B[myid*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];
+    //Repair an item of A
+    __syncthreads();
+    A[myid*MAT2+y*MAT1+y]=1;
 }
 
 //Solve all A and B psds together. 
-//requires grid(MBPT^N-2,1,1) block(N,N,1)
-__global__ void lk_max_permutations(float *A, float *B, int *offset, float *LK, float *lambdas, float *w){
+//requires grid(MBPT^N,1,1) block(1,1,1)
+__global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, float *lambdas, float *w){
     //MyID is now effectively 3D
-    int id=blockIdx.x*blockDim.x*blockDim.y+threadIdx.x*blockDim.x+*offset;
+    int id=blockIdx.x+(offset);
     int bitbangval=id;
     int p_pivot[MAT1],q_pivot[MAT1];
     float lk=0;
     int bitload[MAT1], i;
+    int broken=0;
 
-    
     //generate bitload and pivots at the same time
     for (i=MAT1-1; i>=0; i--){
         bitload[i]=bitbangval%{{maxbitspertone}};
@@ -213,16 +218,19 @@ __global__ void lk_max_permutations(float *A, float *B, int *offset, float *LK, 
     //do the magic
     d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
     d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
-    
+
     //At this point, B is populated with the P results.
     for (i=0;i<MAT1;i++){
-        lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1]);
+        //Need to check for negative B's
+        if (B[id*MAT1+i]<0)
+            broken++;
+        lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1+i]);
     }
-    LK[id]=lk;
+    if (broken==0)
+        LK[id]=lk;
+    else
+        LK[id]=FAILVALUE;
 }
-
-
-  
 """)
 
 class GPU(object):
@@ -236,13 +244,13 @@ class GPU(object):
         self.mbpt=bundle.get_MBPT()
         r_kernels=t_kernels.render(matrixN=self.N,
                                mbpt=15,
-                               channelgap=pow(10,(self.gamma+3)/10),
-                               noise=self.noise,
-                               maxbitspertone=self.mbpt
+                               channelgap=pow(10,(self.gamma+3)/10), #19.7242
+                               noise=self.noise, #4.313e-14
+                               maxbitspertone=self.mbpt,
                                )
         self.kernels = SourceModule(r_kernels)
         self.init=time()
-        
+
     #In progress, ignore this.
     def calc_psd(self,bitload,k,gamma,noise):
         A=np.zeros((self.N*self.N))
@@ -264,33 +272,33 @@ class GPU(object):
         self.done=time()
         return h_b
     
-    def lkmax(self,lambdas,w,xtalk_gain):
+    def lkmax(self,lambdas,w,xtalk_gain,k):
         #lk_prepare_permutations(float *A, float *B, float *xtg, int *offset)
         #lk_max_permutations(float *A, float *B, int *offset, float *LK, float *lambdas, float *w)
         #Number of expected permutations
         Nc=pow(self.mbpt,self.N)
-        print Nc
         
         #FIXME need to add loop construct here if Nc > 65535
-        offset = 0
-        
-        #offset
-        d_offset=cuda.mem_alloc(np.float32().nbytes)
-        cuda.memcpy_htod(d_offset,np.float32(offset))
+        offset = np.int32(0);
+
         #A[Nc*N*N],
-        d_A=cuda.mem_alloc(np.empty((Nc,self.N,self.N)).astype(np.float32).nbytes)
+        d_A=cuda.mem_alloc(np.zeros((Nc*self.N*self.N)).astype(np.float32).nbytes)
+        A=np.empty((Nc*self.N*self.N)).astype(np.float32)
+        
         #B[Nc*N]
-        d_B=cuda.mem_alloc(np.empty((Nc,self.N)).astype(np.float32).nbytes)
+        d_B=cuda.mem_alloc(np.zeros((Nc*self.N)).astype(np.float32).nbytes)
+        B=np.empty((Nc*self.N)).astype(np.float32)
+        
         #XTG[N*N] (for this k, clear this after prepare)
-        d_XTG=cuda.mem_alloc(np.empty((self.N,self.N)).astype(np.float32).nbytes)
+        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
         cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
         
         #Go prepare
         prepare=self.kernels.get_function("lk_prepare_permutations")
-        gridsize=pow(self.mbpt,(self.N-1))
-        prepare(d_A,d_B,d_XTG,d_offset,grid=(gridsize,1),block=(512/self.N,self.N,1))
+        gridsize=pow(self.mbpt,(self.N))
+        prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
+        cuda.memcpy_dtoh(A,d_A)
         
-                
         #Don't need this anymore
         d_XTG.free()
         
@@ -302,17 +310,27 @@ class GPU(object):
         cuda.memcpy_htod(d_w,w.astype(np.float32))
         #LK (where final LK values come to rest...)
         d_lk=cuda.mem_alloc(np.empty((Nc)).astype(np.float32).nbytes)
-        
+
         #Go Solve
-        gridsize=pow(self.mbpt,(self.N-2))
         lkmax=self.kernels.get_function("lk_max_permutations")
-        lkmax(d_A,d_B,d_offset,d_lk,d_w, grid=(gridsize,1), block=(self.N,self.N,1))
-        
+        lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(1,1,1))
+
         lk=np.empty((Nc)).astype(np.float32)
         cuda.memcpy_dtoh(lk,d_lk)
+        B=cuda.from_device(d_B,(Nc,self.N),np.float32)
+
+        lk_maxid=np.argmax(lk)
         
+        if np.isneginf(lk[lk_maxid]):
+            raise ValueError
+        P=B[lk_maxid]
+        bitload=util.rebase(lk_maxid,self.mbpt)
+        bitload.reverse()
+
         #If this works I'm gonna cry
-        assert 0!=0, "Got LK %s"%str(lk)        
+        #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
+
+        return (P,bitload)
         
     def calc_psd(self,bitload,channelgap,noise,xtalk_gain):
         #all tones
@@ -321,8 +339,6 @@ class GPU(object):
         d_a=gpuarray.empty((self.N,self.N,self.K))
         d_b=gpuarray.empty((self.N,self.K))
         a=channelgap*(pow(2,d_bitload)-1)*xtalk_gain
-        
-        
 
     def optimise_p(self,lambdas,xtalk_gain):
         pass

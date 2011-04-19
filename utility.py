@@ -24,7 +24,7 @@ graphdir="graphs/"
 
 mp=False
 
-useGPU=True
+useGPU=False
 
 material=[{ # awg 26
             "r_0c":286.17578,     # ohms/km
@@ -245,6 +245,16 @@ def psd2str(psd):
 class CostValue(object):
     def __set__(self,obj,val):
         self.val= val if val > 0 else sys.maxint
+   
+#base10toN calculator   
+def rebase(a, b):
+    results = []
+    while True:
+        results.append(a % b)
+        if a < b: break
+        a //= b
+    results.reverse()
+    return results
 
 if __name__ == "__main__":
 
