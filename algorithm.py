@@ -25,9 +25,10 @@ class Algorithm(object):
     stats={}
 
         
-    def __init__(self,bundle):
+    def __init__(self,bundle,useGPU=False):
         assert isinstance(bundle,Bundle), "Did you give me a bundle to use?"
         self.bundle=bundle
+        self.useGPU=useGPU
 
     def preamble(self):
         '''

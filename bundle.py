@@ -315,7 +315,7 @@ class Bundle(object):
     Generate PSD vector matrix between lines and return matrix
     :from psd_vector.c
     '''
-    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=True, noise=NOISE):
+    def calc_psd(self,bitload,k,gamma=GAMMA, precompute=True, noise=NOISE, gpu=False):
         #Caching implementation (AMK)
         key = hashlib.sha1(bitload.view()).hexdigest()+str(k)
         
@@ -328,7 +328,7 @@ class Bundle(object):
             pass
         
         #Generate Matrices (See Intro.pdf 2.23)
-        if (useGPU):
+        if (False):
             A=np.zeros((self.N,self.N)).astype(np.float32)
             B=np.zeros((self.N,1)).astype(np.float32)
         else:
@@ -338,14 +338,12 @@ class Bundle(object):
         XTG=self.xtalk_gain[k,:,:].copy()
         
         channelgap=pow(10,(gamma+3)/10)
-        F=[(channelgap*(pow(2,bitload[v]-1))) for v in range(self.N)]
         
         log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
         for v in range(self.N): #victims
-            B[v,0]=(channelgap*(pow(2,bitload[v])-1)/XTG[v,v])
-            A[v]=-B[v,0]*XTG[:,v]
+            B[v,0]=(noise*channelgap*(pow(2,bitload[v])-1)/XTG[v,v])
+            A[v]=-(channelgap*(pow(2,bitload[v])-1)*XTG[:,v]/XTG[v,v])
             A[v,v]=1
-            B[v,0]*=noise
         '''
             B[v,0]=((channelgap*pow(2,bitload[v]-1)*noise)/XTG[v,v]) #equiv f(b_v(k))*o / H_vv
             for x in range(self.N):
@@ -354,9 +352,8 @@ class Bundle(object):
         '''
     
         #Everyone loves linear algebra...dont they?
-        #FIXME This one line is the biggest stumbling block to parallelism
-        if (useGPU):
-            P=self.gpu.solve(A,B,224)
+        if (gpu):
+            P=self.gpu.solve(A,B,224) #FIXME currently useless and disabled
         else:
             P=np.linalg.solve(A,B)
         

@@ -23,6 +23,8 @@ parser.add_option("-A","--altscenario", dest="altscenario", help="specify an exi
 parser.add_option("-G","--nographing",dest="graphing", action="store_false",help="disable graphing", default=True)
 parser.add_option("-p","--profiling",dest="profiling", action="store_true",help="enable profiling", default=False)
 parser.add_option("-c","--cache",dest="cache", action="store_true",help="attempt to read psd_cache from scenariofile", default=False)
+parser.add_option("-g","--gpu",dest="gpu", action="store_true",help="attempt to use gpu", default=False)
+
 
 
 (options,args) = parser.parse_args()
@@ -45,7 +47,7 @@ if __name__ == "__main__":
     '''
     Perform algorithm selection and option passing
     '''
-    algo = algos[options.algo](bundle)
+    algo = algos[options.algo](bundle,options.gpu)
     if options.profiling:
         log.info("Profiling Run")
         if not os.path.isdir(profdir):

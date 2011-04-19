@@ -7,6 +7,7 @@ import numpy as np
 import scipy.misc
 import multiprocessing
 from time import time
+import sys
 
 import utility as util
 
@@ -20,7 +21,7 @@ from jinja2 import Template
 t_kernels=Template("""
 #define MAT1 {{matrixN}}
 #define MAT2 MAT1*MAT1
-#define FAILVALUE -INFINITY
+#define FAILVALUE {{failvalue}}
 #define TINY 1.0e-40
 #define a(i,j) a[(i)*MAT1+(j)]
 
@@ -182,25 +183,24 @@ __global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int offs
     
     //rebase myid to base (MBPT)
     //Unfortunately theres no way around every thread working out its own bitload :( 
-    for (i=MAT1-1; i>=0; i--){
+    for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%{{maxbitspertone}};
         bitbangval/={{maxbitspertone}};
-    }
-    //Generate a row of A for this permutation and victim y
-    for (i=0;i<MAT1;i++){
+        
+        //Generate a row of A for this permutation and victim y
         A[myid*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[i])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
     }
     //Generate an item of B
     B[myid*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];
+    
     //Repair an item of A
-    __syncthreads();
+    //__syncthreads(); Not needed since we are the only ones dealing with row y
     A[myid*MAT2+y*MAT1+y]=1;
 }
 
 //Solve all A and B psds together. 
 //requires grid(MBPT^N,1,1) block(1,1,1)
 __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, float *lambdas, float *w){
-    //MyID is now effectively 3D
     int id=blockIdx.x+(offset);
     int bitbangval=id;
     int p_pivot[MAT1],q_pivot[MAT1];
@@ -209,7 +209,7 @@ __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, f
     int broken=0;
 
     //generate bitload and pivots at the same time
-    for (i=MAT1-1; i>=0; i--){
+    for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%{{maxbitspertone}};
         bitbangval/={{maxbitspertone}};
         p_pivot[i]=q_pivot[i]=i;
@@ -243,10 +243,10 @@ class GPU(object):
         self.noise=bundle.get_NOISE()
         self.mbpt=bundle.get_MBPT()
         r_kernels=t_kernels.render(matrixN=self.N,
-                               mbpt=15,
                                channelgap=pow(10,(self.gamma+3)/10), #19.7242
                                noise=self.noise, #4.313e-14
                                maxbitspertone=self.mbpt,
+                               failvalue=np.float32(-sys.maxint)
                                )
         self.kernels = SourceModule(r_kernels)
         self.init=time()
@@ -315,20 +315,23 @@ class GPU(object):
         lkmax=self.kernels.get_function("lk_max_permutations")
         lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(1,1,1))
 
+        #Bring LK results and power back to host
         lk=np.empty((Nc)).astype(np.float32)
         cuda.memcpy_dtoh(lk,d_lk)
         B=cuda.from_device(d_B,(Nc,self.N),np.float32)
 
+        #find the max lk
         lk_maxid=np.argmax(lk)
         
-        if np.isneginf(lk[lk_maxid]):
+        #if 
+        if (lk[lk_maxid])<=np.float32(-sys.maxint/2):
+            print "BWAHAHAHAHAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
             raise ValueError
         P=B[lk_maxid]
-        bitload=util.rebase(lk_maxid,self.mbpt)
-        bitload.reverse()
+        bitload=self.bitload_from_id(lk_maxid)
 
         #If this works I'm gonna cry
-        #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
+        print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
 
         return (P,bitload)
         
@@ -353,6 +356,13 @@ class GPU(object):
         
         print("Times:\nInit:%f\nGo:%f\nExec:%f"%(self.init-self.start,self.go-self.test,self.done-self.go))
         print b
+    
+    def bitload_from_id(self,id):
+        bitload=np.zeros(self.N)
+        for i in range(self.N-1,-1,-1):
+            bitload[i]=id%self.mbpt;
+            id/=self.mbpt;
+        return bitload
         
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@ __date__ ="$02-Dec-2010 18:48:38$"
 
 import math, cmath, numpy as np, sys, scipy.special as sps
 import functools,cPickle
-
 import logging
 
 # Log everything, and send it to stderr.
@@ -23,8 +22,6 @@ profdir="profiles/"
 graphdir="graphs/"
 
 mp=False
-
-useGPU=False
 
 material=[{ # awg 26
             "r_0c":286.17578,     # ohms/km
@@ -246,16 +243,6 @@ class CostValue(object):
     def __set__(self,obj,val):
         self.val= val if val > 0 else sys.maxint
    
-#base10toN calculator   
-def rebase(a, b):
-    results = []
-    while True:
-        results.append(a % b)
-        if a < b: break
-        a //= b
-    results.reverse()
-    return results
-
 if __name__ == "__main__":
 
     test_len=3000

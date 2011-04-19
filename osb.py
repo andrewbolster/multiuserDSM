@@ -178,9 +178,9 @@ class OSB(Algorithm):
     '''   
     def optimise_p(self,lambdas):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
-        if (useGPU) :
+        if (self.useGPU):
             for k in range(self.bundle.K):
-                #self.optimise_p_k(lambdas,k,k+1)
+                self.optimise_p_k(lambdas,k,k+1)
                 (self.p[k],self.b[k])=self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
         else:
             #for each subchannel
@@ -225,6 +225,7 @@ class OSB(Algorithm):
     def _l_k(self,bitload,lambdas,k):
         P=self.bundle.calc_psd(bitload,k)
         #If anything's broken, this run is screwed anyway so feed optimise_p a bogus value
+        #THIS CHECK HAS BEEN GPU CHECKED 19/4
         if (P < 0).any(): #TODO Spectral Mask
             return -self.defaults['maxval']
 
