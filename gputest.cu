@@ -3,11 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_permutation.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
 
 #include <sm_11_atomic_functions.h>
 

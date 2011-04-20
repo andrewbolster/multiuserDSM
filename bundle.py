@@ -276,8 +276,10 @@ class Bundle(object):
             
             log.debug("fext\tgain\tcnr\tsnr")
             for tone in xrange(self.K):
-                
-                noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + (line.noise)
+                try:
+                    noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + (line.noise)
+                except OverflowError:
+                    log.error("Overflowed on tone:%d"%tone)
                 line.cnr[tone] = line.gain[tone]/noise #gain calculated from xtalk_gain generation
                 line.snr[tone] = dbmhz_to_watts(line.p[tone])*noise
                 

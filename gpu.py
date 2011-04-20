@@ -187,14 +187,14 @@ __global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int offs
         bitload[i]=bitbangval%{{maxbitspertone}};
         bitbangval/={{maxbitspertone}};
         //Generate a row of A for this permutation and victim y
-        A[myid*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[y])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
+        A[blockIdx.x*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[y])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
     }
     //Generate an item of B
-    B[myid*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];
+    B[blockIdx.x*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];
     
     //Repair an item of A
     __syncthreads(); //Seems to help with memory coalescing
-    A[myid*MAT2+y*MAT1+y]=1;
+    A[blockIdx.x*MAT2+y*MAT1+y]=1;
 }
 
 //Solve all A and B psds together. 
@@ -215,22 +215,24 @@ __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, f
     }
 
     //do the magic
-    d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
-    d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
+    d_pivot_decomp(&A[blockIdx.x*MAT2],&p_pivot[0],&q_pivot[0]);
+    d_solve(&A[blockIdx.x*MAT2],&B[blockIdx.x*MAT1],&p_pivot[0],&q_pivot[0]);
+
+//Split this into a new kernel?
 
     //At this point, B is populated with the P results.
     for (i=0;i<MAT1;i++){
         //Need to check for negative B's
-        if (B[id*MAT1+i]<0)
+        if (B[blockIdx.x*MAT1+i]<0)
             broken++;
-        lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1+i]);
+        lk+=(bitload[i]*w[i])-(lambdas[i]*B[blockIdx.x*MAT1+i]);
     }
     
     //If anything is broken return a failing value (around -inf)
     if (broken==0)
-        LK[id]=lk;
+        LK[blockIdx.x]=lk;
     else
-        LK[id]=FAILVALUE;
+        LK[blockIdx.x]=FAILVALUE;
 }
 """)
 
@@ -281,57 +283,62 @@ class GPU(object):
         
         #loop construct here if Nc > 65535
         global_lk_maxid=-1
+        gridsize=min(pow(self.mbpt,(self.N)),65535)
+        
+        #B[Nc*N]
+        d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(np.float32).nbytes)
+        B=np.empty((Nc*self.N)).astype(np.float32)
+        
+        #LK (where final LK values come to rest...)
+        d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
+    
+
         if Nc>65535:
             util.info("Working on %d combinations, this might take a while"%Nc)
-        for o in range(0,Nc,65535):
+        for o in range(0,Nc,gridsize):
             #offset 
             offset = np.int32(o);
+            
             #A[Nc*N*N],
-            d_A=cuda.mem_alloc(np.zeros((Nc*self.N*self.N)).astype(np.float32).nbytes)
+            d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(np.float32).nbytes)
             A=np.empty((Nc*self.N*self.N)).astype(np.float32)
-            
-            #B[Nc*N]
-            d_B=cuda.mem_alloc(np.zeros((Nc*self.N)).astype(np.float32).nbytes)
-            B=np.empty((Nc*self.N)).astype(np.float32)
-            
+        
             #XTG[N*N] (for this k, clear this after prepare)
             d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
             
             #Go prepare
             prepare=self.kernels.get_function("lk_prepare_permutations")
-            gridsize=pow(self.mbpt,(self.N))
             prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
             
             #Don't need this anymore
             d_XTG.free()
-            
+            d_A.free()
+
             #lambdas
             d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_lambdas,lambdas.astype(np.float32))
             #w
             d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_w,w.astype(np.float32))
-            #LK (where final LK values come to rest...)
-            d_lk=cuda.mem_alloc(np.empty((Nc)).astype(np.float32).nbytes)
-    
+
             #Go Solve
             lkmax=self.kernels.get_function("lk_max_permutations")
             lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(1,1,1))
     
             #Bring LK results and power back to host
-            lk=np.empty((Nc)).astype(np.float32)
+            lk=np.empty((gridsize)).astype(np.float32)
             cuda.memcpy_dtoh(lk,d_lk)
+            
     
             #find the max lk
             lk_maxid=np.argmax(lk)
             if global_lk_maxid<lk_maxid:
-                B=cuda.from_device(d_B,(Nc,self.N),np.float32)
+                B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
                 P=B[lk_maxid]
-                global_lk_maxid=lk_maxid
-            
-            if (lk[lk_maxid])<=np.float32(-sys.maxint/2):
-                raise ValueError
+                if (P>1).any():
+                    util.log.info("Offset:%d,lkmaxid:%d,P:%s"%(o,lk_maxid,P))
+
         #end for
         bitload=self.bitload_from_id(global_lk_maxid)
 
