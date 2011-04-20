@@ -283,9 +283,9 @@ class GPU(object):
         
         #loop construct here if Ncombinations > 65535
         global_lk_maxid=-1
-        gridmax=65535
+        gridmax=32768
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
-        monitor=255
+        monitor=95
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
