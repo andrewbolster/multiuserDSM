@@ -279,7 +279,7 @@ class Bundle(object):
                 try:
                     noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + (line.noise)
                 except OverflowError:
-                    log.error("Overflowed on tone:%d"%tone)
+                    log.error("Overflowed on tone:%d:%d"%(line.id,tone))
                 line.cnr[tone] = line.gain[tone]/noise #gain calculated from xtalk_gain generation
                 line.snr[tone] = dbmhz_to_watts(line.p[tone])*noise
                 
@@ -356,7 +356,7 @@ class Bundle(object):
         #Everyone loves linear algebra...dont they?
         if (gpu):
             P=self.gpu.solve(A,B,224) #FIXME currently useless and disabled
-            log.info("Someone made me do single gpu work :( %d"%k)
+            log.debug("GPU Outside Scope:%d:%s:%s"%(k,str(P),str(bitload)))
         else:
             P=np.linalg.solve(A,B)
         

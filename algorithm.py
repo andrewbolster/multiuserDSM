@@ -55,7 +55,7 @@ class Algorithm(object):
         self.b=util.mat2arr(self.b)
 
         for k in range(self.bundle.K):
-            self.p[k]=self.bundle.calc_psd(self.b[k],k)
+            self.p[k]=self.bundle.calc_psd(self.b[k],k,gpu=self.useGPU)
         
         for line in self.bundle.lines:
             line.b=self.b[:,line.id]

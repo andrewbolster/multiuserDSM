@@ -193,7 +193,7 @@ __global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int offs
     B[blockIdx.x*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];
     
     //Repair an item of A
-    __syncthreads(); //Seems to help with memory coalescing
+    //__syncthreads(); //Seems to help with memory coalescing
     A[blockIdx.x*MAT2+y*MAT1+y]=1;
 }
 
@@ -279,41 +279,42 @@ class GPU(object):
         #lk_prepare_permutations(float *A, float *B, float *xtg, int *offset)
         #lk_max_permutations(float *A, float *B, int *offset, float *LK, float *lambdas, float *w)
         #Number of expected permutations
-        Nc=pow(self.mbpt,self.N)
+        Ncombinations=pow(self.mbpt,self.N)
         
-        #loop construct here if Nc > 65535
+        #loop construct here if Ncombinations > 65535
         global_lk_maxid=-1
-        gridsize=min(pow(self.mbpt,(self.N)),65535)
-        
-        #B[Nc*N]
-        d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(np.float32).nbytes)
-        B=np.empty((Nc*self.N)).astype(np.float32)
-        
-        #LK (where final LK values come to rest...)
-        d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
-    
+        gridmax=65535
+        gridsize=min(pow(self.mbpt,(self.N)),gridmax)
+        monitor=255
 
-        if Nc>65535:
-            util.info("Working on %d combinations, this might take a while"%Nc)
-        for o in range(0,Nc,gridsize):
+        #Check if this is getting hairy
+        (free,total)=cuda.mem_get_info()
+                
+        if Ncombinations>gridmax:
+            util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
+        for o in range(0,Ncombinations,gridsize):
             #offset 
             offset = np.int32(o);
             
             #A[Nc*N*N],
             d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(np.float32).nbytes)
-            A=np.empty((Nc*self.N*self.N)).astype(np.float32)
-        
+            A=np.empty((gridsize*self.N*self.N)).astype(np.float32)
+            #B[Ncombinations*N]
+            d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(np.float32).nbytes)
+            B=np.empty((Ncombinations*self.N)).astype(np.float32)
+            #LK (where final LK values come to rest...)
+            d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
             #XTG[N*N] (for this k, clear this after prepare)
             d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
             
             #Go prepare
             prepare=self.kernels.get_function("lk_prepare_permutations")
+            if (k>monitor): self.meminfo(prepare,k,o)
             prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
             
             #Don't need this anymore
             d_XTG.free()
-            d_A.free()
 
             #lambdas
             d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
@@ -324,27 +325,39 @@ class GPU(object):
 
             #Go Solve
             lkmax=self.kernels.get_function("lk_max_permutations")
+            if (k>monitor): self.meminfo(lkmax,k,o)
             lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(1,1,1))
     
             #Bring LK results and power back to host
             lk=np.empty((gridsize)).astype(np.float32)
             cuda.memcpy_dtoh(lk,d_lk)
             
-    
             #find the max lk
             lk_maxid=np.argmax(lk)
-            if global_lk_maxid<lk_maxid:
-                B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
+            
+            #Hopefully this stuff goes on in the background
+            d_A.free()
+            d_lk.free()
+            d_lambdas.free()
+            d_w.free()
+            
+            if lk_maxid>global_lk_maxid:
+                B=np.empty((gridsize,self.N),np.float32)
+                cuda.memcpy_dtoh(B,d_B)
                 P=B[lk_maxid]
-                if (P>1).any():
-                    util.log.info("Offset:%d,lkmaxid:%d,P:%s"%(o,lk_maxid,P))
+                global_lk_maxid=lk_maxid
+                if k in []:
+                    util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
+            
+            #'Free at last! Free at last! Thank God Almighty, we are free at last!'
+            d_B.free()
 
         #end for
         bitload=self.bitload_from_id(global_lk_maxid)
-
+        
         #If this works I'm gonna cry
         #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
-
+        cuda.Context.synchronize()
         return (P,bitload)
         
     def calc_psd(self,bitload,channelgap,noise,xtalk_gain):
@@ -357,6 +370,16 @@ class GPU(object):
 
     def optimise_p(self,lambdas,xtalk_gain):
         pass
+        
+    def meminfo(self,kernel,k=-1,o=-1):
+        shared=kernel.shared_size_bytes
+        regs=kernel.num_regs
+        local=kernel.local_size_bytes
+        const=kernel.const_size_bytes
+        mbpt=kernel.max_threads_per_block
+
+        util.log.info("""(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,"""%(k,o,local,shared,regs,const,mbpt))
+        
         
         
     def gpu_test(self):
