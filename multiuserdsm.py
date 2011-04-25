@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 The main module for the multiuserdsm framework
 '''

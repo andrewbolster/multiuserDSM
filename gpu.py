@@ -19,6 +19,7 @@ from pycuda.gpuarray import GPUArray
 from jinja2 import Template
 
 t_kernels=Template("""
+#include <pycuda-helpers.hpp>
 #define MAT1 {{matrixN}}
 #define MAT2 MAT1*MAT1
 #define FAILVALUE {{failvalue}}
@@ -27,6 +28,8 @@ t_kernels=Template("""
 
 #define GO 1
 #define NOGO 0
+
+texture<float, cudaTextureType2D,cudaReadModeElementType> XTG;
 
 __device__ void d_pivot_decomp(float *a, int *p, int *q){
     int i,j,k;
@@ -173,7 +176,7 @@ __global__ void generateB(int *bitload, float *A, float *B, float *xtg){
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int offset){
+__global__ void lk_prepare_permutations(float *A, float *B, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
     int y=threadIdx.x;
     int myid=blockIdx.x+(offset);
@@ -187,10 +190,10 @@ __global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int offs
         bitload[i]=bitbangval%{{maxbitspertone}};
         bitbangval/={{maxbitspertone}};
         //Generate a row of A for this permutation and victim y
-        A[blockIdx.x*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[y])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
+        A[blockIdx.x*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[y])-1)*tex2D(XTG,i,y))/tex2D(XTG,y,y);
     }
     //Generate an item of B
-    B[blockIdx.x*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/xtg[y*MAT1+y];
+    B[blockIdx.x*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/tex2D(XTG,y,y);
     
     //Repair an item of A
     //__syncthreads(); //Seems to help with memory coalescing
@@ -283,19 +286,20 @@ class GPU(object):
         
         #loop construct here if Ncombinations > 65535
         global_lk_maxid=-1
-        gridmax=32768
+        gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
-        monitor=95
+        monitor=255
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
                 
-        if Ncombinations>gridmax:
+        if k%10==0:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
             offset = np.int32(o);
             
+            #Memories that are presistent
             #A[Nc*N*N],
             d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(np.float32).nbytes)
             A=np.empty((gridsize*self.N*self.N)).astype(np.float32)
@@ -305,16 +309,17 @@ class GPU(object):
             #LK (where final LK values come to rest...)
             d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
             #XTG[N*N] (for this k, clear this after prepare)
-            d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
-            cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
-            
+            #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
+            #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+            #Do XTG as a shared texture.
+            t_XTG=self.kernels.get_texref("XTG");
+            cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+        
             #Go prepare
             prepare=self.kernels.get_function("lk_prepare_permutations")
-            if (k>monitor): self.meminfo(prepare,k,o)
-            prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
-            
-            #Don't need this anymore
-            d_XTG.free()
+            #if (k>monitor): self.meminfo(prepare,k,o)
+            prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=(gridsize,1),block=(self.N,1,1))
+            cuda.Context.synchronize()
 
             #lambdas
             d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
@@ -323,11 +328,13 @@ class GPU(object):
             d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_w,w.astype(np.float32))
 
+
             #Go Solve
             lkmax=self.kernels.get_function("lk_max_permutations")
             if (k>monitor): self.meminfo(lkmax,k,o)
             lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(1,1,1))
-    
+            cuda.Context.synchronize()
+
             #Bring LK results and power back to host
             lk=np.empty((gridsize)).astype(np.float32)
             cuda.memcpy_dtoh(lk,d_lk)
@@ -357,7 +364,6 @@ class GPU(object):
         
         #If this works I'm gonna cry
         #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
-        cuda.Context.synchronize()
         return (P,bitload)
         
     def calc_psd(self,bitload,channelgap,noise,xtalk_gain):
@@ -380,8 +386,6 @@ class GPU(object):
 
         util.log.info("""(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,"""%(k,o,local,shared,regs,const,mbpt))
         
-        
-        
     def gpu_test(self):
         self.test=time()
         matrixcount=224;
@@ -398,7 +402,6 @@ class GPU(object):
             bitload[i]=id%self.mbpt;
             id/=self.mbpt;
         return bitload
-        
 
 if __name__ == "__main__":
     gpu=GPU(3)

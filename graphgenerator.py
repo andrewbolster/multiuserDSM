@@ -51,10 +51,10 @@ class graphgen():
         
     def graph_cm(self):
         pl.close()
-        channels=range(self.cm.shape[2])
-        for x in range(self.cm.shape[0]):
-            for v in range(self.cm.shape[1]):
-                pl.plot(channels,self.cm[x,v,:],label="%d,%d"%(x,v)) #this may be the wrong slicing style
+        channels=range(self.cm.shape[0])
+        for x in range(self.cm.shape[1]):
+            for v in range(self.cm.shape[2]):
+                pl.plot(channels,self.cm[:,x,v],label="%d,%d"%(x,v)) #this may be the wrong slicing style
         pl.xlabel("Subchannel Index")
         pl.ylabel("Gain")
         pl.yscale("log")
