@@ -13,6 +13,8 @@ import utility as util
 
 import pycuda.autoinit
 import pycuda.driver as cuda
+import pycuda.tools as ctools
+
 import numpy
 from pycuda.compiler import SourceModule
 from pycuda.gpuarray import GPUArray
@@ -201,9 +203,9 @@ __global__ void lk_prepare_permutations(float *A, float *B, int offset){
 }
 
 //Solve all A and B psds together. 
-//requires grid(MBPT^N,1,1) block(1,1,1)
+//requires grid(MBPT^N/threadmax,1,1) block(threadmax,1,1)
 __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, float *lambdas, float *w){
-    int id=blockIdx.x+(offset);
+    int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id;
     int p_pivot[MAT1],q_pivot[MAT1];
     float lk=0;
@@ -216,26 +218,28 @@ __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, f
         bitbangval/={{maxbitspertone}};
         p_pivot[i]=q_pivot[i]=i;
     }
-
-    //do the magic
-    d_pivot_decomp(&A[blockIdx.x*MAT2],&p_pivot[0],&q_pivot[0]);
-    d_solve(&A[blockIdx.x*MAT2],&B[blockIdx.x*MAT1],&p_pivot[0],&q_pivot[0]);
-
-//Split this into a new kernel?
-
-    //At this point, B is populated with the P results.
-    for (i=0;i<MAT1;i++){
-        //Need to check for negative B's
-        if (B[blockIdx.x*MAT1+i]<0)
-            broken++;
-        lk+=(bitload[i]*w[i])-(lambdas[i]*B[blockIdx.x*MAT1+i]);
-    }
+    //Stopper for invalid id's (where bitcombinations is less than maximum blocksize}
+    if (bitbangval==0){
+        //do the magic
+        d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
+        d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
     
-    //If anything is broken return a failing value (around -inf)
-    if (broken==0)
-        LK[blockIdx.x]=lk;
-    else
-        LK[blockIdx.x]=FAILVALUE;
+    //Split this into a new kernel?
+    
+        //At this point, B is populated with the P results.
+        for (i=0;i<MAT1;i++){
+            //Need to check for negative B's
+            if (B[id*MAT1+i]<0)
+                broken++;
+            lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1+i]);
+        }
+        
+        //If anything is broken return a failing value (around -inf)
+        if (broken==0)
+            LK[id]=lk;
+        else
+            LK[id]=FAILVALUE;
+    }
 }
 """)
 
@@ -288,10 +292,14 @@ class GPU(object):
         global_lk_maxid=-1
         gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
-        monitor=255
+        monitor=0
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
+        mydev=cuda.Context.get_device()
+        threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        #Playing Save
+        threadmax=int(np.floor(threadmax/2))
                 
         if k%10==0:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
@@ -302,10 +310,8 @@ class GPU(object):
             #Memories that are presistent
             #A[Nc*N*N],
             d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(np.float32).nbytes)
-            A=np.empty((gridsize*self.N*self.N)).astype(np.float32)
             #B[Ncombinations*N]
             d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(np.float32).nbytes)
-            B=np.empty((Ncombinations*self.N)).astype(np.float32)
             #LK (where final LK values come to rest...)
             d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
             #XTG[N*N] (for this k, clear this after prepare)
@@ -331,8 +337,9 @@ class GPU(object):
 
             #Go Solve
             lkmax=self.kernels.get_function("lk_max_permutations")
-            if (k>monitor): self.meminfo(lkmax,k,o)
-            lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(1,1,1))
+            lkmax_gridsize=int(np.floor(gridsize/threadmax))
+            if (k>monitor): self.meminfo(lkmax,k,o,threadmax)
+            lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(threadmax,1,1))
             cuda.Context.synchronize()
 
             #Bring LK results and power back to host
@@ -377,14 +384,16 @@ class GPU(object):
     def optimise_p(self,lambdas,xtalk_gain):
         pass
         
-    def meminfo(self,kernel,k=-1,o=-1):
+    def meminfo(self,kernel,k=-1,o=-1,threads=1):
         shared=kernel.shared_size_bytes
         regs=kernel.num_regs
         local=kernel.local_size_bytes
         const=kernel.const_size_bytes
         mbpt=kernel.max_threads_per_block
+        devdata=ctools.DeviceData()
+        occupancy=ctools.OccupancyRecord(devdata,threads, shared_mem=shared,registers=regs)
 
-        util.log.info("""(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,"""%(k,o,local,shared,regs,const,mbpt))
+        util.log.info("""(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,OC:%f"""%(k,o,local,shared,regs,const,mbpt,occupancy.occupancy))
         
     def gpu_test(self):
         self.test=time()
