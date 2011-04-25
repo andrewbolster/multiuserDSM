@@ -292,7 +292,7 @@ class GPU(object):
         global_lk_maxid=-1
         gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
-        monitor=0
+        monitor=225
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
@@ -301,7 +301,7 @@ class GPU(object):
         #Playing Save
         threadmax=int(np.floor(threadmax/2))
                 
-        if k%10==0:
+        if k==0:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
