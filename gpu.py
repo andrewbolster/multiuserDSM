@@ -119,7 +119,6 @@ __device__ void d_solve(float *a, float *x, int *p, int *q){
         }
         xtmp[i]=(ftmp)/a(i,i);
     }
-    for (i=0;i<MAT1;i++)
 
     //Last bit
     //solves x=Qy
@@ -204,13 +203,12 @@ __global__ void lk_prepare_permutations(float *A, float *B, int offset){
 
 //Solve all A and B psds together. 
 //requires grid(MBPT^N/threadmax,1,1) block(threadmax,1,1)
-__global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, float *lambdas, float *w){
+__global__ void solve_permutations(float *A, float *B, int offset){
     int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id;
     int p_pivot[MAT1],q_pivot[MAT1];
     float lk=0;
     int bitload[MAT1], i;
-    int broken=0;
 
     //generate bitload and pivots at the same time
     for (i=0; i<MAT1; i++){
@@ -223,15 +221,27 @@ __global__ void lk_max_permutations(float *A, float *B, int offset, float *LK, f
         //do the magic
         d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
         d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
+    }
+}
+
+//Finally Calculate the LK_Max_permutations
+__global__ void lk_max_permutations(float *P, float *LK, float *lambdas, float *w){
+    int id=blockIdx.x*blockDim.x+threadIdx.x;
+    int bitbangval=id;
+    float lk=0;
+    int bitload[MAT1], i, broken=0;
     
-    //Split this into a new kernel?
-    
-        //At this point, B is populated with the P results.
+    //At this point, B is populated with the P results.
+    for (i=0;i<MAT1;i++){
+        bitload[i]=bitbangval%{{maxbitspertone}};
+        bitbangval/={{maxbitspertone}};
+    }
+    if (bitbangval==0){//check for out of range id's
         for (i=0;i<MAT1;i++){
-            //Need to check for negative B's
-            if (B[id*MAT1+i]<0)
+           //Need to check for negative B's
+            if (P[id*MAT1+i]<0)
                 broken++;
-            lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1+i]);
+            lk+=(bitload[i]*w[i])-(lambdas[i]*P[id*MAT1+i]);
         }
         
         //If anything is broken return a failing value (around -inf)
@@ -292,16 +302,16 @@ class GPU(object):
         global_lk_maxid=-1
         gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
-        monitor=225
+        monitor=97
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
         mydev=cuda.Context.get_device()
         threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
-        #Playing Save
+        #Playing Safe
         threadmax=int(np.floor(threadmax/2))
                 
-        if k==0:
+        if False:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
@@ -321,11 +331,18 @@ class GPU(object):
             t_XTG=self.kernels.get_texref("XTG");
             cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         
-            #Go prepare
+            #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
             #if (k>monitor): self.meminfo(prepare,k,o)
             prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=(gridsize,1),block=(self.N,1,1))
             cuda.Context.synchronize()
+            
+            if k in [97,98]:
+                #Bring AB results back to host
+                A=cuda.from_device(d_A,(gridsize,self.N,self.N),np.float32)
+                B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
+                P=np.linalg.solve(A[0],B[0].T)
+                util.log.info("A:%s\nB:%s\P:%s"%(str(A),str(B),str(P)))
 
             #lambdas
             d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
@@ -334,12 +351,20 @@ class GPU(object):
             d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_w,w.astype(np.float32))
 
-
             #Go Solve
+            lksolve=self.kernels.get_function("solve_permutations")
+            lksolve_gridsize=int(np.floor(gridsize/threadmax))
+            #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
+            lksolve(d_A,d_B,offset, grid=(gridsize,1), block=(threadmax,1,1))
+            cuda.Context.synchronize()
+            
+            #Inter Kernel Housekeeping
+            d_A.free()
+            
+            
+            #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
-            lkmax_gridsize=int(np.floor(gridsize/threadmax))
-            if (k>monitor): self.meminfo(lkmax,k,o,threadmax)
-            lkmax(d_A,d_B,offset,d_lk,d_lambdas,d_w, grid=(gridsize,1), block=(threadmax,1,1))
+            lkmax(d_B,d_lk,d_lambdas,d_w,grid=(gridsize,1), block=(threadmax,1,1))
             cuda.Context.synchronize()
 
             #Bring LK results and power back to host
@@ -350,7 +375,7 @@ class GPU(object):
             lk_maxid=np.argmax(lk)
             
             #Hopefully this stuff goes on in the background
-            d_A.free()
+            
             d_lk.free()
             d_lambdas.free()
             d_w.free()
