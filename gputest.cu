@@ -4,12 +4,10 @@
 #include <string.h>
 #include <math.h>
 
-#include <sm_11_atomic_functions.h>
-
 #define CUDA_CHK(NAME, ARGS) { \
   cudaError_t cuda_err_code = NAME ARGS; \
   if (cuda_err_code != cudaSuccess) { \
-    printf("%s failed with code %d\n", #NAME, cuda_err_code); \
+    printf("%s failed with %s\n", #NAME, cudaGetErrorString(cuda_err_code)); \
     abort(); \
   } \
 }
@@ -20,9 +18,10 @@
 #ifndef min
 #define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
 #endif
-#define MAT1 3
+#define MAT1 4
 #define MAT2 MAT1*MAT1
 #define TINY 1.0e-40
+#define FAILVALUE -1.0e40
 #define a(i,j) a[(i)*MAT1+(j)]
 
 #define channelgap 19.7242
@@ -39,6 +38,9 @@ void Check_Kernel(const char *message){
   }
 }
 
+
+texture<float, cudaTextureType2D,cudaReadModeElementType> XTG;
+
 __device__ void d_pivot_decomp(float *a, int *p, int *q){
     int i,j,k;
     int n=MAT1;
@@ -46,7 +48,7 @@ __device__ void d_pivot_decomp(float *a, int *p, int *q){
     float max;
     float ftmp;
     for (k=0;k<n;k++){
-        pi=-1,pj=-1,max=0.0;
+        pi=-1,pj=-1,max=FAILVALUE;
         //find pivot in submatrix a(k:n,k:n)
         for (i=k;i<n;i++) {
             for (j=k;j<n;j++) {
@@ -78,7 +80,7 @@ __device__ void d_pivot_decomp(float *a, int *p, int *q){
         //END PIVOT
 
         //check pivot size and decompose
-        if ((fabs(a(k,k))>TINY)){
+        if ((fabs(a(k,k))>TINY)){//should always be true with pivoting
             for (i=k+1;i<n;i++){
                 //Column normalisation
                 ftmp=a(i,k)/=a(k,k);
@@ -96,26 +98,28 @@ __device__ void d_pivot_decomp(float *a, int *p, int *q){
 __device__ void d_solve(float *a, float *x, int *p, int *q){
     //forward substitution; see  Golub, Van Loan 96
     //And see http://www.cs.rutgers.edu/~richter/cs510/completePivoting.pdf
-    int i,ii=0,j;
+    int i,ii=0,j,pi;
     float ftmp;
     float xtmp[MAT1];
     //Swap rows (x=Px)
     for (i=0; i<MAT1; i++){
-        xtmp[i]=x[p[i]]; //value that should be here
+        pi=p[i];
+        xtmp[i]=x[pi]; //value that should be here
     }
     //Lx=x
+    //partially taken from Sourcebook on Parallel Computing p577
     for (i=0;i<MAT1;i++){
         ftmp=xtmp[i];
-        if (ii != 0)
-            for (j=ii-1;j<i;j++)
-                ftmp-=a(i,j)*xtmp[j];
-        else
-            if (ftmp!=0.0)
-                ii=i+1;
-        xtmp[i]=ftmp;
+        if (ii!=0){
+          for (j=ii-1;j<i;j++)
+              ftmp-=a(i,j)*xtmp[j];
+        } else{
+          if (ftmp !=0.0)
+            ii=i+1;
+        }
+        xtmp[i]=ftmp; //Unit lower triangular so second division unnecessary
     }
     //backward substitution
-    //partially taken from Sourcebook on Parallel Computing p577
     //solves Uy=z
     xtmp[MAT1-1]/=a(MAT1-1,MAT1-1);
     for (i=MAT1-2;i>=0;i--){
@@ -123,14 +127,14 @@ __device__ void d_solve(float *a, float *x, int *p, int *q){
         for (j=i+1;j<MAT1;j++){
             ftmp-=a(i,j)*xtmp[j];
         }
-        xtmp[i]=(ftmp)/a(i,i);
+        xtmp[i]=(ftmp)/a(i,i);//non unit upper triangular so this division is necessary
     }
-    for (i=0;i<MAT1;i++)
 
     //Last bit
     //solves x=Qy
     for (i=0;i<MAT1;i++){
-        x[i]=xtmp[q[i]];
+        pi=q[i];
+        x[i]=xtmp[pi];
     }
 }
 
@@ -147,73 +151,97 @@ __global__ void solve(float *A, float *B){
     d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
   }
 }
+
 //===============================================================================
 // CALC_PSD ACCESSORY FUNCTIONS for set channel (woo-hoo!)
 //===============================================================================
-//Generate the A dna B for all possible bitloads (in this offset)
+//Generate the A and B for all possible bitloads (in this offset)
 //requires grid(MBPT^N,1,1) block(N,1,1)
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(float *A, float *B, float *xtg, int *offset){
+__global__ void lk_prepare_permutations(float *A, float *B, float *d_XTG, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
-    int y=threadIdx.x;
-    int myid=blockIdx.x+(*offset);
+    int j=threadIdx.x;
+    int myid=blockIdx.x; //offset doesn't matter for this
     int bitbangval=myid;
 
     int bitload[MAT1], i;
     
     //rebase myid to base (MBPT)
     //Unfortunately theres no way around every thread working out its own bitload :( 
-    for (i=MAT1-1; i>=0; i--){
+    for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%maxbitspertone;
         bitbangval/=maxbitspertone;
     }
-    //Generate a row of A for this permutation and victim y
-    for (i=0;i<MAT1;i++){
-        A[myid*MAT2+y*MAT1+i]=-(channelgap*((1<<bitload[i])-1)*xtg[i*MAT1+y])/xtg[y*MAT1+y];
+    for (i=0; i<MAT1; i++){
+        //Generate a row of A for this permutation and victim j
+        //A[myid*MAT2+j*MAT1+i]=-(channelgap*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
+        A[myid*MAT2+j*MAT1+i]=-(channelgap*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
     }
     //Generate an item of B
-    B[myid*MAT1+y]=(noise*channelgap*((1<<bitload[y])-1))/xtg[y*MAT1+y];
+    B[myid*MAT1+j]=(noise*channelgap*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];
+    
     //Repair an item of A
-    __syncthreads();
-    A[myid*MAT2+y*MAT1+y]=1;
+    __syncthreads(); //Seems to help with memory coalescing
+    A[myid*MAT2+j*MAT1+j]=1;
 }
 
 //Solve all A and B psds together. 
-//requires grid(MBPT^N,1,1) block(1,1,1)
-__global__ void lk_max_permutations(float *A, float *B, int *offset, float *LK, float *lambdas, float *w){
-    //MyID is now effectively 3D
-    int id=blockIdx.x+(*offset);
+//requires grid(MBPT^N/threadmax,1,1) block(threadmax,1,1)
+__global__ void solve_permutations(float *A, float *B, int offset){
+    int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id;
     int p_pivot[MAT1],q_pivot[MAT1];
-    float lk=0;
-    int bitload[MAT1], i;
+    int i;
 
-    
-    //generate bitload and pivots at the same time
-    for (i=MAT1-1; i>=0; i--){
-        bitload[i]=bitbangval%maxbitspertone;
+    //simulate bitload generation for in-place id check, and pivots at the same time
+    for (i=0; i<MAT1; i++){
         bitbangval/=maxbitspertone;
         p_pivot[i]=q_pivot[i]=i;
     }
+    //Stopper for invalid id's (where bitcombinations is less than maximum blocksize}
+    if (bitbangval==0){
+        //do the magic
+        d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
+        d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
+    }
+}
 
-    //do the magic
-    d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
-    d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
+//Finally Calculate the LK_Max_permutations
+__global__ void lk_max_permutations(float *P, float *LK, float *lambdas, float *w){
+    int id=blockIdx.x*blockDim.x+threadIdx.x;
+    int bitbangval=id;
+    float lk=0;
+    int bitload[MAT1], i, broken=0;
     
     //At this point, B is populated with the P results.
     for (i=0;i<MAT1;i++){
-        lk+=(bitload[i]*w[i])-(lambdas[i]*B[id*MAT1+i]);
+        bitload[i]=bitbangval%maxbitspertone;
+        bitbangval/=maxbitspertone;
     }
-    LK[id]=lk;
+    if (bitbangval==0){//check for out of range id's
+        for (i=0;i<MAT1;i++){
+           //Need to check for negative B's
+            if (P[id*MAT1+i]<0)
+                broken++;
+            lk+=(bitload[i]*w[i])-(lambdas[i]*P[id*MAT1+i]);
+        }
+        
+        //If anything is broken return a failing value (around -inf)
+        if (broken==0)
+            LK[id]=lk;
+        else
+            LK[id]=FAILVALUE;
+    }
 }
-
 int main(){
   //What are you actually trying to do:
   //  generate 2 input matrixes, (NxN,Nx1) and 1 output (1xN)
   //  do this over outerloop length for threadiding
+  printf("Hello there\n");
   cudaSetDevice(0);
+  printf("Set Device\n");
   const unsigned int matrixcount=4;
   const unsigned int ncombos=pow(maxbitspertone,MAT1);
   const unsigned int outerloop=ncombos;
@@ -224,20 +252,30 @@ int main(){
   //const float exampleA[]={4,3,6,3};
   //const float b[]={5,7,8}; 
   //const float exampleB[]={4,5};
-  const float x[]={5e-10,7e-20,8e-8,7e-20,8e-8,5e-10,8e-20,5e-8,7e-10}; //xtg analogue
+  //const float x[]={5e-10,7e-20,8e-8,7e-20,8e-8,5e-10,8e-20,5e-8,7e-10}; //xtg analogue
+  const float x[]={//this one breaks
+           7.15337843e-09,   9.98540799e-18,   8.27619149e-13,
+           9.98540799e-18,   1.79722338e-07,   7.45386129e-06,
+           1.79722338e-07,   5.17430336e-10,   8.27619149e-13,
+           9.98540799e-18,   7.15337843e-09,   9.98540799e-18,
+           1.79722338e-07,   5.17430336e-10,   1.79722338e-07,
+           7.45386129e-06};
+  const float x2[]={//this one should be fine
+           7.66152695e-09,   1.08253155e-17,   8.72877254e-13,
+           1.08253155e-17,   1.79434933e-07,   7.76722237e-06,
+           1.79434933e-07,   5.30951476e-10,   8.72877254e-13,
+           1.08253155e-17,   7.66152695e-09,   1.08253155e-17,
+           1.79434933e-07,   5.30951476e-10,   1.79434933e-07,
+           7.76722237e-06};
 
   //memory allocations
-  int* h_offset=(int*)malloc(sizeof(int));
-  (*h_offset)=0;
-  int* d_offset;
-  CUDA_CHK(cudaMalloc, (&d_offset, sizeof(int)));
-  CUDA_CHK(cudaMemcpy, (d_offset, h_offset, sizeof(int), cudaMemcpyHostToDevice));
+  int h_offset=0;
 
   float* h_A = (float*)malloc(sizeof(float)*matsize);//empty till after
   float* h_b = (float*)malloc(sizeof(float)*vecsize);//empty till after
 
   float* h_l = (float*)malloc(sizeof(float)*vecsize);
-  float* h_x = (float*)malloc(sizeof(float)*matsize);
+  float* h_x = (float*)malloc(sizeof(float)*MAT2);
   float* d_A;
   float* d_b;
   float* d_x;
@@ -245,7 +283,7 @@ int main(){
   CUDA_CHK(cudaMalloc, (&d_A, sizeof(float)*matsize));
   CUDA_CHK(cudaMalloc, (&d_b, sizeof(float)*vecsize));
   CUDA_CHK(cudaMalloc, (&d_l, sizeof(float)*vecsize));
-  CUDA_CHK(cudaMalloc, (&d_x, sizeof(float)*matsize));
+  CUDA_CHK(cudaMalloc, (&d_x, sizeof(float)*MAT2));
 
   //don't need these on device till after permutation generation
   float* h_lk = (float*)malloc(sizeof(float)*outerloop);//empty till after
@@ -260,21 +298,21 @@ int main(){
     for (unsigned int j = 0; j < MAT1; j++){
       h_l[(i*MAT1)+j]=1.0;
       h_w[(i*MAT1)+j]=1.0;
+      if (i<MAT1) h_x[(i*MAT1)+j]=x[i*MAT1+j];
       //printf("\n%d:",j);
-      for (unsigned int k=0; k < MAT1; k++){
+      //for (unsigned int k=0; k < MAT1; k++){
         //printf("%d,",k);
         //h_A[(i*MAT2)+(j*MAT1)+k]=a(j,k);
-        h_x[(i*MAT2)+(j*MAT1)+k]=x[j*MAT1+k];
         
-      }
+      //}
     }
   }
-
   printf("Generated\n");
     //copy values to device
  // CUDA_CHK(cudaMemcpy, (d_A, h_A, sizeof(float)*matsize, cudaMemcpyHostToDevice));
   CUDA_CHK(cudaMemcpy, (d_l, h_l, sizeof(float)*vecsize, cudaMemcpyHostToDevice));
-  CUDA_CHK(cudaMemcpy, (d_x, h_x, sizeof(float)*matsize, cudaMemcpyHostToDevice));
+  CUDA_CHK(cudaMemcpy, (d_x, h_x, sizeof(float)*MAT2, cudaMemcpyHostToDevice));
+  CUDA_CHK(cudaBindTexture,(NULL,XTG,d_x,sizeof(float)*MAT2));
 
   printf("Copied\n");/*
   for (unsigned int i=0; i<outerloop; i++){
@@ -292,7 +330,7 @@ int main(){
   */
   //parameters
   //dim3 blocksPerGrid((outerloop + threadsPerBlock.x -1)/threadsPerBlock.x,1,1);
-  dim3 blocksPerGrid(pow(maxbitspertone,MAT1),1,1);
+  dim3 blocksPerGrid(ncombos,1,1);
   dim3 threadsPerBlock(MAT1,1,1);
   
   printf("TPB:%d,BPG:%d\n",threadsPerBlock.x,blocksPerGrid.x);
@@ -302,25 +340,37 @@ int main(){
   CUDA_CHK(cudaEventCreate, (&evt_stop));
   CUDA_CHK(cudaEventRecord, (evt_start,0));
 
-  lk_prepare_permutations<<<blocksPerGrid,threadsPerBlock>>>(d_A,d_b,d_x,d_offset);
+  lk_prepare_permutations<<<blocksPerGrid,threadsPerBlock>>>(d_A,d_b,d_x,h_offset);
   cudaDeviceSynchronize();
   Check_Kernel("Generate");
   CUDA_CHK(cudaMemcpy, (h_A,d_A, sizeof(float)*matsize, cudaMemcpyDeviceToHost));
   CUDA_CHK(cudaMemcpy, (h_b,d_b, sizeof(float)*vecsize, cudaMemcpyDeviceToHost));
-  CUDA_CHK(cudaMemcpy, (h_x,d_x, sizeof(float)*matsize, cudaMemcpyDeviceToHost));
+  cudaDeviceSynchronize();
+  for (unsigned int i=10000; i<10100; i++){
+    printf("\n%d:A|b\n",i);
+    //printf("%.3lf|",h_x[i*MAT1]);
+    for (unsigned int j=0; j<MAT1; j++){
+      for (unsigned int k=0;k<MAT1; k++){
+        printf("%g,",h_A[(i*MAT2)+(j*MAT1)+k]);
+      }
+      printf("|%g\n",h_b[i*MAT1+j]);
+    }
+  }
+  puts("\n");
 
-  printf("Ran solve\n");
+  printf("Ran Generate\n");
 
-  
-
-  CUDA_CHK(cudaFree, (d_x));
-  CUDA_CHK(cudaMalloc, (&d_lk, sizeof(float)*vecsize));
+  //CUDA_CHK(cudaFree, (d_x));
+  CUDA_CHK(cudaMalloc, (&d_lk, sizeof(float)*outerloop));
   CUDA_CHK(cudaMalloc, (&d_w, sizeof(float)*vecsize));
   CUDA_CHK(cudaMemcpy, (d_w, h_w, sizeof(float)*vecsize, cudaMemcpyHostToDevice));
-  dim3 threadsPerBlock_lkmax(1,1,1);
-  lk_max_permutations<<<blocksPerGrid,threadsPerBlock>>>(d_A,d_b,d_offset,d_lk,d_l,d_w);
-  cudaDeviceSynchronize();
-  Check_Kernel("LKmax");
+  dim3 threadsPerBlock_lksolve(256,1,1);
+  dim3 blocksPerGrid_lksolve(ncombos/256,1,1);
+  solve_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_A,d_b,h_offset);
+  Check_Kernel("Solve");
+  printf("Ran Solve\n");
+lk_max_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_b,d_lk, d_l, d_w);
+  Check_Kernel("Max");
   CUDA_CHK(cudaMemcpy, (h_lk, d_lk, sizeof(float)*outerloop, cudaMemcpyDeviceToHost));
   CUDA_CHK(cudaEventRecord, (evt_stop, 0));
   CUDA_CHK(cudaEventSynchronize, (evt_stop));
@@ -328,18 +378,24 @@ int main(){
   CUDA_CHK(cudaEventElapsedTime, (&total_time, evt_start, evt_stop));
   float one_time = total_time * 1e-3;
 
+  float lk_max=FAILVALUE;
+  int lk;
   for (unsigned int i=0; i<outerloop; i++){
-    printf("\n%d:x:A:LK:%g",i,h_lk[i]);
+    //printf("%d:A:LK:%g\n",i,h_lk[i]);
+    if (h_lk[i]>lk_max){
+      lk=i;
+      lk_max=h_lk[i];
+    }/*
     //printf("%.3lf|",h_x[i*MAT1]);
     for (unsigned int j=0; j<MAT1; j++){
-      printf("\n%g:",h_x[i*MAT1+j]);
       for (unsigned int k=0;k<MAT1; k++){
         printf("%g,",h_A[(i*MAT2)+(j*MAT1)+k]);
       }
     }
+    puts("\n");*/
+  
   }
-  puts("\n");
-  printf("time: %g s\n", one_time);
+  printf("time: %g s\nlkmax:%g@%d\n", one_time,h_lk[lk],lk);
 
   cudaEventDestroy(evt_start);
   cudaEventDestroy(evt_stop);

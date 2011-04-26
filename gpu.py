@@ -72,7 +72,7 @@ __device__ void d_pivot_decomp(float *a, int *p, int *q){
         //END PIVOT
 
         //check pivot size and decompose
-        if ((fabs(a(k,k))>TINY)){
+        if ((fabs(a(k,k))>TINY)){//should always be true with pivoting
             for (i=k+1;i<n;i++){
                 //Column normalisation
                 ftmp=a(i,k)/=a(k,k);
@@ -90,26 +90,23 @@ __device__ void d_pivot_decomp(float *a, int *p, int *q){
 __device__ void d_solve(float *a, float *x, int *p, int *q){
     //forward substitution; see  Golub, Van Loan 96
     //And see http://www.cs.rutgers.edu/~richter/cs510/completePivoting.pdf
-    int i,ii=0,j;
+    int i,j,pi;
     float ftmp;
     float xtmp[MAT1];
     //Swap rows (x=Px)
     for (i=0; i<MAT1; i++){
-        xtmp[i]=x[p[i]]; //value that should be here
+        pi=p[i];
+        xtmp[i]=x[pi]; //value that should be here
     }
     //Lx=x
+    //partially taken from Sourcebook on Parallel Computing p577
     for (i=0;i<MAT1;i++){
         ftmp=xtmp[i];
-        if (ii != 0)
-            for (j=ii-1;j<i;j++)
-                ftmp-=a(i,j)*xtmp[j];
-        else
-            if (ftmp!=0.0)
-                ii=i+1;
-        xtmp[i]=ftmp;
+        for (j=0;j<i;j++)
+            ftmp-=a(i,j)*xtmp[j];
+        xtmp[i]=ftmp; //Unit lower triangular so second division unnecessary
     }
     //backward substitution
-    //partially taken from Sourcebook on Parallel Computing p577
     //solves Uy=z
     xtmp[MAT1-1]/=a(MAT1-1,MAT1-1);
     for (i=MAT1-2;i>=0;i--){
@@ -117,13 +114,14 @@ __device__ void d_solve(float *a, float *x, int *p, int *q){
         for (j=i+1;j<MAT1;j++){
             ftmp-=a(i,j)*xtmp[j];
         }
-        xtmp[i]=(ftmp)/a(i,i);
+        xtmp[i]=(ftmp)/a(i,i);//non unit upper triangular so this division is necessary
     }
 
     //Last bit
     //solves x=Qy
     for (i=0;i<MAT1;i++){
-        x[i]=xtmp[q[i]];
+        pi=q[i];
+        x[i]=xtmp[pi];
     }
 }
 
@@ -177,11 +175,11 @@ __global__ void generateB(int *bitload, float *A, float *B, float *xtg){
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(float *A, float *B, int offset){
+__global__ void lk_prepare_permutations(float *A, float *B, float *d_XTG, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
-    int y=threadIdx.x;
-    int myid=blockIdx.x+(offset);
-    int bitbangval=myid;
+    int j=threadIdx.x;
+    int myid=blockIdx.x;
+    int bitbangval=myid+offset;
 
     int bitload[MAT1], i;
     
@@ -190,29 +188,30 @@ __global__ void lk_prepare_permutations(float *A, float *B, int offset){
     for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%{{maxbitspertone}};
         bitbangval/={{maxbitspertone}};
+    }
+    //FIXME Make handle out of range id's
+    for (i=0; i<MAT1; i++){
         //Generate a row of A for this permutation and victim y
-        A[blockIdx.x*MAT2+y*MAT1+i]=-({{channelgap}}*((1<<bitload[y])-1)*tex2D(XTG,i,y))/tex2D(XTG,y,y);
+        A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
     }
     //Generate an item of B
-    B[blockIdx.x*MAT1+y]=({{noise}}*{{channelgap}}*((1<<bitload[y])-1))/tex2D(XTG,y,y);
+    B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];
     
     //Repair an item of A
     //__syncthreads(); //Seems to help with memory coalescing
-    A[blockIdx.x*MAT2+y*MAT1+y]=1;
+    A[blockIdx.x*MAT2+j*MAT1+j]=1;
 }
 
 //Solve all A and B psds together. 
 //requires grid(MBPT^N/threadmax,1,1) block(threadmax,1,1)
 __global__ void solve_permutations(float *A, float *B, int offset){
     int id=blockIdx.x*blockDim.x+threadIdx.x;
-    int bitbangval=id;
+    int bitbangval=id+offset;
     int p_pivot[MAT1],q_pivot[MAT1];
-    float lk=0;
-    int bitload[MAT1], i;
+    int i;
 
-    //generate bitload and pivots at the same time
+    //simulate bitload generation for in-place id check, and pivots at the same time
     for (i=0; i<MAT1; i++){
-        bitload[i]=bitbangval%{{maxbitspertone}};
         bitbangval/={{maxbitspertone}};
         p_pivot[i]=q_pivot[i]=i;
     }
@@ -325,24 +324,29 @@ class GPU(object):
             #LK (where final LK values come to rest...)
             d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
             #XTG[N*N] (for this k, clear this after prepare)
-            #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
-            #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+            d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
+            cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
             #Do XTG as a shared texture.
-            t_XTG=self.kernels.get_texref("XTG");
-            cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+            #t_XTG=self.kernels.get_texref("XTG");
+            #cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
             #if (k>monitor): self.meminfo(prepare,k,o)
-            prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=(gridsize,1),block=(self.N,1,1))
-            cuda.Context.synchronize()
+            prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
+            try:
+                cuda.Context.synchronize()
+            except pycuda._driver.LaunchError:
+                util.log.error("Failed on Prepare, Tone %d: XTG:%s"%(k,str(xtalk_gain)))
+                raise
             
-            if k in [97,98]:
+            if k in []:
                 #Bring AB results back to host
                 A=cuda.from_device(d_A,(gridsize,self.N,self.N),np.float32)
                 B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
-                P=np.linalg.solve(A[0],B[0].T)
-                util.log.info("A:%s\nB:%s\P:%s"%(str(A),str(B),str(P)))
+                for g in [223]:
+                    P=np.linalg.solve(A[g],B[g].T)
+                    util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
 
             #lambdas
             d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
@@ -350,22 +354,33 @@ class GPU(object):
             #w
             d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_w,w.astype(np.float32))
+            
+            #Even thinking about printing these out as debug messages is pointless
+            #because without knowing which bitload it failed at...
+            A=cuda.from_device(d_A,(gridsize,self.N,self.N),np.float32)
+            B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
 
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
-            lksolve_gridsize=int(np.floor(gridsize/threadmax))
+            threadshare_gridsize=int(np.floor(gridsize/threadmax))
             #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
-            lksolve(d_A,d_B,offset, grid=(gridsize,1), block=(threadmax,1,1))
-            cuda.Context.synchronize()
-            
+            lksolve(d_A,d_B,offset, grid=(threadshare_gridsize,1), block=(threadmax,1,1))
+            try:
+                cuda.Context.synchronize()
+            except pycuda._driver.LaunchError:
+                util.log.error("Failed on Solve, Tone %d: \nXTG:%s\nA:%s\nB:%s"%(k,str(xtalk_gain),str(A[k]),str(B[k])))
+                raise            
             #Inter Kernel Housekeeping
             d_A.free()
             
-            
             #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
-            lkmax(d_B,d_lk,d_lambdas,d_w,grid=(gridsize,1), block=(threadmax,1,1))
-            cuda.Context.synchronize()
+            lkmax(d_B,d_lk,d_lambdas,d_w,grid=(threadshare_gridsize,1), block=(threadmax,1,1))
+            try:
+                cuda.Context.synchronize()
+            except pycuda._driver.LaunchError:
+                util.log.error("Failed on LKMax,Tone %d: XTG:%s"%(k,str(xtalk_gain)))
+                raise
 
             #Bring LK results and power back to host
             lk=np.empty((gridsize)).astype(np.float32)
@@ -385,7 +400,7 @@ class GPU(object):
                 cuda.memcpy_dtoh(B,d_B)
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
-                if k in []:
+                if False:
                     util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
             
             #'Free at last! Free at last! Thank God Almighty, we are free at last!'
