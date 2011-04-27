@@ -330,11 +330,6 @@ class GPU(object):
             d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.float32).nbytes)
             cuda.memcpy_htod(d_w,w.astype(np.float32))
             
-            #Even thinking about printing these out as debug messages is pointless
-            #because without knowing which bitload it failed at...
-            A=cuda.from_device(d_A,(gridsize,self.N,self.N),np.float32)
-            B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
-
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
             threadshare_gridsize=int(np.floor(gridsize/threadmax))
@@ -343,7 +338,7 @@ class GPU(object):
             try:
                 cuda.Context.synchronize()
             except pycuda._driver.LaunchError:
-                util.log.error("Failed on Solve, Tone %d: \nXTG:%s\nA:%s\nB:%s"%(k,str(xtalk_gain),str(A[k]),str(B[k])))
+                util.log.error("Failed on Solve, Tone %d: \nXTG:%s"%(k,str(xtalk_gain)))
                 raise            
             #Inter Kernel Housekeeping
             d_A.free()
