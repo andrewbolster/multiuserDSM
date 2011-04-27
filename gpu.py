@@ -31,7 +31,7 @@ t_kernels=Template("""
 #define GO 1
 #define NOGO 0
 
-texture<FPT,cudaTextureType2D,cudaReadModeElementType> XTG;
+texture<float,cudaTextureType2D,cudaReadModeElementType> XTG;
 
 __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int i,j,k;
