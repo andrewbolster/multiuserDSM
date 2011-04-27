@@ -40,7 +40,7 @@ __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     FPT max;
     FPT ftmp;
     for (k=0;k<n;k++){
-        pi=-1,pj=-1,max=0.0;
+        pi=-1,pj=-1,max=FAILVALUE;
         //find pivot in submatrix a(k:n,k:n)
         for (i=k;i<n;i++) {
             for (j=k;j<n;j++) {
@@ -268,9 +268,9 @@ class GPU(object):
     def solve(self,a,b,max):
         d_a=cuda.mem_alloc(a.astype(self.type).nbytes)
         d_b=cuda.mem_alloc(b.astype(self.type).nbytes)
-        cuda.memcpy_htod(d_a,a)
-        cuda.memcpy_htod(d_b,b)
-        h_b=np.empty_like(b)
+        cuda.memcpy_htod(d_a,a.astype(self.type))
+        cuda.memcpy_htod(d_b,b.astype(self.type))
+        h_b=np.empty_like(b.astype(self.type))
         self.go=time()
         
         #Go solve
