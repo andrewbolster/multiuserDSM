@@ -25,6 +25,9 @@ t_kernels=Template("""
 #define MAT2 MAT1*MAT1
 #define FAILVALUE {{failvalue}}
 #define FPT {{floatingpointtype}}
+#define CHANNELGAP {{channelgap}}
+#define NOISE {{noise}}
+#define MBPT {{maxbitspertone}}
 #define TINY 1.0e-40
 #define a(i,j) a[(i)*MAT1+(j)]
 
@@ -158,18 +161,18 @@ __global__ void lk_prepare_permutations(FPT *A, FPT *B, int offset){
     //rebase myid to base (MBPT)
     //Unfortunately theres no way around every thread working out its own bitload :( 
     for (i=0; i<MAT1; i++){
-        bitload[i]=bitbangval%{{maxbitspertone}};
-        bitbangval/={{maxbitspertone}};
+        bitload[i]=bitbangval%MBPT;
+        bitbangval/=MBPT;
     }
     if (bitbangval==0){
       for (i=0; i<MAT1; i++){
           //Generate a row of A for this permutation and victim y
-          A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
+          A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
       }
     }
     //Generate an item of B
-    //B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
-    B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/tex2D(XTG,j,j);
+    //B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
+    B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/tex2D(XTG,j,j);
 
     //Repair an item of A
     //__syncthreads(); //Seems to help with memory coalescing
@@ -186,7 +189,7 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
 
     //simulate bitload generation for in-place id check, and pivots at the same time
     for (i=0; i<MAT1; i++){
-        bitbangval/={{maxbitspertone}};
+        bitbangval/=MBPT;
         p_pivot[i]=q_pivot[i]=i;
     }
     //Stopper for invalid id's (where bitcombinations is less than maximum blocksize}
@@ -206,8 +209,8 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
     
     //At this point, B is populated with the P results.
     for (i=0;i<MAT1;i++){
-        bitload[i]=bitbangval%{{maxbitspertone}};
-        bitbangval/={{maxbitspertone}};
+        bitload[i]=bitbangval%MBPT;
+        bitbangval/=MBPT;
     }
     if (bitbangval==0){//check for out of range id's
         for (i=0;i<MAT1;i++){
