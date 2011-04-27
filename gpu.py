@@ -40,7 +40,7 @@ __device__ void d_pivot_decomp(float *a, int *p, int *q){
     float max;
     float ftmp;
     for (k=0;k<n;k++){
-        pi=-1,pj=-1,max=0.0;
+        pi=-1,pj=-1,max=FAILVALUE;
         //find pivot in submatrix a(k:n,k:n)
         for (i=k;i<n;i++) {
             for (j=k;j<n;j++) {
@@ -310,7 +310,7 @@ class GPU(object):
         #Playing Safe
         threadmax=int(np.floor(threadmax/2))
                 
-        if False:
+        if True:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
@@ -344,7 +344,7 @@ class GPU(object):
                 #Bring AB results back to host
                 A=cuda.from_device(d_A,(gridsize,self.N,self.N),np.float32)
                 B=cuda.from_device(d_B,(gridsize,self.N),np.float32)
-                for g in [223]:
+                for g in []:
                     P=np.linalg.solve(A[g],B[g].T)
                     util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
 

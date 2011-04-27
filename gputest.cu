@@ -267,6 +267,20 @@ int main(){
            1.08253155e-17,   7.66152695e-09,   1.08253155e-17,
            1.79434933e-07,   5.30951476e-10,   1.79434933e-07,
            7.76722237e-06};
+  const float x178[]={
+         5.15676578e-11,   2.60163643e-20,   1.55231521e-14,
+         2.60163643e-20,   1.74280845e-07,   3.86365544e-07,
+         1.74280845e-07,   6.97834034e-11,   1.55231521e-14,
+         2.60163643e-20,   5.15676578e-11,   2.60163643e-20,
+         1.74280845e-07,   6.97834034e-11,   1.74280845e-07,
+         3.86365544e-07};
+  const float x179[]={//The 'new' broken one
+         4.87663895e-11,   2.42887090e-20,   1.48197082e-14,
+         2.42887090e-20,   1.73987318e-07,   3.73631407e-07,
+         1.73987318e-07,   6.81261232e-11,   1.48197082e-14,
+         2.42887090e-20,   4.87663895e-11,   2.42887090e-20,
+         1.73987318e-07,   6.81261232e-11,   1.73987318e-07,
+         3.73631407e-07};
 
   //memory allocations
   int h_offset=0;
@@ -298,7 +312,7 @@ int main(){
     for (unsigned int j = 0; j < MAT1; j++){
       h_l[(i*MAT1)+j]=1.0;
       h_w[(i*MAT1)+j]=1.0;
-      if (i<MAT1) h_x[(i*MAT1)+j]=x[i*MAT1+j];
+      if (i<MAT1) h_x[(i*MAT1)+j]=x179[i*MAT1+j];
       //printf("\n%d:",j);
       //for (unsigned int k=0; k < MAT1; k++){
         //printf("%d,",k);
@@ -385,15 +399,16 @@ lk_max_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_b,d_lk,
     if (h_lk[i]>lk_max){
       lk=i;
       lk_max=h_lk[i];
-    }/*
-    //printf("%.3lf|",h_x[i*MAT1]);
-    for (unsigned int j=0; j<MAT1; j++){
-      for (unsigned int k=0;k<MAT1; k++){
-        printf("%g,",h_A[(i*MAT2)+(j*MAT1)+k]);
+      printf("New LKMax:%d,(%g)\n",i,h_lk[i]);
+    
+      //printf("%.3lf|",h_x[i*MAT1]);
+      for (unsigned int j=0; j<MAT1; j++){
+        for (unsigned int k=0;k<MAT1; k++){
+          printf("%g,",h_A[(i*MAT2)+(j*MAT1)+k]);
+        }
+      puts("\n");
       }
-    }
-    puts("\n");*/
-  
+    } 
   }
   printf("time: %g s\nlkmax:%g@%d\n", one_time,h_lk[lk],lk);
 
