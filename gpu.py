@@ -4,7 +4,6 @@ Created on 12 Mar 2011
 @author: bolster
 '''
 import numpy as np
-import scipy.misc
 import multiprocessing
 from time import time
 import sys
@@ -25,20 +24,21 @@ t_kernels=Template("""
 #define MAT1 {{matrixN}}
 #define MAT2 MAT1*MAT1
 #define FAILVALUE {{failvalue}}
+#define FPT {{floatingpointtype}}
 #define TINY 1.0e-40
 #define a(i,j) a[(i)*MAT1+(j)]
 
 #define GO 1
 #define NOGO 0
 
-texture<double> XTG;
+texture<FPT,cudaTextureType2D,cudaReadModeElementType> XTG;
 
-__device__ void d_pivot_decomp(double *a, int *p, int *q){
+__device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int i,j,k;
     int n=MAT1;
     int pi,pj,tmp;
-    double max;
-    double ftmp;
+    FPT max;
+    FPT ftmp;
     for (k=0;k<n;k++){
         pi=-1,pj=-1,max=0.0;
         //find pivot in submatrix a(k:n,k:n)
@@ -87,12 +87,12 @@ __device__ void d_pivot_decomp(double *a, int *p, int *q){
 }
 
 
-__device__ void d_solve(double *a, double *x, int *p, int *q){
+__device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
     //forward substitution; see  Golub, Van Loan 96
     //And see http://www.cs.rutgers.edu/~richter/cs510/completePivoting.pdf
     int i,j,pi;
-    double ftmp;
-    double xtmp[MAT1];
+    FPT ftmp;
+    FPT xtmp[MAT1];
     //Swap rows (x=Px)
     for (i=0; i<MAT1; i++){
         pi=p[i];
@@ -125,7 +125,7 @@ __device__ void d_solve(double *a, double *x, int *p, int *q){
     }
 }
 
-__global__ void solve(double *A, double *B){
+__global__ void solve(FPT *A, FPT *B){
   //Each thread solves the A[id]x[id]=b[id] problem
   int id= blockDim.x*blockIdx.x + threadIdx.x;
   int p_pivot[MAT1],q_pivot[MAT1];
@@ -147,7 +147,7 @@ __global__ void solve(double *A, double *B){
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(double *A, double *B, double *d_XTG, int offset){
+__global__ void lk_prepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
     int j=threadIdx.x;
     int myid=blockIdx.x;
@@ -184,7 +184,7 @@ __global__ void lk_prepare_permutations(double *A, double *B, double *d_XTG, int
 
 //Solve all A and B psds together. 
 //requires grid(MBPT^N/threadmax,1,1) block(threadmax,1,1)
-__global__ void solve_permutations(double *A, double *B, int offset){
+__global__ void solve_permutations(FPT *A, FPT *B, int offset){
     int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id+offset;
     int p_pivot[MAT1],q_pivot[MAT1];
@@ -204,10 +204,10 @@ __global__ void solve_permutations(double *A, double *B, int offset){
 }
 
 //Finally Calculate the LK_Max_permutations
-__global__ void lk_max_permutations(double *P, double *LK, double *lambdas, double *w){
+__global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
     int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id;
-    double lk=0;
+    FPT lk=0;
     int bitload[MAT1], i, broken=0;
     
     //At this point, B is populated with the P results.
@@ -241,15 +241,30 @@ class GPU(object):
         self.gamma=bundle.get_GAMMA()
         self.noise=bundle.get_NOISE()
         self.mbpt=bundle.get_MBPT()
+        
+        #Work out some context sensitive runtime parameters
+        mydev=cuda.Context.get_device()
+        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        compute=mydev.compute_capability()
+        if (compute>=(1,3)):
+            self.type=np.double
+            typestr="double"
+        else:
+            self.type=np.float32
+            typestr="float"
+            
+            
         r_kernels=t_kernels.render(matrixN=self.N,
                                channelgap=pow(10,(self.gamma+3)/10), #19.7242
                                noise=self.noise, #4.313e-14
                                maxbitspertone=self.mbpt,
-                               failvalue=np.double(-sys.maxint)
+                               failvalue=self.type(-sys.maxint),
+                               floatingpointtype=typestr
                                )
         self.kernels = SourceModule(r_kernels)
         self.init=time()
-
+        
+            
     #In progress, ignore this.
     def calc_psd(self,bitload,k,gamma,noise):
         A=np.zeros((self.N*self.N))
@@ -285,10 +300,6 @@ class GPU(object):
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
-        mydev=cuda.Context.get_device()
-        threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
-        #Playing Safe
-        threadmax=int(np.floor(threadmax))
                 
         if False:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
@@ -298,23 +309,23 @@ class GPU(object):
             
             #Memories that are presistent
             #A[Nc*N*N],
-            d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(np.double).nbytes)
+            d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(self.type).nbytes)
             #B[Ncombinations*N]
-            d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(np.double).nbytes)
+            d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(self.type).nbytes)
             #LK (where final LK values come to rest...)
-            d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.double).nbytes)
+            d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(self.type).nbytes)
             #XTG[N*N] (for this k, clear this after prepare)
             #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
             #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
             #Do XTG as a shared texture.
             t_XTG=self.kernels.get_texref("XTG");
-            cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+            cuda.matrix_to_texref(xtalk_gain.astype(self.type).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
             #if (k>monitor): self.meminfo(prepare,k,o)
-            prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=(gridsize,1),block=(self.N,1,1))
             try:
+                prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=(gridsize,1),block=(self.N,1,1))
                 cuda.Context.synchronize()
             except pycuda._driver.LaunchError:
                 util.log.error("Failed on Prepare, Tone %d: XTG:%s"%(k,str(xtalk_gain)))
@@ -322,18 +333,18 @@ class GPU(object):
             
             if k in []:
                 #Bring AB results back to host
-                A=cuda.from_device(d_A,(gridsize,self.N,self.N),np.double)
-                B=cuda.from_device(d_B,(gridsize,self.N),np.double)
+                A=cuda.from_device(d_A,(gridsize,self.N,self.N),self.type)
+                B=cuda.from_device(d_B,(gridsize,self.N),self.type)
                 for g in [223]:
                     P=np.linalg.solve(A[g],B[g].T)
                     util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
 
             #lambdas
-            d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(np.double).nbytes)
-            cuda.memcpy_htod(d_lambdas,lambdas.astype(np.double))
+            d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
+            cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
             #w
-            d_w=cuda.mem_alloc(np.empty((self.N)).astype(np.double).nbytes)
-            cuda.memcpy_htod(d_w,w.astype(np.double))
+            d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
+            cuda.memcpy_htod(d_w,w.astype(self.type))
             
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
@@ -358,7 +369,7 @@ class GPU(object):
                 raise
 
             #Bring LK results and power back to host
-            lk=np.empty((gridsize)).astype(np.double)
+            lk=np.empty((gridsize)).astype(self.type)
             cuda.memcpy_dtoh(lk,d_lk)
             
             #find the max lk
@@ -371,7 +382,7 @@ class GPU(object):
             d_w.free()
             
             if lk_maxid>global_lk_maxid:
-                B=np.empty((gridsize,self.N),np.double)
+                B=np.empty((gridsize,self.N),self.type)
                 cuda.memcpy_dtoh(B,d_B)
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
