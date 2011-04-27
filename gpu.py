@@ -19,6 +19,9 @@ from pycuda.compiler import SourceModule
 from pycuda.gpuarray import GPUArray
 from jinja2 import Template
 
+#Control how smart you want to be
+adapt=False
+
 t_kernels=Template("""
 #include <pycuda-helpers.hpp>
 #define MAT1 {{matrixN}}
@@ -241,9 +244,9 @@ class GPU(object):
         
         #Work out some context sensitive runtime parameters
         mydev=cuda.Context.get_device()
-        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)/2
+        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
         compute=mydev.compute_capability()
-        if (compute>=(1,3)):
+        if (compute>=(1,3) and adapt):
             self.type=np.double
             typestr="double"
         else:
@@ -284,12 +287,9 @@ class GPU(object):
         return h_b
     
     def lkmax(self,lambdas,w,xtalk_gain,k):
-        #lk_prepare_permutations(double *A, double *B, double *xtg, int *offset)
-        #lk_max_permutations(double *A, double *B, int *offset, double *LK, double *lambdas, double *w)
         #Number of expected permutations
         Ncombinations=pow(self.mbpt,self.N)
         
-        #loop construct here if Ncombinations > 65535
         global_lk_maxid=-1
         gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
@@ -297,26 +297,28 @@ class GPU(object):
 
         #Check if this is getting hairy
         (free,total)=cuda.mem_get_info()
+        threadshare_gridsize=int(max(np.floor(gridsize/self.threadmax),1))
+
+        #Memories that are presistent
+        d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(self.type).nbytes)
+        d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(self.type).nbytes)
+        d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(self.type).nbytes)
+        #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
+        #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+        #Do XTG as a shared texture.
+        t_XTG=self.kernels.get_texref("XTG");
+        cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+        #lambdas
+        d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
+        #w
+        d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
                 
-        if False:
+        if True:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
             offset = np.int32(o);
             
-            #Memories that are presistent
-            #A[Nc*N*N],
-            d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(self.type).nbytes)
-            #B[Ncombinations*N]
-            d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(self.type).nbytes)
-            #LK (where final LK values come to rest...)
-            d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(self.type).nbytes)
-            #XTG[N*N] (for this k, clear this after prepare)
-            #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
-            #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
-            #Do XTG as a shared texture.
-            t_XTG=self.kernels.get_texref("XTG");
-            cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
@@ -336,16 +338,9 @@ class GPU(object):
                     P=np.linalg.solve(A[g],B[g].T)
                     util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
 
-            #lambdas
-            d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
-            cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
-            #w
-            d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
-            cuda.memcpy_htod(d_w,w.astype(self.type))
             
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
-            threadshare_gridsize=int(max(np.floor(gridsize/self.threadmax),1))
             #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
             try:
                 cuda.Context.synchronize()
@@ -354,8 +349,10 @@ class GPU(object):
             except:
                 util.log.error("Failed on LKMax,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain),str(threadshare_gridsize),str(self.threadmax)))
                 raise            
-            #Inter Kernel Housekeeping
-            d_A.free()
+
+            #Inter Kernel Housekeeping: For the amount of global memory being used, freeing isn't worth it
+            cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
+            cuda.memcpy_htod(d_w,w.astype(self.type))
             
             #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
@@ -375,9 +372,6 @@ class GPU(object):
             
             #Hopefully this stuff goes on in the background
             
-            d_lk.free()
-            d_lambdas.free()
-            d_w.free()
             
             if lk_maxid>global_lk_maxid:
                 B=np.empty((gridsize,self.N),self.type)
@@ -387,12 +381,14 @@ class GPU(object):
                 if False:
                     util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
             
-            #'Free at last! Free at last! Thank God Almighty, we are free at last!'
-            d_B.free()
-
         #end for
         bitload=self.bitload_from_id(global_lk_maxid)
         
+        d_A.free()
+        d_B.free()
+        d_lk.free()
+        d_lambdas.free()
+        d_w.free()
         #If this works I'm gonna cry
         #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
         return (P,bitload)

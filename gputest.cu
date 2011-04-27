@@ -25,7 +25,7 @@ void Check_Kernel(const char *message){
   }
 }
 
-#define FPT double
+#define FPT float
 #define a(i,j) a[(i)*MAT1+(j)]
 #define MAT1 4
 #define MAT2 MAT1*MAT1
@@ -300,7 +300,7 @@ int main(){
   XTG_desc=cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
 
   //CUDA_CHK(cudaMalloc, (&d_x, sizeof(float)*MAT2));
-  CUDA_CHK(cudaMallocArray,( &d_x, &XTG_desc, MAT1, MAT1));
+  CUDA_CHK(cudaMallocArray,( &d_x, &XTG_desc, sizeof(float)*MAT1, sizeof(float)*MAT1));
 
   //don't need these on device till after permutation generation
   FPT* h_lk = (FPT*)malloc(sizeof(FPT)*outerloop);//empty till after
