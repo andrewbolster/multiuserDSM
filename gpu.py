@@ -147,7 +147,7 @@ __global__ void solve(FPT *A, FPT *B){
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
+__global__ void lk_prepare_permutations(FPT *A, FPT *B, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
     int j=threadIdx.x;
     int myid=blockIdx.x;
@@ -164,14 +164,8 @@ __global__ void lk_prepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
     if (bitbangval==0){
       for (i=0; i<MAT1; i++){
           //Generate a row of A for this permutation and victim y
-          A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
+          A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
       }
-      //Generate an item of B
-      B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];
-      
-      //Repair an item of A
-      //__syncthreads(); //Seems to help with memory coalescing
-      A[blockIdx.x*MAT2+j*MAT1+j]=1;
     }
     //Generate an item of B
     //B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
@@ -244,7 +238,7 @@ class GPU(object):
         
         #Work out some context sensitive runtime parameters
         mydev=cuda.Context.get_device()
-        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)/2
         compute=mydev.compute_capability()
         if (compute>=(1,3)):
             self.type=np.double
@@ -348,13 +342,13 @@ class GPU(object):
             
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
-            threadshare_gridsize=int(max(np.floor(gridsize/threadmax),1))
+            threadshare_gridsize=int(max(np.floor(gridsize/self.threadmax),1))
             #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
             try:
-                lksolve(d_A,d_B,offset, grid=(threadshare_gridsize,1), block=(threadmax,1,1))
+                lksolve(d_A,d_B,offset, grid=(threadshare_gridsize,1), block=(self.threadmax,1,1))
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain),str(threadshare_gridsize),str(threadmax)))
+                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain),str(threadshare_gridsize),str(self.threadmax)))
                 raise            
             #Inter Kernel Housekeeping
             d_A.free()
@@ -362,10 +356,10 @@ class GPU(object):
             #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
             try:
-                lkmax(d_B,d_lk,d_lambdas,d_w,grid=(threadshare_gridsize,1), block=(threadmax,1,1))
+                lkmax(d_B,d_lk,d_lambdas,d_w,grid=(threadshare_gridsize,1), block=(self.threadmax,1,1))
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain),str(threadshare_gridsize),str(threadmax)))
+                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain),str(threadshare_gridsize),str(self.threadmax)))
                 raise
 
             #Bring LK results and power back to host
