@@ -244,7 +244,7 @@ class GPU(object):
         
         #Work out some context sensitive runtime parameters
         mydev=cuda.Context.get_device()
-        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)/2
         compute=mydev.compute_capability()
         if (compute>=(1,3) and adapt):
             self.type=np.double
@@ -313,12 +313,11 @@ class GPU(object):
         #w
         d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
                 
-        if True:
+        if False:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
             offset = np.int32(o);
-            
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
@@ -330,7 +329,7 @@ class GPU(object):
                 util.log.error("Failed on Prepare, Tone %d: XTG:%s"%(k,str(xtalk_gain)))
                 raise
             
-            if True:
+            if False:
                 #Bring AB results back to host
                 A=cuda.from_device(d_A,(gridsize,self.N,self.N),self.type)
                 B=cuda.from_device(d_B,(gridsize,self.N),self.type)
@@ -338,7 +337,6 @@ class GPU(object):
                     P=np.linalg.solve(A[g],B[g].T)
                     util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
 
-            
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
             #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
@@ -371,8 +369,7 @@ class GPU(object):
             lk_maxid=np.argmax(lk)
             
             #Hopefully this stuff goes on in the background
-            
-            
+
             if lk_maxid>global_lk_maxid:
                 B=np.empty((gridsize,self.N),self.type)
                 cuda.memcpy_dtoh(B,d_B)
@@ -380,7 +377,7 @@ class GPU(object):
                 global_lk_maxid=lk_maxid
                 if False:
                     util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
-            
+
         #end for
         bitload=self.bitload_from_id(global_lk_maxid)
         
