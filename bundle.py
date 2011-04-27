@@ -8,11 +8,11 @@ import re
 import cmath
 import numpy as np
 import pyparsing
-import scipy.special as ss
+#import scipy.special as ss
 import pylab as pl
 import pprint
 import itertools
-import hashlib, murmur
+import hashlib
 import os
 from tempfile import mkdtemp
 from math import pow,log10,sqrt
@@ -301,8 +301,10 @@ class Bundle(object):
     def _calc_sym_err(self,line,k): #TODO
         
         M=pow(2,line.b[k])
-               
-        return 1 - (1 - (1 - 1/sqrt(M))*ss.erf(sqrt((3*line.snr[k])/(2*(M-1)))))
+              
+        log.error("Tried to execute broken _calc_cym_error")
+        raise ValueError
+        return 1 - (1 - (1 - 1/sqrt(M)))#*ss.erf(sqrt((3*line.snr[k])/(2*(M-1)))))
     
     '''
     Checks inter-service margins

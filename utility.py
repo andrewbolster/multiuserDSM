@@ -3,7 +3,8 @@
 __author__="bolster"
 __date__ ="$02-Dec-2010 18:48:38$"
 
-import math, cmath, numpy as np, sys, scipy.special as sps
+import cmath, numpy as np, sys#, scipy.special as sps
+from math import *
 import functools,cPickle
 import logging
 
@@ -77,7 +78,216 @@ material=[{ # awg 26
 
 t=2 #Type 3 in transferfn.c
 
+tiny= 1e-300
+half=  5.00000000000000000000e-01
+one =  1.00000000000000000000e+00
+two =  2.00000000000000000000e+00
+erx =  8.45062911510467529297e-01
 
+## Coefficients for approximation to  erf  in [0.84375,1.25] 
+pa0  = -2.36211856075265944077e-03
+pa1  =  4.14856118683748331666e-01
+pa2  = -3.72207876035701323847e-01
+pa3  =  3.18346619901161753674e-01
+pa4  = -1.10894694282396677476e-01
+pa5  =  3.54783043256182359371e-02
+pa6  = -2.16637559486879084300e-03
+qa1  =  1.06420880400844228286e-01
+qa2  =  5.40397917702171048937e-01
+qa3  =  7.18286544141962662868e-02
+qa4  =  1.26171219808761642112e-01
+qa5  =  1.36370839120290507362e-02
+qa6  =  1.19844998467991074170e-02
+
+def erf1(x):
+    '''erf(x) for x in [0,0.84375]'''
+    e, i = frexp(x)
+    if abs(i)>28:
+        if abs(i)>57:
+            return 0.125*(8.0*x+efx8*x)
+        return x + efx*x
+    z = x*x
+    r = pp0+z*(pp1+z*(pp2+z*(pp3+z*pp4)))
+    s = one+z*(qq1+z*(qq2+z*(qq3+z*(qq4+z*qq5))))
+    y = r/s
+    return x + x*y
+
+def erfc1(x):
+    '''erfc(x)for x in [0,0.84375]'''
+    e,i = frexp(x)
+    if abs(i)>56:
+        return one-x
+    z = x*x
+    r = pp0+z*(pp1+z*(pp2+z*(pp3+z*pp4)))
+    s = one+z*(qq1+z*(qq2+z*(qq3+z*(qq4+z*qq5))))
+    y = r/s
+    if (x<0.25):
+        return one-(x+x*y)
+    else:
+        r = x*y
+        r += (x-half)
+        return half - r
+
+## Coefficients for approximation to  erf  in [0.84375,1.25] 
+
+pa0  = -2.36211856075265944077e-03
+pa1  =  4.14856118683748331666e-01
+pa2  = -3.72207876035701323847e-01
+pa3  =  3.18346619901161753674e-01
+pa4  = -1.10894694282396677476e-01
+pa5  =  3.54783043256182359371e-02
+pa6  = -2.16637559486879084300e-03
+qa1  =  1.06420880400844228286e-01
+qa2  =  5.40397917702171048937e-01
+qa3  =  7.18286544141962662868e-02
+qa4  =  1.26171219808761642112e-01
+qa5  =  1.36370839120290507362e-02
+qa6  =  1.19844998467991074170e-02
+
+def erf2(x):
+    '''erf(x) for x in [0.84375,1.25]'''
+    s = fabs(x)-one
+    P = pa0+s*(pa1+s*(pa2+s*(pa3+s*(pa4+s*(pa5+s*pa6)))))
+    Q = one+s*(qa1+s*(qa2+s*(qa3+s*(qa4+s*(qa5+s*qa6)))))
+    if x>=0:
+        return erx + P/Q
+    return -erx - P/Q
+
+def erfc2(x):
+    '''erfc(x) for x in [0.84375, 1.25]'''
+    return one-erf2(x)
+
+## Coefficients for approximation to  erfc in [1.25,1/0.35]
+
+ra0  = -9.86494403484714822705e-03
+ra1  = -6.93858572707181764372e-01
+ra2  = -1.05586262253232909814e+01
+ra3  = -6.23753324503260060396e+01
+ra4  = -1.62396669462573470355e+02
+ra5  = -1.84605092906711035994e+02
+ra6  = -8.12874355063065934246e+01
+ra7  = -9.81432934416914548592e+00
+sa1  =  1.96512716674392571292e+01
+sa2  =  1.37657754143519042600e+02
+sa3  =  4.34565877475229228821e+02
+sa4  =  6.45387271733267880336e+02
+sa5  =  4.29008140027567833386e+02
+sa6  =  1.08635005541779435134e+02
+sa7  =  6.57024977031928170135e+00
+sa8  = -6.04244152148580987438e-02
+
+def erf3(x):
+    '''erf(x) for x in [1.25,2.857142]'''
+    x0=x
+    x = fabs(x)
+    s = one/(x*x)
+    R=ra0+s*(ra1+s*(ra2+s*(ra3+s*(ra4+s*(ra5+s*(ra6+s*ra7))))))
+    S=one+s*(sa1+s*(sa2+s*(sa3+s*(sa4+s*(sa5+s*(sa6+s*(sa7+s*sa8)))))))
+    z = ldexp(x0,0)
+    r = exp(-z*z-0.5625)*exp((z-x)*(z+x)+R/S)
+    if(x0>=0):
+        return one-r/x
+    else:
+        return  r/x-one;
+
+def erfc3(x):
+    '''erfc(x) for x in [1.25,1/0.35]'''
+    return one-erf3(x)
+
+## Coefficients for approximation to  erfc in [1/.35,28]
+
+rb0  = -9.86494292470009928597e-03
+rb1  = -7.99283237680523006574e-01
+rb2  = -1.77579549177547519889e+01
+rb3  = -1.60636384855821916062e+02
+rb4  = -6.37566443368389627722e+02
+rb5  = -1.02509513161107724954e+03
+rb6  = -4.83519191608651397019e+02
+sb1  =  3.03380607434824582924e+01
+sb2  =  3.25792512996573918826e+02
+sb3  =  1.53672958608443695994e+03
+sb4  =  3.19985821950859553908e+03
+sb5  =  2.55305040643316442583e+03
+sb6  =  4.74528541206955367215e+02
+sb7  = -2.24409524465858183362e+01
+
+def erf4(x):
+    '''erf(x) for x in [1/.35,6]'''
+    x0=x
+    x = fabs(x)
+    s = one/(x*x)
+    R=rb0+s*(rb1+s*(rb2+s*(rb3+s*(rb4+s*(rb5+s*rb6)))))
+    S=one+s*(sb1+s*(sb2+s*(sb3+s*(sb4+s*(sb5+s*(sb6+s*sb7))))))
+    z  = ldexp(x0,0)
+    r  =  exp(-z*z-0.5625)*exp((z-x)*(z+x)+R/S)
+    if(z>=0):
+        return one-r/x
+    else:
+        return  r/x-one;
+
+def erfc4(x):
+    '''erfc(x) for x in [2.857142,6]'''
+    return one-erf4(x)
+
+def erf5(x):
+    '''erf(x) for |x| in [6,inf)'''
+    if x>0:
+        return one-tiny
+    return tiny-one
+
+def erfc5(x):
+    '''erfc(x) for |x| in [6,inf)'''
+    if (x>0):
+        return tiny*tiny
+    return two-tiny
+
+#############
+##inf = float('inf')
+##nan = float('nan')
+###########
+inf = float(9e999)
+
+def erf(x):
+    '''return the error function of x'''
+    f = float(x)
+    if (f == inf):
+        return 1.0
+    elif (f == -inf):
+        return -1.0
+##    elif (f is nan):
+##        return nan
+    else:
+        if (abs(x)<0.84375):
+            return erf1(x)
+        elif (0.84375<=abs(x)<1.25):
+            return erf2(x)
+        elif (1.25<=abs(x)<2.857142):
+            return erf3(x)
+        elif (2.857142<=abs(x)<6):
+            return erf4(x)
+        elif (abs(x)>=6):
+            return erf5(x)
+    
+def erfc(x):
+    '''return the complementary of error function of x'''
+    f = float(x)
+    if (f == inf):
+        return 0.0
+    elif (f is -inf):
+        return 2.0
+##    elif (f == nan):
+##        return nan
+    else:
+        if (abs(x)<0.84375):
+            return erfc1(x)
+        elif (0.84375<=abs(x)<1.25):
+            return erfc2(x)
+        elif (1.25<=abs(x)<2.857142):
+            return erfc3(x)
+        elif (2.857142<=abs(x)<6):
+            return erfc4(x)
+        elif (abs(x)>=6):
+            return erfc5(x)
 CHANNEL_BANDWIDTH = 4312.5 #from include/multiuser_load.h
 
 '''
@@ -116,7 +326,7 @@ def do_transfer_function(length,freq,type=3, measure="m"):
         pass
     else: raise TypeError('Improper measurement scale used') 
     
-    w = 2 * math.pi * freq
+    w = 2 * pi * freq
 
     #log.debug("Freq=%f,Len=%d",freq,length)
     Z = complex(_R(freq),w*_L(freq))
@@ -140,11 +350,11 @@ def _R(freq):
     '''
     Return R Parameter for transfer function
     '''
-    c_partial = math.pow(material[t]["a_c"]*freq*freq+math.pow(material[t]["r_0c"],4),(0.25))
+    c_partial = pow(material[t]["a_c"]*freq*freq+pow(material[t]["r_0c"],4),(0.25))
 
     try:
         if material[t]["r_0s"] > 0:
-            s_partial = math.pow(material[t]["a_s"]*math.pow(freq,2)+math.pow(material[t]["r_0s"],4),(0.25))
+            s_partial = pow(material[t]["a_s"]*pow(freq,2)+pow(material[t]["r_0s"],4),(0.25))
             return (c_partial*s_partial)/(c_partial+s_partial)
     except KeyError:
         return c_partial
@@ -153,15 +363,15 @@ def _L(freq):
     '''
     Return L Parameter for transfer function
     '''
-    upper=(material[t]["l_0"]+material[t]["l_inf"]*math.pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
-    lower=(1+math.pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
+    upper=(material[t]["l_0"]+material[t]["l_inf"]*pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
+    lower=(1+pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
     return (upper/lower)
 
 def _C(freq):
-    return material[t]["c_inf"]+material[t]["c_0"]*math.pow(freq,-material[t]["c_e"])
+    return material[t]["c_inf"]+material[t]["c_0"]*pow(freq,-material[t]["c_e"])
 
 def _G(freq):
-    return material[t]["g_0"]*math.pow(freq,material[t]["g_e"])
+    return material[t]["g_0"]*pow(freq,material[t]["g_e"])
 
 '''
 Mathematical Utilities
@@ -174,7 +384,7 @@ def watts_to_dbmhz(e):
 
 def UndB(input):
     try:
-        return math.pow(10,input/10)
+        return pow(10,input/10)
     except ValueError:
         #log.debug("Caught Exception on UndB(%f)"%input)
         raise ValueError
@@ -184,7 +394,7 @@ def UndB(input):
 
 def TodB(input):
     try:
-        return 10*math.log10(input)
+        return 10*log10(input)
     except ValueError:
         #log.debug("Caught Exception on TodB(%f)"%input)
         return -np.inf #FIXME Either make it dynamic across the package or use something like -inf; 
@@ -200,10 +410,10 @@ def complex2str(complex):
     return '{0:.3f}{1:+.3f}i'.format(complex.real,complex.imag)
 
 def _Q_1(value):
-    return math.sqrt(2)*sps.erfc(1-2*value)
+    return sqrt(2)*erfc(1-2*value)
 
 def _Ne(M): #from http://www.docstoc.com/docs/21599433/Basics-of-Digital-Modulation
-    rtM=math.sqrt(M)
+    rtM=sqrt(M)
     return ((2*rtM)-1)/rtM
 
 #Uncoded SNR Gap (Probability-bit-error:Pe,N Nearest Neighbours:Ne)
