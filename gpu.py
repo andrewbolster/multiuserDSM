@@ -328,7 +328,7 @@ class GPU(object):
                 util.log.error("Failed on Prepare, Tone %d: XTG:%s"%(k,str(xtalk_gain)))
                 raise
             
-            if k in []:
+            if True:
                 #Bring AB results back to host
                 A=cuda.from_device(d_A,(gridsize,self.N,self.N),self.type)
                 B=cuda.from_device(d_B,(gridsize,self.N),self.type)
@@ -348,6 +348,7 @@ class GPU(object):
             threadshare_gridsize=int(max(np.floor(gridsize/self.threadmax),1))
             #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
             try:
+                cuda.Context.synchronize()
                 lksolve(d_A,d_B,offset, grid=(threadshare_gridsize,1), block=(self.threadmax,1,1))
                 cuda.Context.synchronize()
             except:
