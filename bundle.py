@@ -201,11 +201,11 @@ class Bundle(object):
             (A,B)=(victim.nt,victim.lt)
             
         #Shared length is the H2 Span
-        shared_length=abs(max(A,D1)-min(B,D2))/1000
+        shared_length=abs(max(A,D1)-min(B,D2))/1000.0
         #Head Length is the H1/H4 Span
-        head_length=(A-D1)/1000
+        head_length=(A-D1)/1000.0
         #Tail Length is the H3 Span
-        tail_length=(B-D2)/1000
+        tail_length=(B-D2)/1000.0
         
         h1 = self.insertion_loss(head_length, freq)
         h2 = self.insertion_loss(shared_length, freq)
@@ -225,7 +225,12 @@ class Bundle(object):
         '''
         H = h1*h2*h3
         
-        gain = H * self.fext(freq, shared_length)
+        try:
+            gain = H * self.fext(freq, shared_length)
+        except ValueError:
+            log.error("Failed on (A,B,D1,D2)=(%d,%d,%d,%d):Shared:%f"%(A,B,D1,D2,shared_length))
+            raise
+        
         return gain  
     
     '''
@@ -241,6 +246,7 @@ class Bundle(object):
         x+= 20*log10(freq/90e3)         #f in Hz
         x+= 6*log10(float(self.N-1)/49)    #n disturbers 
         x+= 10*log10(length)       #shared length in km
+    
         
         try:
             return UndB(x)

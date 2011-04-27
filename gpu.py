@@ -140,34 +140,6 @@ __global__ void solve(float *A, float *B){
 }
 
 //===============================================================================
-// CALC_PSD ACCESSORY FUNCTIONS for set bitload (largely useless)
-//===============================================================================
-//Generate the A 'sausage' for a specified bitload
-//requires grid(N,1,1) block(K,N,1)
-__global__ void generateA(int *bitload, float *A, float *xtg){
-    //V as block index for per-block memory coalescing (talonmies)
-    int v=blockIdx.x;
-    int k=threadIdx.x;
-    int x=threadIdx.y;
-    
-    //block-shared bitload generation?
-    A[k*MAT2+v*MAT1+x]=-({{channelgap}}*((1<<bitload[v])-1)*xtg[k*MAT2+x*MAT1+v])/xtg[k*MAT2+v*MAT1+v];
-}
-
-//Generate the B matrix for a specified bitload
-//requires grid(N,1,1) block(K,1,1)
-__global__ void generateB(int *bitload, float *A, float *B, float *xtg){
-    //V as block index for per-block memory coalescing (talonmies)
-    int v=blockIdx.x;
-    int k=threadIdx.x;
-    
-    //block-shared bitload generation?
-    B[k*MAT1+v]=({{noise}}*{{channelgap}}*((1<<bitload[v])-1))/xtg[k*MAT2+v*MAT1+v];
-    //Repair A while we're here
-    A[k*MAT2+v*MAT1+v]=1;
-}
-
-//===============================================================================
 // CALC_PSD ACCESSORY FUNCTIONS for set channel (woo-hoo!)
 //===============================================================================
 //Generate the A and B for all possible bitloads (in this offset)
@@ -175,7 +147,7 @@ __global__ void generateB(int *bitload, float *A, float *B, float *xtg){
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(float *A, float *B, float *d_XTG, int offset){
+__global__ void lk_prepare_permutations(float *A, float *B, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
     int j=threadIdx.x;
     int myid=blockIdx.x;
@@ -192,11 +164,14 @@ __global__ void lk_prepare_permutations(float *A, float *B, float *d_XTG, int of
     //FIXME Make handle out of range id's
     for (i=0; i<MAT1; i++){
         //Generate a row of A for this permutation and victim y
-        A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
+        //A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
+        A[myid*MAT2+j*MAT1+i]=-({{channelgap}}*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
+
     }
     //Generate an item of B
-    B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];
-    
+    //B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
+    B[myid*MAT1+j]=({{noise}}*{{channelgap}}*((1<<bitload[j])-1))/tex2D(XTG,j,j);
+
     //Repair an item of A
     //__syncthreads(); //Seems to help with memory coalescing
     A[blockIdx.x*MAT2+j*MAT1+j]=1;
@@ -310,7 +285,7 @@ class GPU(object):
         #Playing Safe
         threadmax=int(np.floor(threadmax/2))
                 
-        if True:
+        if False:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
         for o in range(0,Ncombinations,gridsize):
             #offset 
@@ -324,16 +299,16 @@ class GPU(object):
             #LK (where final LK values come to rest...)
             d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(np.float32).nbytes)
             #XTG[N*N] (for this k, clear this after prepare)
-            d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
-            cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+            #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
+            #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
             #Do XTG as a shared texture.
-            #t_XTG=self.kernels.get_texref("XTG");
-            #cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+            t_XTG=self.kernels.get_texref("XTG");
+            cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
             #if (k>monitor): self.meminfo(prepare,k,o)
-            prepare(d_A,d_B,d_XTG,offset,grid=(gridsize,1),block=(self.N,1,1))
+            prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=(gridsize,1),block=(self.N,1,1))
             try:
                 cuda.Context.synchronize()
             except pycuda._driver.LaunchError:
