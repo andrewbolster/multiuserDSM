@@ -31,7 +31,7 @@ t_kernels=Template("""
 #define GO 1
 #define NOGO 0
 
-texture<float,cudaTextureType2D,cudaReadModeElementType> XTG;
+texture<float,2,cudaReadModeElementType> XTG;
 
 __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int i,j,k;
@@ -266,8 +266,8 @@ class GPU(object):
     
     #Arbitrary solver for destructive Ax=x
     def solve(self,a,b,max):
-        d_a=cuda.mem_alloc(a.nbytes)
-        d_b=cuda.mem_alloc(b.nbytes)
+        d_a=cuda.mem_alloc(a.astype(self.type).nbytes)
+        d_b=cuda.mem_alloc(b.astype(self.type).nbytes)
         cuda.memcpy_htod(d_a,a)
         cuda.memcpy_htod(d_b,b)
         h_b=np.empty_like(b)
@@ -275,7 +275,7 @@ class GPU(object):
         
         #Go solve
         go=self.kernels.get_function("solve")
-        go(d_a,d_b,block=(1,1,1))
+        go(d_a,d_b,block=(1,1,1),grid=(1,1))
         cuda.memcpy_dtoh(h_b,d_b)
         self.done=time()
         return h_b
@@ -313,7 +313,7 @@ class GPU(object):
             #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
             #Do XTG as a shared texture.
             t_XTG=self.kernels.get_texref("XTG");
-            cuda.matrix_to_texref(xtalk_gain.astype(self.type).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+            cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")

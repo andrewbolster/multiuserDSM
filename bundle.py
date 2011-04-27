@@ -338,12 +338,8 @@ class Bundle(object):
             pass
         
         #Generate Matrices (See Intro.pdf 2.23)
-        if (gpu):
-            A=np.zeros((self.N,self.N)).astype(np.float32)
-            B=np.zeros((self.N,1)).astype(np.float32)
-        else:
-            A=np.zeros((self.N,self.N))
-            B=np.zeros((self.N,1))
+        A=np.zeros((self.N,self.N))
+        B=np.zeros((self.N,1))
         
         XTG=self.xtalk_gain[k,:,:]
         
