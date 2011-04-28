@@ -45,11 +45,9 @@ __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int pi,pj,tmp;
     FPT max;
     FPT ftmp;
-    
     for (k=0;k<n;k++){
         pi=-1,pj=-1,max=FAILVALUE;
         //find pivot in submatrix a(k:n,k:n)
-        
         for (i=k;i<n;i++) {
             for (j=k;j<n;j++) {
                 if (fabs(a(i,j))>max){
@@ -102,14 +100,12 @@ __device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
     FPT ftmp;
     FPT xtmp[MAT1];
     //Swap rows (x=Px)
-    
     for (i=0; i<MAT1; i++){
         pi=p[i];
         xtmp[i]=x[pi]; //value that should be here
     }
     //Lx=x
     //partially taken from Sourcebook on Parallel Computing p577
-    
     for (i=0;i<MAT1;i++){
         ftmp=xtmp[i];
         for (j=0;j<i;j++)
@@ -129,7 +125,6 @@ __device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
 
     //Last bit
     //solves x=Qy
-    
     for (i=0;i<MAT1;i++){
         pi=q[i];
         x[i]=xtmp[pi];
@@ -141,7 +136,6 @@ __global__ void solve(FPT *A, FPT *B){
   int id= blockDim.x*blockIdx.x + threadIdx.x;
   int p_pivot[MAT1],q_pivot[MAT1];
   if ((GO==1)){
-    
     for (int i=0;i<MAT1;i++) {
         p_pivot[i]=q_pivot[i]=i;
     }
@@ -169,13 +163,11 @@ __global__ void lk_prepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
     
     //rebase myid to base (MBPT)
     //Unfortunately theres no way around every thread working out its own bitload :( 
-    
     for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
     if (bitbangval==0){
-      
       for (i=0; i<MAT1; i++){
           //Generate a row of A for this permutation and victim y
           A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
@@ -200,7 +192,6 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
     int i;
 
     //simulate bitload generation for in-place id check, and pivots at the same time
-    
     for (i=0; i<MAT1; i++){
         bitbangval/=MBPT;
         p_pivot[i]=q_pivot[i]=i;
@@ -221,13 +212,11 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
     int bitload[MAT1], i, broken=0;
     
     //At this point, B is populated with the P results.
-    
     for (i=0;i<MAT1;i++){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
     if (bitbangval==0){//check for out of range id's
-        
         for (i=0;i<MAT1;i++){
            //Need to check for negative B's
             if (P[id*MAT1+i]<0)
@@ -257,11 +246,7 @@ class GPU(object):
         #Work out some context sensitive runtime parameters
         mydev=cuda.Context.get_device()
         self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
-        self.warpsize=mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
-        self.mps=mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
-        self.blockpermp=8
-        self.gridmax=self.blockpermp*self.mps
-
+        self.threadmax/=2
         compute=mydev.compute_capability()
         if (compute>=(1,3) and adapt):
             self.type=np.double
@@ -308,28 +293,24 @@ class GPU(object):
         Ncombinations=pow(self.mbpt,self.N)
         
         global_lk_maxid=-1
-        monitor=-1
+        gridmax=65535/2
+        gridsize=min(pow(self.mbpt,(self.N)),gridmax)
+        monitor=224
 
         #Check if this is getting hairy and assign grid/block dimensions
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
-        warpperblock=max(1,min(4,Ncombinations/warpcount))
-        threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
-        
-        memdim=blockCount*threadCount
-
-        N_grid=((memdim)/self.N,1)
+        (free,total)=cuda.mem_get_info()
+        N_grid=(gridsize,1)
         N_block=(self.N,1,1)
-        threadshare_grid=(blockCount,1)
-        threadshare_block=(threadCount,1,1)
+        threadshare_grid=(int(max(np.floor(gridsize/(self.threadmax)),1)),1)
+        threadshare_block=(self.threadmax,1,1)
 
 
         #Memories that are presistent
-        d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
-        d_B=cuda.mem_alloc(np.zeros((memdim*self.N)).astype(self.type).nbytes)
-        d_lk=cuda.mem_alloc(np.zeros((memdim)).astype(self.type).nbytes)
-        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(self.type).nbytes)
-        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(self.type))
+        d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(self.type).nbytes)
+        d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(self.type).nbytes)
+        d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(self.type).nbytes)
+        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
+        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
         #Do XTG as a shared texture.
         #t_XTG=self.kernels.get_texref("XTG");
         #cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
@@ -342,7 +323,7 @@ class GPU(object):
                 
         if False:
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
-        for o in range(0,Ncombinations,memdim):
+        for o in range(0,Ncombinations,gridsize):
             #offset 
             offset = np.int32(o);
         
@@ -359,8 +340,8 @@ class GPU(object):
             
             if False:
                 #Bring AB results back to host
-                A=cuda.from_device(d_A,(memdim,self.N,self.N),self.type)
-                B=cuda.from_device(d_B,(memdim,self.N),self.type)
+                A=cuda.from_device(d_A,(gridsize,self.N,self.N),self.type)
+                B=cuda.from_device(d_B,(gridsize,self.N),self.type)
                 np.save("A",A)
                 np.save("B",B)
                 for g in [223]:
@@ -381,8 +362,8 @@ class GPU(object):
             
             #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
-            if (k>monitor): self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
+                cuda.Context.synchronize()
                 lkmax(d_B,d_lk,d_lambdas,d_w,grid=threadshare_grid,block=threadshare_block)
                 cuda.Context.synchronize()
             except:
@@ -390,7 +371,7 @@ class GPU(object):
                 raise
 
             #Bring LK results and power back to host
-            lk=np.empty((memdim)).astype(self.type)
+            lk=np.empty((gridsize)).astype(self.type)
             cuda.Context.synchronize()
             cuda.memcpy_dtoh(lk,d_lk)
             
@@ -400,11 +381,11 @@ class GPU(object):
             #Hopefully this stuff goes on in the background
 
             if lk_maxid>global_lk_maxid:
-                B=np.empty((memdim,self.N),self.type)
+                B=np.empty((gridsize,self.N),self.type)
                 cuda.memcpy_dtoh(B,d_B)
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
-                if True:
+                if False:
                     util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
 
         #end for
@@ -415,8 +396,6 @@ class GPU(object):
         d_lk.free()
         d_lambdas.free()
         d_w.free()
-
-        d_XTG.free()
         #If this works I'm gonna cry
         #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
         return (P,bitload)
