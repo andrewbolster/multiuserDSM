@@ -395,7 +395,7 @@ int main(){
   solve_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_A,d_b,h_offset);
   Check_Kernel("Solve");
   printf("Ran Solve\n");
-lk_max_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_b,d_lk, d_l, d_w);
+  lk_max_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_b,d_lk, d_l, d_w);
   Check_Kernel("Max");
   CUDA_CHK(cudaMemcpy, (h_lk, d_lk, sizeof(FPT)*outerloop, cudaMemcpyDeviceToHost));
   CUDA_CHK(cudaEventRecord, (evt_stop, 0));
@@ -413,6 +413,7 @@ lk_max_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_b,d_lk,
       lk_max=h_lk[i];
       printf("New LKMax:%d,(%g)\n",i,h_lk[i]);
     
+    } 
       //printf("%.3lf|",h_x[i*MAT1]);
       for (unsigned int j=0; j<MAT1; j++){
         for (unsigned int k=0;k<MAT1; k++){
@@ -420,7 +421,6 @@ lk_max_permutations<<<blocksPerGrid_lksolve,threadsPerBlock_lksolve>>>(d_b,d_lk,
         }
       puts("\n");
       }
-    } 
   }
   printf("time: %g s\nlkmax:%g@%d\n", one_time,h_lk[lk],lk);
 
