@@ -45,9 +45,11 @@ __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int pi,pj,tmp;
     FPT max;
     FPT ftmp;
+    #pragma unroll
     for (k=0;k<n;k++){
         pi=-1,pj=-1,max=FAILVALUE;
         //find pivot in submatrix a(k:n,k:n)
+        #pragma unroll
         for (i=k;i<n;i++) {
             for (j=k;j<n;j++) {
                 if (fabs(a(i,j))>max){
@@ -100,12 +102,14 @@ __device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
     FPT ftmp;
     FPT xtmp[MAT1];
     //Swap rows (x=Px)
+    #pragma unroll
     for (i=0; i<MAT1; i++){
         pi=p[i];
         xtmp[i]=x[pi]; //value that should be here
     }
     //Lx=x
     //partially taken from Sourcebook on Parallel Computing p577
+    #pragma unroll
     for (i=0;i<MAT1;i++){
         ftmp=xtmp[i];
         for (j=0;j<i;j++)
@@ -125,6 +129,7 @@ __device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
 
     //Last bit
     //solves x=Qy
+    #pragma unroll
     for (i=0;i<MAT1;i++){
         pi=q[i];
         x[i]=xtmp[pi];
@@ -136,6 +141,7 @@ __global__ void solve(FPT *A, FPT *B){
   int id= blockDim.x*blockIdx.x + threadIdx.x;
   int p_pivot[MAT1],q_pivot[MAT1];
   if ((GO==1)){
+    #pragma unroll
     for (int i=0;i<MAT1;i++) {
         p_pivot[i]=q_pivot[i]=i;
     }
@@ -163,11 +169,13 @@ __global__ void lk_prepare_permutations(FPT *A, FPT *B, int offset){
     
     //rebase myid to base (MBPT)
     //Unfortunately theres no way around every thread working out its own bitload :( 
+    #pragma unroll
     for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
     if (bitbangval==0){
+      #pragma unroll
       for (i=0; i<MAT1; i++){
           //Generate a row of A for this permutation and victim y
           A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
@@ -191,6 +199,7 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
     int i;
 
     //simulate bitload generation for in-place id check, and pivots at the same time
+    #pragma unroll
     for (i=0; i<MAT1; i++){
         bitbangval/=MBPT;
         p_pivot[i]=q_pivot[i]=i;
@@ -211,11 +220,13 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
     int bitload[MAT1], i, broken=0;
     
     //At this point, B is populated with the P results.
+    #pragma unroll
     for (i=0;i<MAT1;i++){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
     if (bitbangval==0){//check for out of range id's
+        #pragma unroll
         for (i=0;i<MAT1;i++){
            //Need to check for negative B's
             if (P[id*MAT1+i]<0)
@@ -245,6 +256,7 @@ class GPU(object):
         #Work out some context sensitive runtime parameters
         mydev=cuda.Context.get_device()
         self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        self.threadmax/=2
         compute=mydev.compute_capability()
         if (compute>=(1,3) and adapt):
             self.type=np.double
@@ -261,7 +273,7 @@ class GPU(object):
                                failvalue=self.type(-sys.maxint),
                                floatingpointtype=typestr
                                )
-        self.kernels = SourceModule(r_kernels,arch="sm_13")
+        self.kernels = SourceModule(r_kernels)
         self.init=time()
         
             
