@@ -45,11 +45,11 @@ __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int pi,pj,tmp;
     FPT max;
     FPT ftmp;
-    #pragma unroll
+    
     for (k=0;k<n;k++){
         pi=-1,pj=-1,max=FAILVALUE;
         //find pivot in submatrix a(k:n,k:n)
-        #pragma unroll
+        
         for (i=k;i<n;i++) {
             for (j=k;j<n;j++) {
                 if (fabs(a(i,j))>max){
@@ -102,14 +102,14 @@ __device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
     FPT ftmp;
     FPT xtmp[MAT1];
     //Swap rows (x=Px)
-    #pragma unroll
+    
     for (i=0; i<MAT1; i++){
         pi=p[i];
         xtmp[i]=x[pi]; //value that should be here
     }
     //Lx=x
     //partially taken from Sourcebook on Parallel Computing p577
-    #pragma unroll
+    
     for (i=0;i<MAT1;i++){
         ftmp=xtmp[i];
         for (j=0;j<i;j++)
@@ -129,7 +129,7 @@ __device__ void d_solve(FPT *a, FPT *x, int *p, int *q){
 
     //Last bit
     //solves x=Qy
-    #pragma unroll
+    
     for (i=0;i<MAT1;i++){
         pi=q[i];
         x[i]=xtmp[pi];
@@ -141,7 +141,7 @@ __global__ void solve(FPT *A, FPT *B){
   int id= blockDim.x*blockIdx.x + threadIdx.x;
   int p_pivot[MAT1],q_pivot[MAT1];
   if ((GO==1)){
-    #pragma unroll
+    
     for (int i=0;i<MAT1;i++) {
         p_pivot[i]=q_pivot[i]=i;
     }
@@ -159,7 +159,7 @@ __global__ void solve(FPT *A, FPT *B){
 //where MBPT^(N-1)>65535, use offset to continue
 //thread.y's collaboratively populate A and B for their id
 //This probably hammers memory...
-__global__ void lk_prepare_permutations(FPT *A, FPT *B, int offset){
+__global__ void lk_prepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
     int j=threadIdx.x;
     int myid=blockIdx.x;
@@ -169,21 +169,22 @@ __global__ void lk_prepare_permutations(FPT *A, FPT *B, int offset){
     
     //rebase myid to base (MBPT)
     //Unfortunately theres no way around every thread working out its own bitload :( 
-    #pragma unroll
+    
     for (i=0; i<MAT1; i++){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
     if (bitbangval==0){
-      #pragma unroll
+      
       for (i=0; i<MAT1; i++){
           //Generate a row of A for this permutation and victim y
-          A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
+          A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
+          //A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
       }
     }
     //Generate an item of B
-    //B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
-    B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/tex2D(XTG,j,j);
+    B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
+    //B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/tex2D(XTG,j,j);
 
     //Repair an item of A
     //__syncthreads(); //Seems to help with memory coalescing
@@ -199,7 +200,7 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
     int i;
 
     //simulate bitload generation for in-place id check, and pivots at the same time
-    #pragma unroll
+    
     for (i=0; i<MAT1; i++){
         bitbangval/=MBPT;
         p_pivot[i]=q_pivot[i]=i;
@@ -220,13 +221,13 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
     int bitload[MAT1], i, broken=0;
     
     //At this point, B is populated with the P results.
-    #pragma unroll
+    
     for (i=0;i<MAT1;i++){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
     if (bitbangval==0){//check for out of range id's
-        #pragma unroll
+        
         for (i=0;i<MAT1;i++){
            //Need to check for negative B's
             if (P[id*MAT1+i]<0)
@@ -303,12 +304,11 @@ class GPU(object):
         Ncombinations=pow(self.mbpt,self.N)
         
         global_lk_maxid=-1
-        gridmax=65535/2
+        gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
-        monitor=97
+        monitor=-1
 
         #Check if this is getting hairy and assign grid/block dimensions
-        (free,total)=cuda.mem_get_info()
         default_grid=(gridsize,1)
         N_block=(self.N,1,1)
         threadshare_grid=(int(max(np.floor(gridsize/(self.threadmax)),1)),1)
@@ -319,11 +319,11 @@ class GPU(object):
         d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(self.type).nbytes)
         d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(self.type).nbytes)
         d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(self.type).nbytes)
-        #d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
-        #cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(self.type).nbytes)
+        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(self.type))
         #Do XTG as a shared texture.
-        t_XTG=self.kernels.get_texref("XTG");
-        cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
+        #t_XTG=self.kernels.get_texref("XTG");
+        #cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
         #lambdas
         d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
         #w
@@ -339,9 +339,10 @@ class GPU(object):
         
             #Go prepare A and B
             prepare=self.kernels.get_function("lk_prepare_permutations")
-            #if (k>monitor): self.meminfo(prepare,k,o)
+            if (k>monitor): self.meminfo(prepare,k,o,N_block,"Prep")
             try:
-                prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)
+                #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)
+                prepare(d_A,d_B,d_XTG,offset,grid=default_grid,block=N_block)
                 cuda.Context.synchronize()
             except pycuda._driver.LaunchError:
                 util.log.error("Failed on Prepare, Tone %d: XTG:%s"%(k,str(xtalk_gain)))
@@ -359,7 +360,7 @@ class GPU(object):
 
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
-            #if (k>monitor): self.meminfo(lksolve,k,o,threadmax)
+            if (k>monitor): self.meminfo(lksolve,k,o,threadshare_block,"Solve")
             try:
                 lksolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
                 cuda.Context.synchronize()
@@ -371,6 +372,7 @@ class GPU(object):
             
             #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
+            if (k>monitor): self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
                 cuda.Context.synchronize()
                 lkmax(d_B,d_lk,d_lambdas,d_w,grid=threadshare_grid,block=threadshare_block)
@@ -393,7 +395,7 @@ class GPU(object):
                 cuda.memcpy_dtoh(B,d_B)
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
-                if False:
+                if True:
                     util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
 
         #end for
@@ -404,20 +406,23 @@ class GPU(object):
         d_lk.free()
         d_lambdas.free()
         d_w.free()
+
+        d_XTG.free()
         #If this works I'm gonna cry
         #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
         return (P,bitload)
         
-    def meminfo(self,kernel,k=-1,o=-1,threads=1):
+    def meminfo(self,kernel,k=-1,o=-1,threads=[],name=""):
+        (free,total)=cuda.mem_get_info()
         shared=kernel.shared_size_bytes
         regs=kernel.num_regs
         local=kernel.local_size_bytes
         const=kernel.const_size_bytes
         mbpt=kernel.max_threads_per_block
         devdata=ctools.DeviceData()
-        occupancy=ctools.OccupancyRecord(devdata,threads, shared_mem=shared,registers=regs)
+        occupancy=ctools.OccupancyRecord(devdata,threads[0], shared_mem=shared,registers=regs)
 
-        util.log.info("""(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,OC:%f"""%(k,o,local,shared,regs,const,mbpt,occupancy.occupancy))
+        util.log.info("%s(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,T:%d,OC:%f,Free:%d"%(name,k,o,local,shared,regs,const,mbpt,threads[0],occupancy.occupancy,(free*100)/total))
         
     def gpu_test(self):
         self.test=time()
