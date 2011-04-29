@@ -246,7 +246,11 @@ class GPU(object):
         #Work out some context sensitive runtime parameters
         mydev=cuda.Context.get_device()
         self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
-        self.threadmax/=2
+        self.warpsize=mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
+        self.mps=mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
+        self.blockpermp=32
+        self.gridmax=min(self.blockpermp*self.mps,65535)
+
         compute=mydev.compute_capability()
         if (compute>=(1,3) and adapt):
             self.type=np.double
@@ -293,24 +297,31 @@ class GPU(object):
         Ncombinations=pow(self.mbpt,self.N)
         
         global_lk_maxid=-1
-        gridmax=65535/2
+        gridmax=65535
         gridsize=min(pow(self.mbpt,(self.N)),gridmax)
         monitor=224
 
         #Check if this is getting hairy and assign grid/block dimensions
-        (free,total)=cuda.mem_get_info()
-        N_grid=(gridsize,1)
-        N_block=(self.N,1,1)
-        threadshare_grid=(int(max(np.floor(gridsize/(self.threadmax)),1)),1)
-        threadshare_block=(self.threadmax,1,1)
+        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
+        warpperblock=max(1,min(2,warpcount))
+        threadCount=self.warpsize * warpperblock
+        blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
+        #util.log.info("Tone:%d\nWarpcount:%d\nWarpPer:%d\nThreads:%d,Blocks:%d"%(k,warpcount,warpperblock,threadCount,blockCount))
 
+        #How many individual lk's
+        memdim=blockCount*threadCount
+
+        N_grid=((memdim),1)
+        N_block=(self.N,1,1)
+        threadshare_grid=(blockCount,1)
+        threadshare_block=(threadCount,1,1)
 
         #Memories that are presistent
-        d_A=cuda.mem_alloc(np.zeros((gridsize*self.N*self.N)).astype(self.type).nbytes)
-        d_B=cuda.mem_alloc(np.zeros((gridsize*self.N)).astype(self.type).nbytes)
-        d_lk=cuda.mem_alloc(np.empty((gridsize)).astype(self.type).nbytes)
-        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(np.float32).nbytes)
-        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(np.float32))
+        d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
+        d_B=cuda.mem_alloc(np.zeros((memdim*self.N)).astype(self.type).nbytes)
+        d_lk=cuda.mem_alloc(np.empty((memdim)).astype(self.type).nbytes)
+        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(self.type).nbytes)
+        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(self.type))
         #Do XTG as a shared texture.
         #t_XTG=self.kernels.get_texref("XTG");
         #cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
@@ -322,8 +333,9 @@ class GPU(object):
         cuda.memcpy_htod(d_w,w.astype(self.type))
                 
         if False:
+            (free,total)=cuda.mem_get_info()
             util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
-        for o in range(0,Ncombinations,gridsize):
+        for o in range(0,Ncombinations,memdim):
             #offset 
             offset = np.int32(o);
         
@@ -335,18 +347,19 @@ class GPU(object):
                 prepare(d_A,d_B,d_XTG,offset,grid=N_grid,block=N_block)
                 cuda.Context.synchronize()
             except pycuda._driver.LaunchError:
-                util.log.error("Failed on Prepare, Tone %d: XTG:%s"%(k,str(xtalk_gain)))
+                util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise
             
-            if False:
+            if True:
                 #Bring AB results back to host
-                A=cuda.from_device(d_A,(gridsize,self.N,self.N),self.type)
-                B=cuda.from_device(d_B,(gridsize,self.N),self.type)
+                A=cuda.from_device(d_A,(memdim,self.N,self.N),self.type)
+                B=cuda.from_device(d_B,(memdim,self.N),self.type)
                 np.save("A",A)
                 np.save("B",B)
                 for g in [223]:
                     P=np.linalg.solve(A[g],B[g].T)
-                    util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
+                    if not (numpy.isfinite(P)).all():
+                        util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
 
             #Go Solve
             lksolve=self.kernels.get_function("solve_permutations")
@@ -355,23 +368,24 @@ class GPU(object):
                 lksolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on Solve,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
+                util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise            
 
             #Inter Kernel Housekeeping: For the amount of global memory being used, freeing isn't worth it
             
             #Go Find the Max
             lkmax=self.kernels.get_function("lk_max_permutations")
+            if (k>monitor): self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
                 cuda.Context.synchronize()
                 lkmax(d_B,d_lk,d_lambdas,d_w,grid=threadshare_grid,block=threadshare_block)
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nBlockDim:%s,GridDim:%s"%(k,str(xtalk_gain),str(threadshare_grid),str(threadshare_block)))
+                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain),str(threadshare_grid),str(threadshare_block)))
                 raise
 
             #Bring LK results and power back to host
-            lk=np.empty((gridsize)).astype(self.type)
+            lk=np.empty((memdim)).astype(self.type)
             cuda.Context.synchronize()
             cuda.memcpy_dtoh(lk,d_lk)
             
@@ -381,7 +395,7 @@ class GPU(object):
             #Hopefully this stuff goes on in the background
 
             if lk_maxid>global_lk_maxid:
-                B=np.empty((gridsize,self.N),self.type)
+                B=np.empty((memdim,self.N),self.type)
                 cuda.memcpy_dtoh(B,d_B)
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
@@ -396,6 +410,8 @@ class GPU(object):
         d_lk.free()
         d_lambdas.free()
         d_w.free()
+
+        d_XTG.free()
         #If this works I'm gonna cry
         #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
         return (P,bitload)
