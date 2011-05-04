@@ -35,7 +35,7 @@ if options.cache and os.path.isfile(rawdir+options.scenarioname+'-cache.npy'):
     log.info("Using Cached PSD values. This is very dangerous")
     options.cache=rawdir+options.scenarioname+'-cache.npy'    
 
-bundle = Bundle(network_file=options.network,K=options.K,scenarioname=options.scenarioname, cachefile=options.cache)
+bundle = Bundle(network_file=options.network,K=options.K,scenarioname=options.scenarioname, cachefile=options.cache, useGPU=options.gpu)
 algos={"OSB":OSB,"MIPB":MIPB}
 
 

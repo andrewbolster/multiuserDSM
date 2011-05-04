@@ -31,7 +31,7 @@ class Bundle(object):
     NOISE=dbmhz_to_watts(-140)
     MAXBITSPERTONE=15
     
-    def __init__(self,network_file="",K=224,scenarioname="NoScenario",cachefile=False):
+    def __init__(self,network_file="",K=224,scenarioname="NoScenario",cachefile=False,useGPU=False):
         self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
@@ -71,8 +71,9 @@ class Bundle(object):
         finally:
             self.N = len(self.lines)
             log.info("Successfully read %d lines from %s"%(self.N,network_file))
-        
-        self.gpu=GPU(self)
+
+        if(useGPU):
+            self.gpu=GPU(self)
 
 
         log.info("Calculating the channel matrix for %d channels"%self.K)

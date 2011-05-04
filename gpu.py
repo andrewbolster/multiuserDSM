@@ -9,14 +9,17 @@ from time import time
 import sys
 
 import utility as util
-
-import pycuda.autoinit
-import pycuda.driver as cuda
-import pycuda.tools as ctools
+try:
+    import pycuda.autoinit
+    import pycuda.driver as cuda
+    import pycuda.tools as ctools
+    from pycuda.compiler import SourceModule
+    from pycuda.gpuarray import GPUArray
+    anythingbroken=False
+except ImportError:
+    anythingbroken=True
 
 import numpy
-from pycuda.compiler import SourceModule
-from pycuda.gpuarray import GPUArray
 from jinja2 import Template
 
 #Control how smart you want to be
@@ -235,6 +238,8 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
 
 class GPU(object):
     def __init__(self,bundle):
+        if anythingbroken:
+            util.log.error("GPU imports failed miserably")
         self.start=time()
         self.bundle=bundle
         self.N=self.bundle.N
