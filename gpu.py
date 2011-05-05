@@ -364,7 +364,7 @@ class GPU(object):
                 util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise
             
-            if True:
+            if False:
                 #Bring AB results back to host
                 A=cuda.from_device(d_A,(memdim,self.N,self.N),self.type)
                 B=cuda.from_device(d_B,(memdim,self.N),self.type)
