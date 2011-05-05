@@ -23,7 +23,7 @@ import numpy
 from jinja2 import Template
 
 #Control how smart you want to be
-adapt=False
+adapt=True
 
 t_kernels=Template("""
 #include <pycuda-helpers.hpp>
@@ -171,7 +171,7 @@ __global__ void lk_prepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
-    if (myid<MAXID){
+    if (myid+offset<MAXID){
       for (i=0; i<MAT1; i++){
           //Generate a row of A for this permutation and victim y
           A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
@@ -201,7 +201,7 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
         p_pivot[i]=q_pivot[i]=i;
     }
     //Stopper for invalid id's (where bitcombinations is less than maximum blocksize}
-    if (id<MAXID){
+    if (id+offset<MAXID){
         //do the magic
         d_pivot_decomp(&A[id*MAT2],&p_pivot[0],&q_pivot[0]);
         d_solve(&A[id*MAT2],&B[id*MAT1],&p_pivot[0],&q_pivot[0]);
@@ -209,7 +209,7 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
 }
 
 //Finally Calculate the LK_Max_permutations
-__global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
+__global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w, int offset){
     int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id;
     FPT lk=0;
@@ -220,7 +220,7 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w){
         bitload[i]=bitbangval%MBPT;
         bitbangval/=MBPT;
     }
-    if (id<MAXID){//check for out of range id's
+    if (id+offset<MAXID){//check for out of range id's
         for (i=0;i<MAT1;i++){
            //Need to check for negative B's
             if (P[id*MAT1+i]<0)
@@ -275,7 +275,7 @@ class GPU(object):
                                maxbitspertone=self.mbpt,
                                failvalue=self.type(-sys.maxint),
                                floatingpointtype=typestr,
-                               maxid=pow(self.mbpt,self.N)
+                               maxid=pow(self.mbpt,self.N)-1
                                )
         self.kernels = SourceModule(r_kernels)
         self.init=time()
@@ -304,12 +304,14 @@ class GPU(object):
     
     def lkmax(self,lambdas,w,xtalk_gain,k):
         #Number of expected permutations
-        Ncombinations=pow(self.mbpt,self.N)
+        Ncombinations=pow(self.mbpt,self.N)-1
         
         global_lk_maxid=-1
         gridmax=65535
-        monitor=225
+        monitor=0
         gpudiag=False
+        prepdiag=False
+        combodiag=True
         gridsize=min(Ncombinations,self.gridmax)
 
         #Check if this is getting hairy and assign grid/block dimensions
@@ -317,7 +319,6 @@ class GPU(object):
         warpperblock=max(1,min(2,warpcount))
         threadCount=self.warpsize * warpperblock
         blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
-        #util.log.info("Tone:%d\nWarpcount:%d\nWarpPer:%d\nThreads:%d,Blocks:%d"%(k,warpcount,warpperblock,threadCount,blockCount))
 
         #How many individual lk's
         memdim=blockCount*threadCount
@@ -326,9 +327,6 @@ class GPU(object):
         N_block=(self.N,1,1)
         threadshare_grid=(blockCount,1)
         threadshare_block=(threadCount,1,1)
-        if (self.print_config):
-            util.log.info("Memdim:%d,blockCount:%d,threadCount:%d"%(memdim,blockCount,threadCount))
-            self.print_config=False
 
         #Memories that are presistent
         d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
@@ -345,10 +343,19 @@ class GPU(object):
         d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
         cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
         cuda.memcpy_htod(d_w,w.astype(self.type))
-                
-        if False:
-            (free,total)=cuda.mem_get_info()
-            util.log.info("Working on %d combinations for K:%d, Mem %d%% Free"%(Ncombinations,k,(free*100/total)))
+        
+
+        #Print some information regarding the thread execution structure
+        if (self.print_config):
+            #Some info about combinations being run
+            for o in range(0,Ncombinations,memdim):
+                if combodiag:
+                    (free,total)=cuda.mem_get_info()
+                    util.log.info("Working on %d-%d combinations of %d for K:%d, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,(free*100/total)))
+            util.log.info("Memdim:%d,blockCount:%d,threadCount:%d,warpCount:%d,warpperblock:%d"%(memdim,blockCount,threadCount,warpcount,warpperblock))
+            util.log.info("Warpsize:%d,Gridmax:%d"%(self.warpsize,self.gridmax))
+            self.print_config=False
+        
         for o in range(0,Ncombinations,memdim):
             #offset 
             offset = np.int32(o);
@@ -364,7 +371,7 @@ class GPU(object):
                 util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise
             
-            if False:
+            if prepdiag:
                 #Bring AB results back to host
                 A=cuda.from_device(d_A,(memdim,self.N,self.N),self.type)
                 B=cuda.from_device(d_B,(memdim,self.N),self.type)
@@ -391,8 +398,7 @@ class GPU(object):
             lkmax=self.kernels.get_function("lk_max_permutations")
             if (k>monitor) and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
-                cuda.Context.synchronize()
-                lkmax(d_B,d_lk,d_lambdas,d_w,grid=threadshare_grid,block=threadshare_block)
+                lkmax(d_B,d_lk,d_lambdas,d_w,offset,grid=threadshare_grid,block=threadshare_block)
                 cuda.Context.synchronize()
             except:
                 util.log.error("Failed on LKMax,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain),str(threadshare_grid),str(threadshare_block)))
@@ -411,13 +417,14 @@ class GPU(object):
             if lk_maxid>global_lk_maxid:
                 B=np.empty((memdim,self.N),self.type)
                 cuda.memcpy_dtoh(B,d_B)
+                cuda.Context.synchronize()
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
+                bitload=self.bitload_from_id(global_lk_maxid)
                 if (k>monitor):
-                    util.log.info("Tone:%d,lkmaxid:%d,P:%s"%(k,lk_maxid,P))
+                    util.log.info("GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P)))
 
         #end for
-        bitload=self.bitload_from_id(global_lk_maxid)
         
         d_A.free()
         d_B.free()
@@ -427,7 +434,6 @@ class GPU(object):
 
         d_XTG.free()
         #If this works I'm gonna cry
-        #print "GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P))
         return (P,bitload)
         
     def meminfo(self,kernel,k=-1,o=-1,threads=[],name=""):
