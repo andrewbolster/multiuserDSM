@@ -7,8 +7,9 @@ import numpy as np
 import math
 import sys
 import logging
-import multiprocessing
 import hashlib
+import multiprocessing
+
 
 #Local Imports
 from bundle import Bundle
@@ -45,8 +46,9 @@ class OSB(Algorithm):
         self.rate_targets=np.tile(self.defaults['rate_target'], self.bundle.N)
         self.power_budget=np.tile(self.defaults['p_budget'], self.bundle.N)
         
-        #Create multithreading pool
-        self.threadpool=multiprocessing.Pool(multiprocessing.cpu_count())
+        if not self.useGPU:
+            #Create multithreading pool
+            self.threadpool=multiprocessing.Pool(multiprocessing.cpu_count())
             
         self.preamble()
         #lambda values and weights are dim(N)

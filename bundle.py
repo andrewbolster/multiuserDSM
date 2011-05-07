@@ -85,6 +85,11 @@ class Bundle(object):
         self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
         self.tofile(scenarioname)
         
+    '''
+    Deconstructor
+    '''
+    def __del__(self):
+        del self.gpu
 
     '''
     Return GAMMA and NOISE (for GPU stuff)
@@ -360,8 +365,8 @@ class Bundle(object):
     
         #Everyone loves linear algebra...dont they?
         if (gpu):
-            P=self.gpu.solve(A,B,224) #FIXME currently useless and disabled
-            log.debug("GPU Outside Scope:%d:%s:%s"%(k,str(P),str(bitload)))
+            log.info("GPU Outside Scope:%d:%s:%s"%(k,str(P),str(bitload)))
+            P=self.gpu.solve(A,B,224)
         else:
             P=np.linalg.solve(A,B)
         
