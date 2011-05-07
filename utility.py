@@ -455,7 +455,15 @@ def psd2str(psd):
 class CostValue(object):
     def __set__(self,obj,val):
         self.val= val if val > 0 else sys.maxint
-   
+
+#bitload from int(used for lk max)
+def bitload_from_id(id,N,mbpt):
+    bitload=np.zeros(N)
+    for i in range(N):
+        bitload[i]=id%mbpt;
+        id/=mbpt;
+    return bitload
+
 if __name__ == "__main__":
 
     test_len=3000

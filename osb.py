@@ -7,7 +7,7 @@ import numpy as np
 import math
 import sys
 import logging
-import multiprocessing, threading
+import multiprocessing
 import hashlib
 
 #Local Imports
@@ -179,19 +179,15 @@ class OSB(Algorithm):
     def optimise_p(self,lambdas):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
         if (self.useGPU):
+            '''
             #singledevice GPU execution
             if len(self.bundle.gpus)==1:
                 for k in range(self.bundle.K):
                     #self.optimise_p_k(lambdas,k,k+1)
                     (self.p[k],self.b[k])=self.bundle.gpus[0].lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
+            '''
             #Multidevice GPU execution
-            else:
-                gpuargslist=[]
-                for k in xrange(self.bundle.K):
-                    gpuargslist.append([lambdas,self.w,self.bundle.xtalk_gain[k],k])
-                results=self.lk_multigpu_map(gpuargslist,self.bundle.gpus)
-                self.p=np.asarray([r[0] for r in results])
-                self.b=np.asarray([r[1] for r in results])
+            (self.p,self.b)=self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain)
         else:
         #Multiprocessing on CPU
             #for each subchannel

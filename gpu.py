@@ -4,12 +4,13 @@ Created on 12 Mar 2011
 @author: bolster
 '''
 import numpy as np
-import multiprocessing
+import threading, Queue, collections, thread
 from time import time
 import sys
 
 import utility as util
 try:
+    import pycuda
     import pycuda.driver as cuda
     import pycuda.tools as ctools
     from pycuda.compiler import SourceModule
@@ -39,8 +40,6 @@ t_kernels=Template("""
 
 #define GO 1
 #define NOGO 0
-
-texture<float,2,cudaReadModeElementType> XTG;
 
 __device__ void d_pivot_decomp(FPT *a, int *p, int *q){
     int i,j,k;
@@ -239,7 +238,7 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w, int o
 """)
 
 class GPU(object):
-    def __init__(self,bundle,thread=0):
+    def __init__(self,bundle):
         if anythingbroken:
             util.log.error("GPU imports failed miserably")
         self.bundle=bundle
@@ -251,19 +250,26 @@ class GPU(object):
         self.print_config=True
 
         #Set up context for initial setup
-        self.ctx=cuda.Device(thread).make_context()
-        self.mydev=self.ctx.get_device()
-        self.ctx.push()
-        util.log.info("Set up device %d:%s"%(thread,self.mydev.name()))
+        cuda.init()
+        mydev=cuda.Device(0)
+        self.devcount=mydev.count()
+        ctx=mydev.make_context()
         
-        #Work out some context sensitive runtime parameters
-        self.threadmax=self.mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
-        self.warpsize=self.mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
-        self.mps=self.mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
+        #Work out some context sensitive runtime parameters (currently assumes homogenous gpus)
+        compute=mydev.compute_capability()
+        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        self.warpsize=mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
+        self.mps=mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
         self.blockpermp=32
         self.gridmax=min(self.blockpermp*self.mps,65535)
+        
+        ctx.pop()
+        ctx.detach()
+        del ctx
+        del mydev
 
-        compute=self.mydev.compute_capability()
+        
+        #Some more hardware based intelligence
         if (compute>=(1,3) and adapt):
             self.type=np.double
             typestr="double"
@@ -271,8 +277,8 @@ class GPU(object):
             self.type=np.float32
             typestr="float"
             
-            
-        r_kernels=t_kernels.render(matrixN=self.N,
+        #Pre-compile kernels
+        self.r_kernels=t_kernels.render(matrixN=self.N,
                                channelgap=pow(10,(self.gamma+3)/10), #19.7242
                                noise=self.noise, #4.313e-14
                                maxbitspertone=self.mbpt,
@@ -280,12 +286,15 @@ class GPU(object):
                                floatingpointtype=typestr,
                                maxid=pow(self.mbpt,self.N)-1
                                )
-        self.kernels = SourceModule(r_kernels)
+        
+        
+        #Set up threading queues
+        self.argqueue=Queue.Queue()
+        self.resqueue=Queue.Queue()
         
     #destructor (for CUDA tidyness)
     def __del__(self):
-        self.ctx.pop()
-        self.ctx.detach()
+        pass
 
     #Arbitrary solver for destructive Ax=x
     def solve(self,a,b,max):
@@ -302,140 +311,6 @@ class GPU(object):
         cuda.memcpy_dtoh(h_b,d_b)
         self.done=time()
         return h_b
-    
-    def lkmax(self,lambdas,w,xtalk_gain,k):
-        #Number of expected permutations
-        Ncombinations=pow(self.mbpt,self.N)-1
-        
-        global_lk_maxid=-1
-        gridmax=65535
-        monitor=0
-        gpudiag=False
-        prepdiag=False
-        combodiag=True
-        gridsize=min(Ncombinations,self.gridmax)
-
-        #Check if this is getting hairy and assign grid/block dimensions
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
-        warpperblock=max(1,min(2,warpcount))
-        threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
-
-        #How many individual lk's
-        memdim=blockCount*threadCount
-
-        N_grid=((memdim),1)
-        N_block=(self.N,1,1)
-        threadshare_grid=(blockCount,1)
-        threadshare_block=(threadCount,1,1)
-
-        #Memories that are presistent
-        d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
-        d_B=cuda.mem_alloc(np.zeros((memdim*self.N)).astype(self.type).nbytes)
-        d_lk=cuda.mem_alloc(np.empty((memdim)).astype(self.type).nbytes)
-        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(self.type).nbytes)
-        cuda.memcpy_htod(d_XTG,xtalk_gain.astype(self.type))
-        #Do XTG as a shared texture.
-        #t_XTG=self.kernels.get_texref("XTG");
-        #cuda.matrix_to_texref(xtalk_gain.astype(np.float32).copy(),t_XTG, order="F") #F indicates FORTRAN matrix addressing(column major)
-        #lambdas
-        d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
-        #w
-        d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
-        cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
-        cuda.memcpy_htod(d_w,w.astype(self.type))
-        
-
-        #Print some information regarding the thread execution structure
-        if (self.print_config):
-            #Some info about combinations being run
-            for o in range(0,Ncombinations,memdim):
-                if combodiag:
-                    (free,total)=cuda.mem_get_info()
-                    util.log.info("Working on %d-%d combinations of %d for K:%d, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,(free*100/total)))
-            util.log.info("Memdim:%d,blockCount:%d,threadCount:%d,warpCount:%d,warpperblock:%d"%(memdim,blockCount,threadCount,warpcount,warpperblock))
-            util.log.info("Warpsize:%d,Gridmax:%d"%(self.warpsize,self.gridmax))
-            self.print_config=False
-        
-        for o in range(0,Ncombinations,memdim):
-            #offset 
-            offset = np.int32(o);
-        
-            #Go prepare A and B
-            prepare=self.kernels.get_function("lk_prepare_permutations")
-            if (k>monitor) and gpudiag: self.meminfo(prepare,k,o,N_block,"Prep")
-            try:
-                #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)
-                prepare(d_A,d_B,d_XTG,offset,grid=N_grid,block=N_block)
-                cuda.Context.synchronize()
-            except pycuda._driver.LaunchError:
-                util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
-                raise
-            
-            if prepdiag:
-                #Bring AB results back to host
-                A=cuda.from_device(d_A,(memdim,self.N,self.N),self.type)
-                B=cuda.from_device(d_B,(memdim,self.N),self.type)
-                np.save("A",A)
-                np.save("B",B)
-                for g in [223]:
-                    P=np.linalg.solve(A[g],B[g].T)
-                    if not (numpy.isfinite(P)).all():
-                        util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
-
-            #Go Solve
-            lksolve=self.kernels.get_function("solve_permutations")
-            if (k>monitor) and gpudiag: self.meminfo(lksolve,k,o,threadshare_block,"Solve")
-            try:
-                lksolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
-                cuda.Context.synchronize()
-            except:
-                util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
-                raise            
-
-            #Inter Kernel Housekeeping: For the amount of global memory being used, freeing isn't worth it
-            
-            #Go Find the Max
-            lkmax=self.kernels.get_function("lk_max_permutations")
-            if (k>monitor) and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
-            try:
-                lkmax(d_B,d_lk,d_lambdas,d_w,offset,grid=threadshare_grid,block=threadshare_block)
-                cuda.Context.synchronize()
-            except:
-                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain),str(threadshare_grid),str(threadshare_block)))
-                raise
-
-            #Bring LK results and power back to host
-            lk=np.empty((memdim)).astype(self.type)
-            cuda.Context.synchronize()
-            cuda.memcpy_dtoh(lk,d_lk)
-            
-            #find the max lk
-            lk_maxid=np.argmax(lk)
-            
-            #Hopefully this stuff goes on in the background
-
-            if lk_maxid>global_lk_maxid:
-                B=np.empty((memdim,self.N),self.type)
-                cuda.memcpy_dtoh(B,d_B)
-                cuda.Context.synchronize()
-                P=B[lk_maxid]
-                global_lk_maxid=lk_maxid
-                bitload=self.bitload_from_id(global_lk_maxid)
-                if (k>monitor):
-                    util.log.info("GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P)))
-
-        #end for
-        
-        d_A.free()
-        d_B.free()
-        d_lk.free()
-        d_lambdas.free()
-        d_w.free()
-
-        d_XTG.free()
-        #If this works I'm gonna cry
-        return (P,bitload)
 
     def meminfo(self,kernel,k=-1,o=-1,threads=[],name=""):
         (free,total)=cuda.mem_get_info()
@@ -458,14 +333,217 @@ class GPU(object):
         
         print("Times:\nInit:%f\nGo:%f\nExec:%f"%(self.init-self.start,self.go-self.test,self.done-self.go))
         print b
+      
+    def lkmax(self,lambdas,w,xtalk_gain):
+        try:
+            #spawn a threadpool
+            threadpool = [None]*self.devcount
+            util.log.info("Spawning %d GPU Threads"%self.devcount)
+            for dev in range(len(threadpool)):
+                threadpool[dev] = lkmax_thread(self.argqueue,self.resqueue,self,device=dev)
+                threadpool[dev].setDaemon(True)
+                threadpool[dev].start()
+                
+            #construct the queue
+            for k in range(self.K):
+                self.argqueue.put((lambdas,w,xtalk_gain[k],k))
+            
+            #Wait for everything to end
+            self.argqueue.join()
+            
+            #kill threads
+            for dev in range(len(threadpool)):
+                del threadpool[dev]
+                  
+            p=np.zeros((self.K,self.N)) #per tone per user power in watts
+            b=np.asmatrix(np.zeros((self.K,self.N)))        
+            while True:
+                try:
+                    (k,power,bitload)=self.resqueue.get_nowait()
+                except Queue.Empty:
+                    break
+
+                p[k]=power
+                b[k]=bitload
+                #util.log.info("%d,%s,%s"%(k,bitload,power))
+            return (p,b)
+        except(KeyboardInterrupt,SystemExit):
+            sys.exit(1)
+        except pycuda._driver.MemoryError:
+            util.log.error("Memory Error: Results tainted, quitting incase")
+            raise
+            sys.exit(1)
+        
+        
+class lkmax_thread(threading.Thread):
+    def __init__(self,argqueue,resqueue,parent,device=0):
+        threading.Thread.__init__(self)
+        self.device=device
+        self.argqueue=argqueue
+        self.resqueue=resqueue
+        self.warpsize=parent.warpsize
+        self.gridmax=parent.gridmax
+        self.N=parent.N
+        self.mbpt=parent.mbpt
+        self.type=parent.type
+        self.print_config=parent.print_config
+        self.r_kernels = parent.r_kernels
+        
+        
+    def run(self):
+        try:
+            #Initialise this device
+            self.dev = cuda.Device(self.device)
+            self.ctx = self.dev.make_context()
+            self.ctx.push()
+        except pycuda._driver.MemoryError:
+            util.log.info("Balls")
+            raise
+            return
+        
+        #Initialise the kernel
+        self.kernels=SourceModule(self.r_kernels)
+        
+        #Number of expected permutations
+        Ncombinations=pow(self.mbpt,self.N)-1
+        
+        global_lk_maxid=-1
+        gridmax=65535
+        monitor=0
+        gpudiag=False
+        prepdiag=False
+        combodiag=True
+        gridsize=min(Ncombinations,self.gridmax)
+
+        #Check if this is getting hairy and assign grid/block dimensions
+        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
+        warpperblock=max(1,min(8,warpcount))
+        threadCount=self.warpsize * warpperblock
+        blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
+
+        #How many individual lk's
+        memdim=blockCount*threadCount
+
+        N_grid=((memdim),1)
+        N_block=(self.N,1,1)
+        threadshare_grid=(blockCount,1)
+        threadshare_block=(threadCount,1,1)
+
+        #Memories that are presistent
+        d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
+        d_B=cuda.mem_alloc(np.zeros((memdim*self.N)).astype(self.type).nbytes)
+        d_lk=cuda.mem_alloc(np.empty((memdim)).astype(self.type).nbytes)
+        d_XTG=cuda.mem_alloc(np.zeros((self.N*self.N)).astype(self.type).nbytes)
+        d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
+        d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
+        
+        #loop to empty queue
+        while self.argqueue.not_empty:
+            #grab args from queue
+            (lambdas,w,xtalk_gain,k)=self.argqueue.get()
+            cuda.memcpy_htod(d_XTG,xtalk_gain.astype(self.type))   
+            cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
+            cuda.memcpy_htod(d_w,w.astype(self.type))
+               
+            #Print some information regarding the thread execution structure
+            if (self.print_config):
+                #Some info about combinations being run
+                for o in range(0,Ncombinations,memdim):
+                    if combodiag:
+                        (free,total)=cuda.mem_get_info()
+                        util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,str(lambdas),(free*100/total)))
+                self.print_config=False
+            
+            for o in range(0,Ncombinations,memdim):
+                #offset 
+                offset = np.int32(o);
+                
+            
+                #Go prepare A and B
+                prepare=self.kernels.get_function("lk_prepare_permutations")
+                try:
+                    #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)
+                    prepare(d_A,d_B,d_XTG,offset,grid=N_grid,block=N_block)
+                    cuda.Context.synchronize()
+                except (pycuda._driver.LaunchError,pycuda._driver.LogicError):
+                    util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(N_grid),str(N_block)))
+                    raise
+
+                if prepdiag:
+                    #Bring AB results back to host
+                    A=cuda.from_device(d_A,(memdim,self.N,self.N),self.type)
+                    B=cuda.from_device(d_B,(memdim,self.N),self.type)
+                    np.save("A",A)
+                    np.save("B",B)
+                    for g in [223]:
+                        P=np.linalg.solve(A[g],B[g].T)
+                        if not (numpy.isfinite(P)).all():
+                            util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
     
-    def bitload_from_id(self,id):
-        bitload=np.zeros(self.N)
-        for i in range(self.N):
-            bitload[i]=id%self.mbpt;
-            id/=self.mbpt;
-        return bitload
+                #Go Solve
+                lksolve=self.kernels.get_function("solve_permutations")
+                try:
+                    lksolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
+                    cuda.Context.synchronize()
+                except:
+                    util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
+                    raise            
     
+                #Inter Kernel Housekeeping: For the amount of global memory being used, freeing isn't worth it
+                
+                #Go Find the Max
+                lkmax=self.kernels.get_function("lk_max_permutations")
+                if (k>monitor) and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
+                try:
+                    lkmax(d_B,d_lk,d_lambdas,d_w,offset,grid=threadshare_grid,block=threadshare_block)
+                    cuda.Context.synchronize()
+                except:
+                    util.log.error("Failed on LKMax,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain),str(threadshare_grid),str(threadshare_block)))
+                    raise
+    
+                #Bring LK results and power back to host
+                lk=np.empty((memdim)).astype(self.type)
+                cuda.Context.synchronize()
+                cuda.memcpy_dtoh(lk,d_lk)
+                
+                #find the max lk
+                lk_maxid=np.argmax(lk)
+                
+                if lk_maxid>global_lk_maxid:
+                    B=np.empty((memdim,self.N),self.type)
+                    cuda.memcpy_dtoh(B,d_B)
+                    cuda.Context.synchronize()
+                    P=B[lk_maxid]
+                    global_lk_maxid=lk_maxid
+                    bitload=util.bitload_from_id(global_lk_maxid,self.N,self.mbpt)
+                    if (k>monitor):
+                        util.log.info("GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P)))
+    
+            #end for
+            self.resqueue.put((k,P,bitload))
+            self.argqueue.task_done()
+        #end queue loop
+        d_A.free()
+        d_B.free()
+        d_lk.free()
+        d_lambdas.free()
+        d_w.free()
+        d_XTG.free()
+        self.ctx.pop()
+        self.ctx.detach()
+        util.log.info("FREE!")
+        #If this works I'm gonna cry
+        
+        
+    def __del__(self):
+        try:
+            #kill the device
+            self.ctx.pop()
+            self.ctx.detach()
+        except AttributeError:
+            pass
+
+
 if __name__ == "__main__":
     gpu=GPU(3)
     gpu.gpu_test()
