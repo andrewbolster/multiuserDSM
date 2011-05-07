@@ -7,7 +7,7 @@ import numpy as np
 import math
 import sys
 import logging
-import multiprocessing
+import multiprocessing, threading
 import hashlib
 
 #Local Imports
@@ -179,10 +179,21 @@ class OSB(Algorithm):
     def optimise_p(self,lambdas):
         #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
         if (self.useGPU):
-            for k in range(self.bundle.K):
-                #self.optimise_p_k(lambdas,k,k+1)
-                (self.p[k],self.b[k])=self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
+            #singledevice GPU execution
+            if len(self.bundle.gpus)==1:
+                for k in range(self.bundle.K):
+                    #self.optimise_p_k(lambdas,k,k+1)
+                    (self.p[k],self.b[k])=self.bundle.gpus[0].lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
+            #Multidevice GPU execution
+            else:
+                gpuargslist=[]
+                for k in xrange(self.bundle.K):
+                    gpuargslist.append([lambdas,self.w,self.bundle.xtalk_gain[k],k])
+                results=self.lk_multigpu_map(gpuargslist,self.bundle.gpus)
+                self.p=np.asarray([r[0] for r in results])
+                self.b=np.asarray([r[1] for r in results])
         else:
+        #Multiprocessing on CPU
             #for each subchannel
             jobs=[]
             kstep=self.bundle.K+1/(multiprocessing.cpu_count()*2)
@@ -244,4 +255,30 @@ class OSB(Algorithm):
         
 
         return lk
+
+    '''
+    Multigpu Mapping of LK Maximisation
+    '''
+    def lk_multigpu_map(self,args_list, gpu_instances):
+
+        result = [None,None] * len(args_list)
+
+        def task_wrapper(gpu_instance, task_indices):
+            for i in task_indices:
+                try:
+                    result.append(gpu_instance.lkmax(*args_list[i]))
+                except:
+                    log.info("%d:%s"%(i,args_list[i]))
+                    raise
+
+        threads = [threading.Thread(
+                        target=task_wrapper, 
+                        args=(gpu_i, list(xrange(len(args_list)))[i::len(gpu_instances)])
+                  ) for i, gpu_i in enumerate(gpu_instances)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        return result
        

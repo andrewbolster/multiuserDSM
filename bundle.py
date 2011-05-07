@@ -73,7 +73,17 @@ class Bundle(object):
             log.info("Successfully read %d lines from %s"%(self.N,network_file))
 
         if(useGPU):
-            self.gpu=GPU(self)
+            try:
+                import pycuda.autoinit
+                import pycuda.driver as cuda
+                devhandler=cuda.Context.get_device()
+                devcount=devhandler.count()
+                self.gpus=[]
+                for i in xrange(devcount):
+                    self.gpus.append(GPU(self,thread=i))
+                log.info("Got %d GPU's"%devcount)
+            except:
+              raise
 
 
         log.info("Calculating the channel matrix for %d channels"%self.K)

@@ -10,7 +10,6 @@ import sys
 
 import utility as util
 try:
-    import pycuda.autoinit
     import pycuda.driver as cuda
     import pycuda.tools as ctools
     from pycuda.compiler import SourceModule
@@ -240,10 +239,9 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w, int o
 """)
 
 class GPU(object):
-    def __init__(self,bundle):
+    def __init__(self,bundle,thread=0):
         if anythingbroken:
             util.log.error("GPU imports failed miserably")
-        self.start=time()
         self.bundle=bundle
         self.N=self.bundle.N
         self.K=self.bundle.K
@@ -251,16 +249,21 @@ class GPU(object):
         self.noise=bundle.get_NOISE()
         self.mbpt=bundle.get_MBPT()
         self.print_config=True
+
+        #Set up context for initial setup
+        self.ctx=cuda.Device(thread).make_context()
+        self.mydev=self.ctx.get_device()
+        self.ctx.push()
+        util.log.info("Set up device %d:%s"%(thread,self.mydev.name()))
         
         #Work out some context sensitive runtime parameters
-        mydev=cuda.Context.get_device()
-        self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
-        self.warpsize=mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
-        self.mps=mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
+        self.threadmax=self.mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
+        self.warpsize=self.mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
+        self.mps=self.mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
         self.blockpermp=32
         self.gridmax=min(self.blockpermp*self.mps,65535)
 
-        compute=mydev.compute_capability()
+        compute=self.mydev.compute_capability()
         if (compute>=(1,3) and adapt):
             self.type=np.double
             typestr="double"
@@ -278,14 +281,12 @@ class GPU(object):
                                maxid=pow(self.mbpt,self.N)-1
                                )
         self.kernels = SourceModule(r_kernels)
-        self.init=time()
         
-            
-    #In progress, ignore this.
-    def calc_psd(self,bitload,k,gamma,noise):
-        A=np.zeros((self.N*self.N))
-        B=np.zeros((self.N))
-    
+    #destructor (for CUDA tidyness)
+    def __del__(self):
+        self.ctx.pop()
+        self.ctx.detach()
+
     #Arbitrary solver for destructive Ax=x
     def solve(self,a,b,max):
         d_a=cuda.mem_alloc(a.astype(self.type).nbytes)
@@ -435,7 +436,7 @@ class GPU(object):
         d_XTG.free()
         #If this works I'm gonna cry
         return (P,bitload)
-        
+
     def meminfo(self,kernel,k=-1,o=-1,threads=[],name=""):
         (free,total)=cuda.mem_get_info()
         shared=kernel.shared_size_bytes
@@ -464,7 +465,7 @@ class GPU(object):
             bitload[i]=id%self.mbpt;
             id/=self.mbpt;
         return bitload
-
+    
 if __name__ == "__main__":
     gpu=GPU(3)
     gpu.gpu_test()
