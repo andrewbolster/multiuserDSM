@@ -353,9 +353,13 @@ class Bundle(object):
         
         log.debug("Channel:%d,Bitload:%s"%(k,str(bitload)))
         for v in range(self.N): #victims
-            B[v,0]=(noise*channelgap*(pow(2,bitload[v])-1)/XTG[v,v])
-            A[v]=-(channelgap*(pow(2,bitload[v])-1)*XTG[:,v]/XTG[v,v])
-            A[v,v]=1
+            try:
+                B[v,0]=(noise*channelgap*(pow(2,bitload[v])-1)/XTG[v,v])
+                A[v]=-(channelgap*(pow(2,bitload[v])-1)*XTG[:,v]/XTG[v,v])
+                A[v,v]=1
+            except (IndexError):
+                log.error("Tried to index v:%d"%v)
+                raise
         '''
             B[v,0]=((channelgap*pow(2,bitload[v]-1)*noise)/XTG[v,v]) #equiv f(b_v(k))*o / H_vv
             for x in range(self.N):

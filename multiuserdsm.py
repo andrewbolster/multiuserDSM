@@ -10,6 +10,7 @@ from bundle import Bundle
 from utility import *
 from osb import OSB
 from mipb import MIPB
+from isb import ISB
 from graphgenerator import graphgen
 import cProfile,os
 
@@ -36,7 +37,7 @@ if options.cache and os.path.isfile(rawdir+options.scenarioname+'-cache.npy'):
     options.cache=rawdir+options.scenarioname+'-cache.npy'    
 
 bundle = Bundle(network_file=options.network,K=options.K,scenarioname=options.scenarioname, cachefile=options.cache, useGPU=options.gpu)
-algos={"OSB":OSB,"MIPB":MIPB}
+algos={"OSB":OSB,"MIPB":MIPB,"ISB":ISB}
 
 
 if __name__ == "__main__":

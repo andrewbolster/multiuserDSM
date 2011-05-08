@@ -189,7 +189,7 @@ class OSB(Algorithm):
                     (self.p[k],self.b[k])=self.bundle.gpus[0].lkmax(lambdas,self.w,self.bundle.xtalk_gain[k],k)
             '''
             #Multidevice GPU execution
-            (self.p,self.b)=self.bundle.gpu.lkmax(lambdas,self.w,self.bundle.xtalk_gain)
+            (self.p,self.b)=self.bundle.gpu.osb_optimise_p(lambdas,self.w,self.bundle.xtalk_gain)
         else:
         #Multiprocessing on CPU
             #for each subchannel
@@ -253,30 +253,4 @@ class OSB(Algorithm):
         
 
         return lk
-
-    '''
-    Multigpu Mapping of LK Maximisation
-    '''
-    def lk_multigpu_map(self,args_list, gpu_instances):
-
-        result = [None,None] * len(args_list)
-
-        def task_wrapper(gpu_instance, task_indices):
-            for i in task_indices:
-                try:
-                    result.append(gpu_instance.lkmax(*args_list[i]))
-                except:
-                    log.info("%d:%s"%(i,args_list[i]))
-                    raise
-
-        threads = [threading.Thread(
-                        target=task_wrapper, 
-                        args=(gpu_i, list(xrange(len(args_list)))[i::len(gpu_instances)])
-                  ) for i, gpu_i in enumerate(gpu_instances)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-
-        return result
        
