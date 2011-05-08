@@ -256,12 +256,12 @@ __device__ void isb_peruser_lkmax_B(FPT *LK, int *B, int lineid){
     B[lineid]=pmax;
 }
 //Do everything at once
-__global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, int *current_b, int offset){
+__global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, int *current_b, int offset, int *permute){
     int lineid=blockIdx.x;                 //The User that we're playing with
     int permutation=threadIdx.x;            //the permutation we're generating
     int otherline=threadIdx.y;              //The other Line we're calculating for row of A/B
     int index=lineid*MBPT+permutation;     //The particular array index we're building
-    int g_index=index*MAT1*MBPT+otherline; //used as a threadshare go-between
+    int g_index=index*MBPT+otherline; //used as a threadshare go-between
     
     int bitload[MAT1], i;
     int p_pivot[MAT1],q_pivot[MAT1];
@@ -272,25 +272,29 @@ __global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambda
         p_pivot[i]=q_pivot[i]=i;
     }
     
+    //generate AB for each user-permutation
     if (index<MAT1*MBPT){
       //make this threads permutation
-      bitload[lineid]=permutation;
+      bitload[lineid]=permute[permutation]=permutation;
       generate_AB(A,P,d_XTG,bitload,index,otherline);
     }
     __syncthreads();
     //Stopper for invalid id's (gets around multiple kernels)
+    //One for each user
     if (g_index<MAT1*MBPT){
         //do the magic
         d_pivot_decomp(&A[g_index*MAT2],&p_pivot[0],&q_pivot[0]);
         d_solve(&A[g_index*MAT2],&P[g_index*MAT1],&p_pivot[0],&q_pivot[0]);
     }
     __syncthreads();
+    //Calculate lk for each permutation on each user
     if (index<MAT1*MBPT){//check for out of range id's
         lkcalc(bitload,lambdas,w,P,LK,index);
     }
     else
         LK[index]=FAILVALUE;
     
+    //One for each user
     if (g_index<MAT1){
         isb_peruser_lkmax_B(LK,current_b,g_index);
     }
@@ -576,7 +580,7 @@ class gpu_thread(threading.Thread):
         warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
         warpperblock=max(1,min(8,warpcount))
         threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
+        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
 
         #How many individual lk's
         memdim=blockCount*threadCount
@@ -614,6 +618,7 @@ class gpu_thread(threading.Thread):
                 if combodiag:
                     (free,total)=cuda.mem_get_info()
                     util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,str(lambdas),(free*100/total)))
+                    util.log.info("warpcount:%d,warpper:%d,threadC:%d,blockC:%d"%(warpcount,warpperblock,threadCount,blockCount))
             self.print_config=False
         
         #Perform LK Calculation and Maximisation for this channel, however many sectors it takes.
@@ -700,7 +705,7 @@ class gpu_thread(threading.Thread):
         warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
         warpperblock=max(1,min(8,warpcount))
         threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,warpcount/warpperblock))
+        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
 
         #How many individual lk's
         memdim=blockCount*threadCount
@@ -728,7 +733,7 @@ class gpu_thread(threading.Thread):
         d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
         d_bitload=cuda.mem_alloc(np.empty((self.N)).astype(np.int32).nbytes)
         d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
-        
+                
         #reset counter
         global_lk_maxid=-1
 
@@ -747,6 +752,8 @@ class gpu_thread(threading.Thread):
             if combodiag:
                 (free,total)=cuda.mem_get_info()
                 util.log.info("Executing %d tests, tone:%d, L:%s, Mem %d%% Free"%(Ncombinations,k,str(lambdas),(free*100/total)))
+                util.log.info("warpcount:%d,warpper:%d,threadC:%d,blockC:%d"%(warpcount,warpperblock,threadCount,blockCount))
+
                 util.log.info("Grid:%s,Block:%s"%(str(threadshare_grid),str(threadshare_block)))
 
             self.print_config=False
@@ -779,7 +786,7 @@ class gpu_thread(threading.Thread):
             cuda.Context.synchronize()
             
             its+=1
-            #util.log.info("Bitload:%s, last:%s, Iteration:%d"%(str(bitload),str(lastload),its))
+            util.log.info("Tone:%d, Bitload:%s, last:%s, Iteration:%d"%(k,str(bitload),str(lastload),its))
             
             #This is a really bad idea because power allocations aren't balanced. Indicates subtler problem.
             past_bitloads.append(bitload.dumps())
@@ -797,14 +804,15 @@ class gpu_thread(threading.Thread):
         #In theory, each P for the relevant bit permutation for each user should be the same
         for jump in range(self.N):
             jumped=(jump+1)%self.N
-            assert (P[jump*self.mbpt+bitload[jump]]==P[jumped*self.mbpt+bitload[jumped]]).all(), "Assumptions wrong:LK:%s"%str(lk)
+            assert (P[jump*self.mbpt+bitload[jump]]==P[jumped*self.mbpt+bitload[jumped]]).all(), "Assumptions wrong:B\n%s\nLK:\n%s"%(str(bitload),str(P))
+
         
         P=P[bitload[0]]
         if k > monitor:
             (free,total)=cuda.mem_get_info()
             util.log.info("GPU LKmax %d,%s:%s: %d%% Free"%(k,str(bitload),str(P),(free*100/total)))
         
-        if (bitload==0).any():
+        if (bitload==0).all():
             util.log.info("Zero is allowed! %d:%s"%(k,str(bitload)))
 
         #end for
