@@ -255,13 +255,11 @@ __device__ void isb_peruser_lkmax_B(FPT *LK, int *B, int lineid){
     }
     B[lineid]=pmax;
 }
-//Do everything at once
-__global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, int *current_b, int offset, int *permute){
-    int lineid=blockIdx.x;                 //The User that we're playing with
-    int permutation=threadIdx.x;            //the permutation we're generating
-    int otherline=threadIdx.y;              //The other Line we're calculating for row of A/B
-    int index=lineid*MBPT+permutation;     //The particular array index we're building
-    int g_index=index*MBPT+otherline; //used as a threadshare go-between
+//Do everything at once for each user permutation
+__global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, int *current_b, int offset){
+    int lineid=threadIdx.x;                 //The User that we're playing with
+    int permutation=threadIdx.y;            //the permutation we're generating
+    int index=lineid*MBPT+permutation;     //The user-permutation array index we're building
     
     int bitload[MAT1], i;
     int p_pivot[MAT1],q_pivot[MAT1];
@@ -272,31 +270,27 @@ __global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambda
         p_pivot[i]=q_pivot[i]=i;
     }
     
-    //generate AB for each user-permutation
+    //generate AB, solve, and build lk for each user-permutation
     if (index<MAT1*MBPT){
-      //make this threads permutation
-      bitload[lineid]=permute[permutation]=permutation;
-      generate_AB(A,P,d_XTG,bitload,index,otherline);
-    }
-    __syncthreads();
-    //Stopper for invalid id's (gets around multiple kernels)
-    //One for each user
-    if (g_index<MAT1*MBPT){
+        //make this thread's (i.e user permutation) A/B and bitload
+        bitload[lineid]=permutation;
+        for (i=0; i<MAT1; i++){
+            generate_AB(A,P,d_XTG,bitload,index,i);
+        }
+        
         //do the magic
-        d_pivot_decomp(&A[g_index*MAT2],&p_pivot[0],&q_pivot[0]);
-        d_solve(&A[g_index*MAT2],&P[g_index*MAT1],&p_pivot[0],&q_pivot[0]);
-    }
-    __syncthreads();
-    //Calculate lk for each permutation on each user
-    if (index<MAT1*MBPT){//check for out of range id's
+        d_pivot_decomp(&A[index*MAT2],&p_pivot[0],&q_pivot[0]);
+        d_solve(&A[index*MAT2],&P[index*MAT1],&p_pivot[0],&q_pivot[0]);
+        
+        //Calculate lk for each permutation on each user
         lkcalc(bitload,lambdas,w,P,LK,index);
     }
     else
         LK[index]=FAILVALUE;
     
     //One for each user
-    if (g_index<MAT1){
-        isb_peruser_lkmax_B(LK,current_b,g_index);
+    if (index<MAT1){
+        isb_peruser_lkmax_B(LK,current_b,index);
     }
 }
 
@@ -628,7 +622,7 @@ class gpu_thread(threading.Thread):
 
             #Go prepare A and B
             try:
-                #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)                                                                                                                                              
+                #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)
                 self.k_osbprepare(d_A,d_B,d_XTG,offset,grid=N_grid,block=N_block)
                 cuda.Context.synchronize()
             except (pycuda._driver.LaunchError,pycuda._driver.LogicError):
@@ -718,12 +712,13 @@ class gpu_thread(threading.Thread):
         
         #threadshare_grid=(blockCount,1)
         #threadshare_block=(threadCount,1,1)
-        threadshare_grid=(self.N,1)
-        threadshare_block=(self.mbpt,self.N,1)
-        monitor=223
+        threadshare_grid=(1,1)
+        threadshare_block=(self.N,self.mbpt,1)
+        monitor=range(224)
         gpudiag=False
         prepdiag=False
         combodiag=True
+        sticking=False
         
         #Mallocs
         d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
@@ -760,7 +755,6 @@ class gpu_thread(threading.Thread):
         
         #Have to deal with non-convergence; simplest way is to keep a record of the past attempts and when it gets repeated, that'll do
         past_bitloads=[]
-        bitloadcounter=collections.Counter()
         stuck=False
         
         #Perform LK Calculation and Maximisation for this channel, however many sectors it takes.
@@ -768,32 +762,46 @@ class gpu_thread(threading.Thread):
         #offset 
         offset = np.int32(o);
         its=0
-        while not (lastload==bitload).all() and not stuck:
+        while not (lastload==bitload).all():
+            its+=1
             lastload=bitload.copy()
             cuda.memcpy_htod(d_bitload,bitload.astype(np.int32)) #int
             
             #Go prepare A and B
             try:
                 #void isb_optimise_pk(FPT *A, FPT *B, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, FPT *current_b, int offset){
-                self.k_isboptimise(d_A,d_B,d_XTG,d_lk,d_lambdas,d_w,d_bitload,offset,grid=threadshare_grid, block=threadshare_block)                 
+                self.k_isboptimise(d_A,d_B,d_XTG,d_lk,d_lambdas,d_w,d_bitload,offset,grid=threadshare_grid, block=threadshare_block)
                 cuda.Context.synchronize()
             except (pycuda._driver.LaunchError,pycuda._driver.LogicError):
-                util.log.error("Failed on Optimise,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadhshare_grid),str(threadshare_block)))
+                util.log.error("Failed on Optimise,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise
+            
+            #If we were previously stuck, we've picked the 'most common' attempted bitload, so don't clobber it.
+            if stuck and sticking:
+                util.log.info("Coming unstuck")
+                break
+
+            assert its<=max(5,2*k), "This is taking too long"
     
             #Bring peruser bitload results back to host
             cuda.memcpy_dtoh(bitload,d_bitload)
             cuda.Context.synchronize()
             
-            its+=1
-            util.log.info("Tone:%d, Bitload:%s, last:%s, Iteration:%d"%(k,str(bitload),str(lastload),its))
+            if (k in monitor):
+                util.log.info("Tone:%d, Bitload:%s, last:%s, Iteration:%d"%(k,str(bitload),str(lastload),its))
             
             #This is a really bad idea because power allocations aren't balanced. Indicates subtler problem.
             past_bitloads.append(bitload.dumps())
-            bitloadcounter.update(past_bitloads)
+            bitloadcounter=collections.Counter(past_bitloads)
             (mostcommon,count)=bitloadcounter.most_common(1)[0]
-            if count > 3:
-                util.log.info("Got stuck on %s, continuing with %s"%(str(np.loads(mostcommon)),str(bitload)))
+            mostcommon=np.loads(mostcommon)
+            if its >= 8 and count >= 4 and sticking:
+                for (b,j) in bitloadcounter.most_common():
+                    if j==count and sum(mostcommon)<sum(np.loads(b)):
+                        mostcommon=np.loads(b)
+                    util.log.info("B:%s,%d"%(str(np.loads(b)),j))
+                util.log.info("Got stuck on %s, continuing"%(str(mostcommon)))
+                bitload=mostcommon
                 stuck=True
         
         #bring the power back for final result
@@ -804,13 +812,16 @@ class gpu_thread(threading.Thread):
         #In theory, each P for the relevant bit permutation for each user should be the same
         for jump in range(self.N):
             jumped=(jump+1)%self.N
-            assert (P[jump*self.mbpt+bitload[jump]]==P[jumped*self.mbpt+bitload[jumped]]).all(), "Assumptions wrong:B\n%s\nLK:\n%s"%(str(bitload),str(P))
+            ijump=jump*self.mbpt+bitload[jump]
+            ijumped=jumped*self.mbpt+bitload[jumped]
+#            util.log.info("Jump:%d:%d\nP%d:%s\nP%d:%s"%(k,jump,ijump,str(P[ijump]),ijumped,str(P[ijumped])))
+            assert (P[ijump]==P[ijumped]).all(), "Assumptions wrong on %d\n:B\n%s\nP:\n%s"%(jump,str(bitload),str(P))
 
         
-        P=P[bitload[0]]
-        if k > monitor:
+        power=P[bitload[0]]
+        if k in monitor:
             (free,total)=cuda.mem_get_info()
-            util.log.info("GPU LKmax %d,%s:%s: %d%% Free"%(k,str(bitload),str(P),(free*100/total)))
+            util.log.info("GPU LKmax %d,%s:%s: %d%% Free"%(k,str(bitload),str(power),(free*100/total)))
         
         if (bitload==0).all():
             util.log.info("Zero is allowed! %d:%s"%(k,str(bitload)))
@@ -822,7 +833,7 @@ class gpu_thread(threading.Thread):
         d_lambdas.free()
         d_w.free()
         d_XTG.free()
-        return (k,P,bitload)
+        return (k,power,bitload)
   
     def __del__(self):
         try:
