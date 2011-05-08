@@ -31,6 +31,22 @@ class Bundle(object):
     NOISE=dbmhz_to_watts(-140)
     MAXBITSPERTONE=15
     
+    #Beta adjustment
+    betamodel=True
+    offset=np.asmatrix([
+            [0,-17.3757,-15.1871,-16.237,-13.0119,2.1896,-12.9727,-15.5395],
+            [-17.2496,0,-7.3152,-24.1604,-15.3275,-8.1194,-21.5641,-13.0353],
+            [-14.7051,-8.742,0,-12.3908,-11.9613,-6.3329,-5.6299,-18.2671],
+            [-15.4583,-25.0632,-13.7968,0,-15.7089,-37.6546,-2.859,-10.2667],
+            [-13.6823,-15.1213,-10.6057,-16.8391,0,-14.5002,-7.9387,-17.6145],
+            [3.2564,-9.1261,-6.0911,-38.9937,-13.5543,0,-27.2996,-20.5998],
+            [-13.1577,-22.6951,-5.635,-3.7635,-7.1681,-26.1968,0,-18.6713],
+            [-14.4681,-13.3279,-19.7019,-8.9933,-17.2753,-19.2207,-18.4048,0]
+            ])
+    for i,j in itertools.product(range(8),range(8)):
+        offset[i,j]=UndB(offset[i,j])
+
+    
     def __init__(self,network_file="",K=224,scenarioname="NoScenario",cachefile=False,useGPU=False):
         self.N = 0                  #Filled in on loading file, here to remind me
         self.lines = []            # the DSL line objects
@@ -117,7 +133,8 @@ class Bundle(object):
                         lx.gain[k] = self.xtalk_gain[k][x][v] = lx.transfer_fn(self.freq[k])
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[k][x][v] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
-                   
+            if self.betamodel:
+                self.xtalk_gain[k]*=self.offset[:self.N,:self.N] #I'm lazy
     '''
     Check Normalised XT Gains and xtalk symmetry 
     :from channel_matrix.c

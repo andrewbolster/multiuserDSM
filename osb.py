@@ -119,6 +119,7 @@ class OSB(Algorithm):
                 last=False #force _l_converged to do first loop
                 log.info("Beginning optimisation run;line:%d"%lineid)           
                 while not self._l_converged(line,last):
+                    last=self.total_power(line)                    
                     self.l[lineid]=(l_max+l_min)/2
                     self.optimise_p(self.l)
                     #assert 1==0, "WIN"
@@ -128,7 +129,6 @@ class OSB(Algorithm):
                         l_min=self.l[lineid]
                     else:
                         l_max=self.l[lineid]
-                    last=linepower
                 log.info("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
 
             #End line loop

@@ -147,6 +147,34 @@ __global__ void solve(FPT *A, FPT *B){
   }
 }
 
+__device__ void generate_AB(FPT *A, FPT *P, FPT *d_XTG, int *bitload, int index, int otherline){
+    for (int i=0; i<MAT1; i++){
+          //Generate a row of A for this permutation and victim y
+          A[index*MAT2+otherline*MAT1+i]=-(CHANNELGAP*((1<<bitload[otherline])-1)*d_XTG[i*MAT1+otherline])/d_XTG[otherline*MAT1+otherline];
+      }
+      //Generate an item of P
+      P[index*MAT1+otherline]=(NOISE*CHANNELGAP*((1<<bitload[otherline])-1))/d_XTG[otherline*MAT1+otherline];    
+    
+      //Repair an item of A
+      A[index*MAT2+otherline*MAT1+otherline]=1;
+}
+
+__device__ void lkcalc(int *bitload, FPT *lambdas, FPT *w, FPT *P, FPT *LK, int index){
+    FPT lk = 0;
+    int broken = 0;
+    for (int i=0;i<MAT1;i++){
+       //Need to check for negative P's
+        if (P[index*MAT1+i]<0)
+            broken++;
+        lk+=(bitload[i]*w[i])-(lambdas[i]*P[index*MAT1+i]);
+    }
+    
+    //If anything is broken return a failing value (around -inf)
+    if (broken==0)
+        LK[index]=lk;
+    else
+        LK[index]=FAILVALUE;
+}
 //===============================================================================
 // CALC_PSD ACCESSORY FUNCTIONS for set channel (woo-hoo!)
 //===============================================================================
@@ -170,19 +198,8 @@ __global__ void lk_osbprepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offse
         bitbangval/=MBPT;
     }
     if (myid+offset<MAXID){
-      for (i=0; i<MAT1; i++){
-          //Generate a row of A for this permutation and victim y
-          A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*d_XTG[i*MAT1+j])/d_XTG[j*MAT1+j];
-          //A[myid*MAT2+j*MAT1+i]=-(CHANNELGAP*((1<<bitload[j])-1)*tex2D(XTG,i,j))/tex2D(XTG,j,j);
-      }
+      generate_AB(A,B,d_XTG,bitload,myid,j);
     }
-    //Generate an item of B
-    B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/d_XTG[j*MAT1+j];    
-    //B[myid*MAT1+j]=(NOISE*CHANNELGAP*((1<<bitload[j])-1))/tex2D(XTG,j,j);
-
-    //Repair an item of A
-    //__syncthreads(); //Seems to help with memory coalescing
-    A[blockIdx.x*MAT2+j*MAT1+j]=1;
 }
 
 //Solve all A and B psds together. 
@@ -210,8 +227,7 @@ __global__ void solve_permutations(FPT *A, FPT *B, int offset){
 __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w, int offset){
     int id=blockIdx.x*blockDim.x+threadIdx.x;
     int bitbangval=id;
-    FPT lk=0;
-    int bitload[MAT1], i, broken=0;
+    int bitload[MAT1], i;
     
     //At this point, B is populated with the P results.
     for (i=0;i<MAT1;i++){
@@ -219,18 +235,7 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w, int o
         bitbangval/=MBPT;
     }
     if (id+offset<MAXID){//check for out of range id's
-        for (i=0;i<MAT1;i++){
-           //Need to check for negative B's
-            if (P[id*MAT1+i]<0)
-                broken++;
-            lk+=(bitload[i]*w[i])-(lambdas[i]*P[id*MAT1+i]);
-        }
-        
-        //If anything is broken return a failing value (around -inf)
-        if (broken==0)
-            LK[id]=lk;
-        else
-            LK[id]=FAILVALUE;
+        lkcalc(bitload,lambdas,w,P,LK,id);
     }
     else
         LK[id]=FAILVALUE;
@@ -258,10 +263,8 @@ __global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambda
     int index=lineid*MBPT+permutation;     //The particular array index we're building
     int g_index=index*MAT1*MBPT+otherline; //used as a threadshare go-between
     
-    int bitload[MAT1], i, broken=0;
+    int bitload[MAT1], i;
     int p_pivot[MAT1],q_pivot[MAT1];
-    FPT lk=0;
-
 
     //copy current bitload into thread memory
     for (i=0; i<MAT1; i++){
@@ -272,38 +275,18 @@ __global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambda
     if (index<MAT1*MBPT){
       //make this threads permutation
       bitload[lineid]=permutation;
-      for (i=0; i<MAT1; i++){
-          //Generate a row of A for this permutation and victim y
-          A[index*MAT2+otherline*MAT1+i]=-(CHANNELGAP*((1<<bitload[otherline])-1)*d_XTG[i*MAT1+otherline])/d_XTG[otherline*MAT1+otherline];
-      }
-      //Generate an item of P
-      P[index*MAT1+otherline]=(NOISE*CHANNELGAP*((1<<bitload[otherline])-1))/d_XTG[otherline*MAT1+otherline];    
-    
-      //Repair an item of A
-      //__syncthreads(); //Seems to help with memory coalescing
-      A[index*MAT2+otherline*MAT1+otherline]=1;
+      generate_AB(A,P,d_XTG,bitload,index,otherline);
     }
-
+    __syncthreads();
     //Stopper for invalid id's (gets around multiple kernels)
     if (g_index<MAT1*MBPT){
         //do the magic
         d_pivot_decomp(&A[g_index*MAT2],&p_pivot[0],&q_pivot[0]);
         d_solve(&A[g_index*MAT2],&P[g_index*MAT1],&p_pivot[0],&q_pivot[0]);
     }
-    
+    __syncthreads();
     if (index<MAT1*MBPT){//check for out of range id's
-        for (i=0;i<MAT1;i++){
-           //Need to check for negative P's
-            if (P[index*MAT1+i]<0)
-                broken++;
-            lk+=(bitload[i]*w[i])-(lambdas[i]*P[index*MAT1+i]);
-        }
-        
-        //If anything is broken return a failing value (around -inf)
-        if (broken==0)
-            LK[index]=lk;
-        else
-            LK[index]=FAILVALUE;
+        lkcalc(bitload,lambdas,w,P,LK,index);
     }
     else
         LK[index]=FAILVALUE;
@@ -374,6 +357,7 @@ class GPU(object):
         util.log.info("Spawning %d GPU Threads"%self.devcount)
         for dev in range(len(self.threadpool)):
             self.threadpool[dev] = gpu_thread(self.argqueue,self.resqueue,self,device=dev)
+            self.threadpool[dev].setDaemon(True)
             self.threadpool[dev].start()
         
     #destructor (for CUDA tidyness)
@@ -626,24 +610,24 @@ class gpu_thread(threading.Thread):
         #Print some information regarding the thread execution structure
         if (self.print_config):
             #Some info about combinations being run
-            for o in range(0,self.Ncombinations,memdim):
+            for o in range(0,Ncombinations,memdim):
                 if combodiag:
                     (free,total)=cuda.mem_get_info()
-                    util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o+memdim,self.Ncombinations,k,str(lambdas),(free*100/total)))
+                    util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,str(lambdas),(free*100/total)))
             self.print_config=False
         
         #Perform LK Calculation and Maximisation for this channel, however many sectors it takes.
-        for o in range(0,self.Ncombinations,memdim):
+        for o in range(0,Ncombinations,memdim):
             #offset 
             offset = np.int32(o);
 
             #Go prepare A and B
             try:
-                #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=self.N_block)                                                                                                                                              
-                self.k_osbprepare(d_A,d_B,d_XTG,offset,grid=self.N_grid,block=self.N_block)
+                #prepare(d_A,d_B,offset,texrefs=[t_XTG],grid=default_grid,block=N_block)                                                                                                                                              
+                self.k_osbprepare(d_A,d_B,d_XTG,offset,grid=N_grid,block=N_block)
                 cuda.Context.synchronize()
             except (pycuda._driver.LaunchError,pycuda._driver.LogicError):
-                util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(self.N_grid),str(self.N_block)))
+                util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(N_grid),str(N_block)))
                 raise
 
             if prepdiag:
@@ -659,19 +643,19 @@ class gpu_thread(threading.Thread):
 
             #Go Solve
             try:
-                self.k_osbsolve(d_A,d_B,offset, grid=self.threadshare_grid, block=self.threadshare_block)
+                self.k_osbsolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(self.threadshare_grid),str(self.threadshare_block)))
+                util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise            
             
             #Go Find the LK Values
-            if (k>monitor) and gpudiag: self.meminfo(lkmax,k,o,self.threadshare_block,"Max")
+            if (k>monitor) and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
-                self.k_osblk(d_B,d_lk,d_lambdas,d_w,offset,grid=self.threadshare_grid,block=self.threadshare_block)
+                self.k_osblk(d_B,d_lk,d_lambdas,d_w,offset,grid=threadshare_grid,block=threadshare_block)
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain),str(self.threadshare_grid),str(self.threadshare_block)))
+                util.log.error("Failed on LKMax,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain),str(threadshare_grid),str(threadshare_block)))
                 raise
 
             #Bring LK results and power back to host
@@ -793,23 +777,27 @@ class gpu_thread(threading.Thread):
             #Bring peruser bitload results back to host
             cuda.memcpy_dtoh(bitload,d_bitload)
             cuda.Context.synchronize()
+            
             its+=1
             #util.log.info("Bitload:%s, last:%s, Iteration:%d"%(str(bitload),str(lastload),its))
+            
+            #This is a really bad idea because power allocations aren't balanced. Indicates subtler problem.
             past_bitloads.append(bitload.dumps())
             bitloadcounter.update(past_bitloads)
             (mostcommon,count)=bitloadcounter.most_common(1)[0]
             if count > 3:
-                util.log.info("Got stuck on %s"%str(np.loads(mostcommon)))
+                util.log.info("Got stuck on %s, continuing with %s"%(str(np.loads(mostcommon)),str(bitload)))
                 stuck=True
         
         #bring the power back for final result
         P=np.empty((memdim,self.N),self.type)
         cuda.memcpy_dtoh(P,d_B)
+        lk=cuda.from_device(d_lk,(self.N,self.mbpt),self.type)
         cuda.Context.synchronize()
         #In theory, each P for the relevant bit permutation for each user should be the same
         for jump in range(self.N):
             jumped=(jump+1)%self.N
-            assert (P[jump*self.mbpt+bitload[jump]]==P[jumped*self.mbpt+bitload[jumped]]).all(), "Assumptions wrong:P:%s"%str(P)
+            assert (P[jump*self.mbpt+bitload[jump]]==P[jumped*self.mbpt+bitload[jumped]]).all(), "Assumptions wrong:LK:%s"%str(lk)
         
         P=P[bitload[0]]
         if k > monitor:

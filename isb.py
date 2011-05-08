@@ -95,7 +95,6 @@ class ISB(Algorithm):
                 self.optimise_p(self.l)
                 linepower=self.total_power(line)
                 if (linepower > self.power_budget[lineid]): #current is lmin
-                    l_min=self.l[lineid]
                     while True: #Until power budget satisfied
                         self.optimise_p(self.l)
                         linepower=self.total_power(line)
@@ -110,8 +109,8 @@ class ISB(Algorithm):
                             log.info("Satisfied power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
                             break
                     l_max=self.l[lineid]
+                    l_min=l_max/2
                 else: #current is lmax
-                    l_max=self.l[lineid]
                     while True: #Until power budget satisfied
                         self.optimise_p(self.l)
                         linepower=self.total_power(line)
@@ -127,12 +126,14 @@ class ISB(Algorithm):
                             log.info("Undershot power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
                             break
                     l_min=self.l[lineid]
+                    l_max=2*l_min
                 log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
 
                 #Actual optimisation
                 last=False #force _l_converged to do first loop
                 log.info("Beginning optimisation run;line:%d"%lineid)           
                 while not self._l_converged(line,last):
+                    last=self.total_power(line)
                     self.l[lineid]=(l_max+l_min)/2
                     self.optimise_p(self.l)
                     #assert 1==0, "WIN"
@@ -141,7 +142,6 @@ class ISB(Algorithm):
                         l_min=self.l[lineid]
                     else:
                         l_max=self.l[lineid]
-                    last=linepower
                 log.info("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
 
             #End line loop
