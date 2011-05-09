@@ -195,38 +195,38 @@ class ISB(Algorithm):
             (self.p,self.b)=self.bundle.gpu.isb_optimise_p(lambdas,self.w,self.bundle.xtalk_gain,self.b)
             #log.info("%s"%self.b)
         else:
-            for k in range(self.bundle.K):
-                self.optimise_p_k(lambdas,k)            
+            self.optimise_p_k(lambdas)            
             #Now we have b hopefully optimised
             
-    def optimise_p_k(self,lambdas,k):
-        #Convergence value check
-        b_this=np.asarray(self.b[k])[0]
-        b_last=np.tile(-1,self.bundle.N)
-        log.debug("Launched channel %d search"%k)
-        
-        #Until convergence of this channels bitload
-        while (b_last!=b_this).any():
-            b_last=b_this.copy()       
-            for line in xrange(self.bundle.N):
-                lk_max=-self.defaults['maxval']
-                b_max=[]
-                #for each bit modification
-                b_this[line]=0
-                while b_this[line] <= self.MAXBITSPERTONE:
-                    #The lagrangian value for this bit combination
-                    lk=self._l_k(b_this,lambdas,k)
-                    if lk >= lk_max:
-                        lk_max=lk
-                        b_max=b_this[line]
-                    b_this[line]+=1
-                        
-                #By now we have b_max for this user on this channel
-                b_this[line]=b_max
-            #at this point we are hopefully maximised
-            #print "CPU LKmax %d:%s:%s:%s"%(k,str(lk_max),str(b_max),str(self.p[k]))
-        self.b[k]=b_this
-        self.p[k]=self.bundle.calc_psd(b_this,k)
+    def optimise_p_k(self,lambdas):
+        for k in range(self.bundle.K):
+            #Convergence value check
+            b_this=np.asarray(self.b[k])[0]
+            b_last=np.tile(-1,self.bundle.N)
+            log.debug("Launched channel %d search"%k)
+            
+            #Until convergence of this channels bitload
+            while (b_last!=b_this).any():
+                b_last=b_this.copy()       
+                for line in xrange(self.bundle.N):
+                    lk_max=-self.defaults['maxval']
+                    b_max=[]
+                    #for each bit modification
+                    b_this[line]=0
+                    while b_this[line] <= self.MAXBITSPERTONE:
+                        #The lagrangian value for this bit combination
+                        lk=self._l_k(b_this,lambdas,k)
+                        if lk >= lk_max:
+                            lk_max=lk
+                            b_max=b_this[line]
+                        b_this[line]+=1
+                            
+                    #By now we have b_max for this user on this channel
+                    b_this[line]=b_max
+                #at this point we are hopefully maximised
+                #print "CPU LKmax %d:%s:%s:%s"%(k,str(lk_max),str(b_max),str(self.p[k]))
+            self.b[k]=b_this
+            self.p[k]=self.bundle.calc_psd(b_this,k)
         #end while
 
     '''
