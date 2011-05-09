@@ -315,7 +315,7 @@ __global__ void isb_optimise_inc(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambd
         bitload[permutation]=current_b[k*MAT1+permutation]; //Copy into channel-shared memory
     }
     __syncthreads();
-    
+
     // This algorithm swaps the k-range and last=this loops
     for (line=0;line<MAT1;line++){
         //copy shared bitload into thread memory
@@ -339,7 +339,7 @@ __global__ void isb_optimise_inc(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambd
         lkcalc(threadbit,lambdas,w,P,LK,index);
         
         //Return maxlk bitload for this user on this channel (threadbit partially overwritten, no problem
-        bitload[line]=isb_perblock_lkmax_B(LK,threadbit,index,(int)MBPT);
+        bitload[line]=isb_perblock_lkmax_B(LK,NULL,k,(int)MBPT);
         
         __syncthreads();
     }
@@ -523,7 +523,7 @@ class GPU(object):
             while True:
                 try:
                     queueitem=self.resqueue.get_nowait()
-                    (func,(k,power,bitload))=queueitem
+                    (func,(power,bitload))=queueitem
                 except Queue.Empty:
                     break
                 except ValueError:
@@ -531,8 +531,8 @@ class GPU(object):
                     continue
                 
                 if func==funcname:
-                    p[k]=power
-                    b[k]=bitload
+                    p=power
+                    b=np.asmatrix(bitload)
                     #util.log.info("%d:%s:%s"%(k,str(bitload),str(power)))
                 else:
                     util.log.error("Invalid Functions %s"%(str(queueitem)))
@@ -927,7 +927,7 @@ class gpu_thread(threading.Thread):
         #threadshare_block=(threadCount,1,1)
         threadshare_grid=(self.K,1)
         threadshare_block=(self.mbpt,1,1)
-        monitor=True
+        monitor=False
         gpudiag=False
         prepdiag=False
         combodiag=True
@@ -976,50 +976,41 @@ class gpu_thread(threading.Thread):
             #Go prepare A and B
             try:
                 #void isb_optimise_pk(FPT *A, FPT *B, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, FPT *current_b, int offset){
-                self.k_isboptimise(d_A,d_B,d_XTG,d_lk,d_lambdas,d_w,d_bitload,offset,grid=threadshare_grid, block=threadshare_block)
+                self.k_isboptimise_inc(d_A,d_B,d_XTG,d_lk,d_lambdas,d_w,d_bitload,offset,grid=threadshare_grid, block=threadshare_block)
                 cuda.Context.synchronize()
             except (pycuda._driver.LaunchError,pycuda._driver.LogicError):
-                util.log.error("Failed on Optimise,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
+                util.log.error("Failed on Optimise,Tone:: XTG:%s\nGridDim:%s,BlockDim:%s"%(str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
                 raise
             
             assert its<=10, "This is taking too long"
     
             #Bring peruser bitload results back to host
             cuda.memcpy_dtoh(bitload,d_bitload)
-            P=np.empty((memdim,self.N),self.type)
+            P=np.empty((self.K,self.mbpt,self.N),self.type)
             cuda.memcpy_dtoh(P,d_B)
             lk=cuda.from_device(d_lk,(memdim),self.type)
 
             cuda.Context.synchronize()
             
             if monitor:
-                util.log.info("Bitload:last This it:%d"%(its))
+                util.log.info("Bitload:last This it:%d,%s"%(its,str(P.shape)))
                 for k in range(self.K):
-                    util.log.info("%s:%s:%s"%(str(bitload[k]),str(lastload[k]),str(lk[k])))
-                
+                    util.log.info("%s:%s:%s:%s"%(str(bitload[k]),str(lastload[k]),str(lk[k]),str(P[k])))
         
         #bring the power back for final result
-        P=np.empty((memdim,self.N),self.type)
-        cuda.memcpy_dtoh(P,d_B)
         lk=cuda.from_device(d_lk,(self.N,self.mbpt),self.type)
         cuda.Context.synchronize()
-        #In theory, each P for the relevant bit permutation for each user should be the same
-        for jump in range(self.K):
-            jumped=(jump+1)%self.N
-            ijump=jump*self.K+bitload[jump]
-            ijumped=jumped*self.K+bitload[jumped]
-#            util.log.info("Jump:%d:%d\nP%d:%s\nP%d:%s"%(k,jump,ijump,str(P[ijump]),ijumped,str(P[ijumped])))
-            assert (P[ijump]==P[ijumped]).all(), "Assumptions wrong on %d"%(jump)
+        #No assumptions this time as there is only one user's collected PSD's left
+        # Well, if you ignore the assumption that its right...
+        power=np.zeros((self.K,self.N))
+        for k in xrange(self.K):
+            #util.log.info("%s,%s"%(str(bitload[k]),str(P[k,bitload[k]].diagonal())))
+            power[k]=P[k,bitload[k]].diagonal()
 
-        
-        power=P[bitload[0]]
         if monitor:
             (free,total)=cuda.mem_get_info()
-            util.log.info("GPU LKmax %d,%s:%s: %d%% Free"%(k,str(bitload),str(power),(free*100/total)))
+            util.log.info("GPU ISB %d%% Free"%((free*100/total)))
         
-        if (bitload==0).any():
-            util.log.info("Zero is allowed! %d:%s"%(k,str(bitload)))
-
         #end for
         d_A.free()
         d_B.free()
@@ -1027,7 +1018,7 @@ class gpu_thread(threading.Thread):
         d_lambdas.free()
         d_w.free()
         d_XTG.free()
-        return (k,power,bitload)
+        return (power,bitload)
   
     def __del__(self):
         try:
