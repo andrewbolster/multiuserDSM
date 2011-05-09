@@ -4,7 +4,7 @@ Created on 12 Mar 2011
 @author: bolster
 '''
 import numpy as np
-import threading, Queue, collections
+import threading, Queue, collections, itertools
 from time import time
 import sys
 
@@ -176,8 +176,30 @@ __device__ void lkcalc(int *bitload, FPT *lambdas, FPT *w, FPT *P, FPT *LK, int 
     else
         LK[index]=FAILVALUE;
 }
+__device__ void d_calc_psd(FPT *A, FPT *P, FPT *d_XTG, int *bitload, int index){
+    //Aim: Given space for A and P, and current_b[N*MAT1] populate P with the psds
+    //Assume d_XTG is relevant to index
+    int i;
+    int p_pivot[MAT1], q_pivot[MAT1];
+    
+    //generate A and B
+    for (i=0;i<MAT1;i++){
+        generate_AB(A,P,d_XTG,bitload,index,i);
+        p_pivot[i]=q_pivot[i]=i;
+    }
+    d_pivot_decomp(&A[index*MAT2],&p_pivot[0],&q_pivot[0]);
+    d_solve(&A[index*MAT2],&P[index*MAT1],&p_pivot[0],&q_pivot[0]);
+}
+
+__global__ void calc_psd(FPT *A, FPT *P, FPT *d_XTG, int *current_b, int N){
+    //Assume we're doing a full channel range recalculation
+    int id=blockIdx.x*blockDim.x+threadIdx.x;
+    if (id<N){
+        d_calc_psd(A,P,&d_XTG[id*MAT2],&current_b[id*MAT1],id);
+    }
+}
 //===============================================================================
-// CALC_PSD ACCESSORY FUNCTIONS for set channel (woo-hoo!)
+// OSB ACCESSORY FUNCTIONS for set channel (woo-hoo!)
 //===============================================================================
 //Generate the A and B for all possible bitloads (in this offset)
 //requires grid(MBPT^N,1,1) block(N,1,1)
@@ -244,15 +266,15 @@ __global__ void lk_max_permutations(FPT *P, FPT *LK, FPT *lambdas, FPT *w, int o
 //===============================================================================
 // ISB Functions
 //===============================================================================
-//Populate the B array with the max permutation for each block of lk's
+//Populate the B array with the max bitload permutation for each block of lk's
 __device__ int isb_perblock_lkmax_B(FPT *LK, int *B, int id, int blocksize){
     int i, pmax=-1;
     FPT lkmax=FAILVALUE;
     for (i=0;i<blocksize;i++){
-        if (lkmax < LK[id*blocksize+i]){
+        if (lkmax <= LK[id*blocksize+i]){
             pmax=i;                     //This is the maxlk bitload for this line
             lkmax=LK[id*blocksize+i];
-        }    
+        }
     }
     if (B!=NULL){
         B[id]=pmax;
@@ -300,19 +322,18 @@ __global__ void isb_optimise_pk(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambda
 
 //Do all channels at once for each permutation range
 __global__ void isb_optimise_inc(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambdas, FPT *w, int *current_b, int offset){
-    int k=blockIdx.x;                 //The channel that we're playing with
-    int permutation=threadIdx.x;            //the permutation we're generating
-    int index=k*MBPT+permutation;     //The channel-permutation array index we're building
-    int line;                        //The internal line loop incrementer
+    const int k=blockIdx.x;                 //The channel that we're playing with
+    const int permutation=threadIdx.x;            //the permutation we're generating
+    const int index=k*MBPT+permutation;     //The channel-permutation array index we're building
+    int line,i;                        //The internal line loop and generic incrementer
     
     __shared__ int bitload[MAT1];
     int threadbit[MAT1];
-    int p_pivot[MAT1],q_pivot[MAT1], i;
 
     //copy initial bitload into block memory
     if (permutation < MAT1){
         //current_b.shape(K,N)
-        bitload[permutation]=current_b[k*MAT1+permutation]; //Copy into channel-shared memory
+        bitload[permutation]=0;
     }
     __syncthreads();
 
@@ -321,19 +342,12 @@ __global__ void isb_optimise_inc(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambd
         //copy shared bitload into thread memory
         for (i=0; i<MAT1; i++){
             threadbit[i]=bitload[i]; //Copy into thread memory
-            p_pivot[i]=q_pivot[i]=i; //reset pivot
         }
         //For this new user, make him special (line-1 should be optimised)
         threadbit[line]=permutation;    
         
-        //generate AB, solve, and build lk for this channel-permutation increment
-        for (i=0; i<MAT1; i++){
-            generate_AB(A,P,&d_XTG[k*MAT2],threadbit,index,i);
-        }
-        
-        //do the magic
-        d_pivot_decomp(&A[index*MAT2],&p_pivot[0],&q_pivot[0]);
-        d_solve(&A[index*MAT2],&P[index*MAT1],&p_pivot[0],&q_pivot[0]);
+        //Solve!
+        d_calc_psd(A,P,&d_XTG[k*MAT2],threadbit,index);
         
         //Calculate lk for each permutation on each channel in parallel
         lkcalc(threadbit,lambdas,w,P,LK,index);
@@ -344,10 +358,12 @@ __global__ void isb_optimise_inc(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambd
         __syncthreads();
     }
 
+    __syncthreads();
     //For each channel, copy bitload back to current_b
     if (permutation<MAT1){
         current_b[k*MAT1+permutation]=bitload[permutation];
     }
+    __syncthreads();
     //At the end of this, current_b will contain the optimal bitloads for all channels, addressible as [k*MAT1+line]
     //    P, addressable as [k*MBPT+bitload] (for the last user)
     //    lk is more or less useless in this case.
@@ -462,15 +478,40 @@ class GPU(object):
 
         util.log.info("%s(%03d,%d)=L:%d,S:%d,R:%d,C:%d,MT:%d,T:%d,OC:%f,Free:%d"%(name,k,o,local,shared,regs,const,mbpt,threads[0],occupancy.occupancy,(free*100)/total))
         
-    def gpu_test(self):
-        self.test=time()
-        matrixcount=224;
-        a=np.tile(np.asarray([1,3,-2,3,5,6,2,4,3]),matrixcount).astype(np.float32)
-        b=np.tile(np.asarray([5,7,8]),matrixcount).astype(np.float32)
-        b=self.solve(a, b, matrixcount)
-        
-        print("Times:\nInit:%f\nGo:%f\nExec:%f"%(self.init-self.start,self.go-self.test,self.done-self.go))
-        print b
+    def calc_psd(self,bitloads,xtalk):
+        funcname='calc_psd'
+        try:
+            #construct the queue
+            for k in range(self.K):
+                self.argqueue.put((funcname,bitloads,xtalk))
+            
+            #Wait for everything to end
+            self.argqueue.join()
+                  
+            p=np.zeros((self.K,self.N)) #per tone per user power in watts
+            while True:
+                try:
+                    queueitem=self.resqueue.get_nowait()
+                    (func,(power))=queueitem
+                except Queue.Empty:
+                    break
+                except ValueError:
+                    util.log.error("Invalid Queueitem %s"%(str(queueitem)))
+                    continue
+                
+                if func==funcname:
+                    p=power
+                    #util.log.info("%d:%s:%s"%(k,str(bitload),str(power)))
+                else:
+                    util.log.error("Invalid Functions %s"%(str(queueitem)))
+            return (p)
+        except(KeyboardInterrupt,SystemExit):
+            util.log.error("Suicide Error: Results tainted, quitting incase")            
+            raise Exception
+        except pycuda._driver.MemoryError:
+            util.log.error("Memory Error: Results tainted, quitting incase")
+            raise MemoryError
+            sys.exit(1)
       
     def osb_optimise_p(self,lambdas,w,xtalk_gain):
         funcname='osb_optimise_p'
@@ -509,11 +550,11 @@ class GPU(object):
             raise MemoryError
             sys.exit(1)
     
-    def isb_optimise_p(self,lambdas,w,xtalk_gain,bitload):
+    def isb_optimise_p(self,lambdas,w,xtalk_gain):
         funcname='isb_optimise_inc'
         try:
             #construct the queue
-            self.argqueue.put((funcname,lambdas,w,xtalk_gain,bitload))
+            self.argqueue.put((funcname,lambdas,w,xtalk_gain))
             
             #Wait for everything to end
             self.argqueue.join()
@@ -579,7 +620,6 @@ class gpu_thread(threading.Thread):
                 
         gridmax=65535
         
-        
         #Kernels
         self.k_osbprepare=self.local.kernels.get_function("lk_osbprepare_permutations")
         self.k_osbsolve=self.local.kernels.get_function("solve_permutations")
@@ -587,7 +627,7 @@ class gpu_thread(threading.Thread):
         self.k_solve=self.local.kernels.get_function("solve")
         self.k_isboptimise=self.local.kernels.get_function("isb_optimise_pk")
         self.k_isboptimise_inc=self.local.kernels.get_function("isb_optimise_inc")
-
+        self.k_calcpsd=self.local.kernels.get_function("calc_psd")
 
         #loop to empty queue
         while True:
@@ -605,6 +645,9 @@ class gpu_thread(threading.Thread):
             elif func=='isb_optimise_inc':
                 result=self.isb_optimise_inc(*args)
                 self.resqueue.put((func,result))
+            elif func=='calc_psd':
+                result=self.calc_psd(*args)
+                self.resqueue.put((func,result))
             else:
                 self.resqueue.put(None)
             
@@ -612,22 +655,43 @@ class gpu_thread(threading.Thread):
 
         #end queue loop
         
-    #Arbitrary solver for destructive Ax=x (Not finished)
-    def solve(self,a,b,max):
-                
-        #Memory
-        d_a=cuda.mem_alloc(a.astype(self.type).nbytes)
-        d_b=cuda.mem_alloc(b.astype(self.type).nbytes)
-        cuda.memcpy_htod(d_a,a.astype(self.type))
-        cuda.memcpy_htod(d_b,b.astype(self.type))
-        h_b=np.empty_like(b.astype(self.type))        
-        #Go solve
+    def calc_psd(self,bitloads,xtalk):
+        #Number of expected permutations
+        Ncombinations=self.K
         
-        go(d_a,d_b,block=(1,1,1),grid=(1,1))
-        cuda.memcpy_dtoh(h_b,d_b)
+        gridsize=min(Ncombinations,self.gridmax)
+
+        #Check if this is getting hairy and assign grid/block dimensions
+        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
+        warpperblock=max(1,min(8,warpcount))
+        threadCount=self.warpsize * warpperblock
+        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+
+        #How many individual lk's
+        memdim=blockCount*threadCount
+
+        threadshare_grid=(blockCount,1)
+        threadshare_block=(threadCount,1,1)
+        
+        #Memory (We get away with the NCombinations because calpsd checks against it)
+        d_a=cuda.mem_alloc(np.zeros((Ncombinations*self.N*self.N)).astype(self.type).nbytes)
+        d_p=cuda.mem_alloc(np.zeros((Ncombinations*self.N)).astype(self.type).nbytes)
+        d_bitload=cuda.mem_alloc(np.zeros((self.K*self.N)).astype(np.int32).nbytes)
+        d_XTG=cuda.mem_alloc(np.zeros((self.K*self.N*self.N)).astype(self.type).nbytes)
+        h_p=np.zeros((self.K,self.N)).astype(self.type)
+        cuda.memcpy_htod(d_bitload,util.mat2arr(bitloads).astype(np.int32))
+        cuda.memcpy_htod(d_XTG,xtalk.astype(self.type))
+        #Go solve
+        #__global__ void calc_psd(FPT *A, FPT *P, FPT *d_XTG, int *current_b, int N){
+
+        self.k_calcpsd(d_a,d_p,d_XTG,d_bitload,np.int32(Ncombinations),block=threadshare_block,grid=threadshare_grid)
+        cuda.Context.synchronize()
+        cuda.memcpy_dtoh(h_p,d_p)
         d_a.free()
-        d_b.free()
-        return h_b
+        d_bitload.free()
+        d_XTG.free()
+        d_p.free()
+        return h_p.astype(np.float64)
     
     def osb_optimise_p(self,lambdas,w,xtalk_gain,k):
         #Number of expected permutations
@@ -901,7 +965,7 @@ class gpu_thread(threading.Thread):
         d_XTG.free()
         return (k,power,bitload)
     
-    def isb_optimise_inc(self,lambdas,w,xtalk_gain,current_bitload):
+    def isb_optimise_inc(self,lambdas,w,xtalk_gain):
         #For all permutations on all channels, calculate each users next bitload
         #Number of expected permutations
         Ncombinations=self.mbpt*self.K
@@ -945,12 +1009,10 @@ class gpu_thread(threading.Thread):
         cuda.memcpy_htod(d_XTG,xtalk_gain.astype(self.type))   
         cuda.memcpy_htod(d_lambdas,lambdas.astype(self.type))
         cuda.memcpy_htod(d_w,w.astype(self.type))
-        cuda.memcpy_htod(d_bitload,current_bitload.astype(np.int32)) #only need to do this once
 
         #Bitload locations
-        bitload=np.asarray(current_bitload).astype(np.int32)
-        #bitload=np.tile(-1,(current_bitload.shape)).astype(np.int32)
-        lastload=np.tile(-2,(bitload.shape)).astype(np.int32)
+        bitload=np.tile(0,(self.K,self.N)).astype(np.int32)
+        lastload=np.tile(-1,(bitload.shape)).astype(np.int32)
            
         #Print some information regarding the thread execution structure
         o=0
@@ -964,8 +1026,7 @@ class gpu_thread(threading.Thread):
 
             self.print_config=False
         
-        #Perform LK Calculation and Maximisation for this channel, however many sectors it takes.
-        #for o in range(0,Ncombinations,memdim):
+        #Perform LK Calculation and Maximisation.
         #offset 
         offset = np.int32(o);
         its=0
@@ -986,27 +1047,14 @@ class gpu_thread(threading.Thread):
     
             #Bring peruser bitload results back to host
             cuda.memcpy_dtoh(bitload,d_bitload)
-            P=np.empty((self.K,self.mbpt,self.N),self.type)
-            cuda.memcpy_dtoh(P,d_B)
-            lk=cuda.from_device(d_lk,(memdim),self.type)
-
             cuda.Context.synchronize()
             
             if monitor:
                 util.log.info("Bitload:last This it:%d,%s"%(its,str(P.shape)))
                 for k in range(self.K):
                     util.log.info("%s:%s:%s:%s"%(str(bitload[k]),str(lastload[k]),str(lk[k]),str(P[k])))
-        
-        #bring the power back for final result
-        lk=cuda.from_device(d_lk,(self.N,self.mbpt),self.type)
-        cuda.Context.synchronize()
-        #No assumptions this time as there is only one user's collected PSD's left
-        # Well, if you ignore the assumption that its right...
-        power=np.zeros((self.K,self.N))
-        for k in xrange(self.K):
-            #util.log.info("%s,%s"%(str(bitload[k]),str(P[k,bitload[k]].diagonal())))
-            power[k]=P[k,bitload[k]].diagonal()
 
+        #util.log.info("Bitload:last This it:%d,%s,%s"%(its,str(P.shape),str(current_bitload.shape)))
         if monitor:
             (free,total)=cuda.mem_get_info()
             util.log.info("GPU ISB %d%% Free"%((free*100/total)))
@@ -1018,6 +1066,9 @@ class gpu_thread(threading.Thread):
         d_lambdas.free()
         d_w.free()
         d_XTG.free()
+        
+        #Sick of this this, get someone else to calculate it!
+        power=self.calc_psd(bitload, xtalk_gain)
         return (power,bitload)
   
     def __del__(self):

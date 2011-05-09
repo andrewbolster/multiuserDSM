@@ -54,8 +54,11 @@ class Algorithm(object):
         #Recalculate P from Bitloads to be careful
         self.b=util.mat2arr(self.b)
 
-        for k in range(self.bundle.K):
-            self.p[k]=self.bundle.calc_psd(self.b[k],k,gpu=False)#disable manual psd for the time being
+        if self.useGPU:
+            self.p=self.bundle.recalcpsd(self.b)
+        if False:
+            for k in range(self.bundle.K):
+                self.p[k]=self.bundle.calc_psd(self.b[k],k,gpu=False)#disable manual psd for the time being
         
         for line in self.bundle.lines:
             line.b=self.b[:,line.id]
@@ -64,7 +67,10 @@ class Algorithm(object):
         self.bundle.calculate_snr()
         self.stats['end']=time.time()
         self.stats['duration']=self.stats['end']-self.stats['start']
-        self.stats['hitratio']=self.bundle._psd_cache['hits']/(self.bundle._psd_cache['hits']+self.bundle._psd_cache['misses'])
+        try:
+            self.stats['hitratio']=self.bundle._psd_cache['hits']/(self.bundle._psd_cache['hits']+self.bundle._psd_cache['misses'])
+        except ZeroDivisionError:
+            self.stats['hitratio']=0.0
 
         util.log.info("All Done Here, took %f, hit ratio of %.4f"%(self.stats['duration'],self.stats['hitratio']))
         

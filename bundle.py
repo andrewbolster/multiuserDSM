@@ -343,6 +343,11 @@ class Bundle(object):
     def check_all_margins(self,gap):
         pass
             
+    '''
+    Magical recalculation with gpu
+    '''
+    def recalcpsd(self,bitloads):
+        return self.gpu.calc_psd(bitloads,self.xtalk_gain)
     
     '''
     Generate PSD vector matrix between lines and return matrix
@@ -403,7 +408,7 @@ class Bundle(object):
 
         self._psd_cache[key]=P   
         self._psd_cache['misses']+=1
-     
+        
         return P 
 
 
