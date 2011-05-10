@@ -26,6 +26,7 @@ parser.add_option("-G","--nographing",dest="graphing", action="store_false",help
 parser.add_option("-p","--profiling",dest="profiling", action="store_true",help="enable profiling", default=False)
 parser.add_option("-c","--cache",dest="cache", action="store_true",help="attempt to read psd_cache from scenariofile", default=False)
 parser.add_option("-g","--gpu",dest="gpu", action="store_true",help="attempt to use gpu", default=False)
+parser.add_option("-r","--rate",dest="rate_search", action="store_true",help="enable rate searching", default=False)
 
 
 
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     '''
     Perform algorithm selection and option passing
     '''
-    algo = algos[options.algo](bundle,options.gpu)
+    algo = algos[options.algo](bundle,options.gpu, options.rate_search)
     if options.profiling:
         log.info("Profiling Run")
         if not os.path.isdir(profdir):

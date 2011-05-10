@@ -464,6 +464,10 @@ class Bundle(object):
         for x in range(self.N):
             print("")
             for v in range(self.N):
-                print("%e"%self.xtalk_gain[tone][x][v]),   
-                
-    
+                print("%e"%self.xtalk_gain[tone][x][v])
+
+    '''
+    See if bundle rates have converged
+    '''
+    def rates_converged(self,tol):
+        return all([line.rate_converged(tol) for line in self.lines])

@@ -602,6 +602,10 @@ class gpu_thread(threading.Thread):
         self.print_config=parent.print_config
         self.r_kernels = parent.r_kernels
         self.local=threading.local()
+        self.monitor=[]
+        self.gpudiag=False
+        self.prepdiag=False
+        self.combodiag=False
         
     def run(self):
         try:
@@ -735,10 +739,10 @@ class gpu_thread(threading.Thread):
         threadshare_grid=(blockCount,1)
         threadshare_block=(threadCount,1,1)
         
-        monitor=255
-        gpudiag=False
-        prepdiag=False
-        combodiag=True
+        monitor=self.monitor
+        gpudiag=self.gpudiag
+        prepdiag=self.prepdiag
+        combodiag=self.combodiag
         
         #Mallocs
         d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
@@ -786,7 +790,7 @@ class gpu_thread(threading.Thread):
                 B=cuda.from_device(d_B,(memdim,self.N),self.type)
                 np.save("A",A)
                 np.save("B",B)
-                for g in [223]:
+                for g in monitor:
                     P=np.linalg.solve(A[g],B[g].T)
                     if not (numpy.isfinite(P)).all():
                         util.log.info("====G:%d\nA:%s\nB:%s\nP:%s"%(g,str(A[g]),str(B[g]),str(P)))
@@ -800,7 +804,7 @@ class gpu_thread(threading.Thread):
                 raise            
             
             #Go Find the LK Values
-            if (k>monitor) and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
+            if k in monitor and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
                 self.k_osblk(d_B,d_lk,d_lambdas,d_w,offset,grid=threadshare_grid,block=threadshare_block)
                 cuda.Context.synchronize()
@@ -822,7 +826,7 @@ class gpu_thread(threading.Thread):
                 P=B[lk_maxid]
                 global_lk_maxid=lk_maxid
                 bitload=util.bitload_from_id(global_lk_maxid,self.N,self.mbpt)
-                if (k>monitor):
+                if k in monitor:
                     util.log.info("GPU LKmax %d,%s:%s:%s"%(k,str(lk[lk_maxid]),str(bitload),str(P)))
 
         #end for
@@ -866,10 +870,10 @@ class gpu_thread(threading.Thread):
         #threadshare_block=(threadCount,1,1)
         threadshare_grid=(1,1)
         threadshare_block=(self.N,self.mbpt,1)
-        monitor=range(224)
-        gpudiag=False
-        prepdiag=False
-        combodiag=True
+        monitor=self.monitor
+        gpudiag=self.gpudiag
+        prepdiag=self.prepdiag
+        combodiag=self.combodiag
         sticking=False
         
         #Mallocs
@@ -1013,10 +1017,11 @@ class gpu_thread(threading.Thread):
         #threadshare_block=(threadCount,1,1)
         threadshare_grid=(self.K,1)
         threadshare_block=(self.mbpt,1,1)
-        monitor=False
-        gpudiag=False
-        prepdiag=False
-        combodiag=True
+        
+        monitor=self.monitor
+        gpudiag=self.gpudiag
+        prepdiag=self.prepdiag
+        combodiag=self.combodiag
         
         #Mallocs
         d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
@@ -1071,13 +1076,13 @@ class gpu_thread(threading.Thread):
             cuda.memcpy_dtoh(bitload,d_bitload)
             cuda.Context.synchronize()
             
-            if monitor:
+            if gpudiag:
                 util.log.info("Bitload:last This it:%d,%s"%(its,str(P.shape)))
                 for k in range(self.K):
                     util.log.info("%s:%s:%s:%s"%(str(bitload[k]),str(lastload[k]),str(lk[k]),str(P[k])))
 
         #util.log.info("Bitload:last This it:%d,%s,%s"%(its,str(P.shape),str(current_bitload.shape)))
-        if monitor:
+        if gpudiag:
             (free,total)=cuda.mem_get_info()
             util.log.info("GPU ISB %d%% Free"%((free*100/total)))
         

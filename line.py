@@ -90,3 +90,9 @@ class Line(object):
     '''
     def rate(self):
         return sum(self.b)
+
+    '''
+    Test Rate Convergence
+    '''
+    def rate_converged(self,tol):
+        return abs(self.rate()-self.rate_target)<tol

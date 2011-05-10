@@ -38,7 +38,8 @@ class OSB(Algorithm):
                        'p_budget':0.110,    #watts #from scenarios.c (0.110
                        'rate_target':False,
                        'min_step':500,      #was min_sl
-                       'p_tol':0.0015,      #should be 0.015
+                       'p_tol':0.015,      #should be 0.015
+                       'rate_tol':10,
                        'GAMMA':self.bundle.GAMMA
                        }
         
@@ -63,21 +64,70 @@ class OSB(Algorithm):
         self.w_max=np.zeros((self.bundle.N))
                               
         #TODO Implement rate region searching
-        if (False and all(rate != self.defaults['rate_target'] for rate in self.rate_targets)):
-            log.info("Rate Region")
+        if self.rate_search and (all(line.rate_target != self.defaults['rate_target'] for line in self.bundle.lines)):
+            log.info("Rate Region Search: Warning: This doesn't work!")
+            while not self.bundle.rates_converged(self.defaults['rate_tol']):
+                for lineid,line in enumerate(self.bundle.lines):
+                    if self.rate_targets[lineid] == self.defaults['rate_target']:
+                        continue
+                    self._bisect_l()
+                    log.info("Line:%d,Current:%d,Target:%d,Weight:%.3f "%(lineid,line.rate(),line.rate_target,self.w[lineid]))
+                    if line.rate_converged(self.defaults['rate_tol']):
+                        log.info("Converged very early on line:%s"%lineid)
+                        continue
+                    if line.rate() > line.rate_target:
+                        log.info("Overshot line:%s"%lineid)
+                        self.w_max[lineid]=self.w[lineid]
+                        self.w[lineid]/=2
+                        while True:
+                            self._bisect_l()
+                            if line.rate()>line.rate_target:
+                                self.w_max[lineid]=self.w[lineid]
+                                self.w[lineid]/=2
+                            else:
+                                self.w_min[lineid]=self.w[lineid]
+                                break
+                    else: #Rate less than target
+                        log.info("Undershot line:%s"%lineid)
+                        self.w_min[lineid]=self.w[lineid]
+                        self.w[lineid]*=2
+                        while True:
+                            self._bisect_l()
+                            if line.rate()<line.rate_target:
+                                self.w_min[lineid]=self.w[lineid]
+                                self.w[lineid]*=2
+                            else:
+                                self.w_max[lineid]=self.w[lineid]
+                                break
+                    if  line.rate_converged(self.defaults['rate_tol']):
+                        continue
+                    else:
+                        self.w[lineid]=(self.w_max[lineid]+self.w_min[lineid])/2
+                        log.info("Rate Bisection on line %d starting at %.3f"%(lineid,self.w[lineid]))
+                        while True:
+                            self._bisect_l()
+                            if line.rate>line.rate_target:
+                                self.w_max[lineid]=self.w[lineid]
+                            else:
+                                self.w_min[lineid]=self.w[lineid]
+                            if line.rate_converged(self.defaults['rate_tol']):
+                                log.info("Rate Bisection on line %d converged at %.3f"%(lineid,self.w[lineid]))
+                                break
+            util.log.info("Rates converged")
         else:
             log.info("Bisection")
-            self._bisect_l();
+            self._bisect_l()
         #init_lines() What the hell is this?
         self.postscript()
         return
-    
     '''
     Lambda Bisection
     :from osb_bb.c
     '''
     def _bisect_l(self):
-        log.info("Beginning Bisection")
+        self.l=np.tile(self.defaults['l'],(self.bundle.N))
+        logit=log.debug
+        logit("Beginning Bisection")
         self.p_total = np.zeros(self.bundle.N)
         self.p_total_last = np.tile(1.0,self.bundle.N)
 
@@ -93,31 +143,31 @@ class OSB(Algorithm):
                 self.l[lineid]=self.defaults['l']
                 lastpower=self.defaults['maxval']                
                 #L-range hunting
-                log.info("Beginning l-range hunt;line:%d"%lineid)
-                while True: #FIXME there must be a better way of doing this
+                logit("Beginning l-range hunt;line:%d"%lineid)
+                while True:
                     self.optimise_p(self.l)
                     linepower=self.total_power(line)
                     #Keep increasing l until power is lower than the budget (l inversely proportional to power)
                     if ( linepower > self.power_budget[lineid]): 
-                        log.info("Missed power budget:linepower:%.3f,lastdrop:%.0f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
+                        logit("Missed power budget:linepower:%.3f,lastdrop:%.0f%%,budget:%s"%((linepower),(100*(lastpower-linepower)/lastpower),str(self.power_budget[lineid])))
                         lastpower=linepower                      
                         if (self.l[lineid] < 1):
                             self.l[lineid]=1 #0*2=0
                         else:
                             self.l[lineid]*=2
                     else:
-                        log.info("Satisfied power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
+                        logit("Satisfied power budget:linepower:%.5f,budget:%s"%((linepower),str(self.power_budget[lineid])))
                         break
                 #this value is the highest that satisfies the power budget
                 l_max=self.l[lineid]
                 #but we know this value doesn't, so use it as the minimum
                 l_min=self.l[lineid]/2.0
-                log.info("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
+                logit("Completed l-range hunt; max:%f,min:%f"%(l_max,l_min))
 
                 
                 #Actual optimisation
                 last=False #force _l_converged to do first loop
-                log.info("Beginning optimisation run;line:%d"%lineid)           
+                logit("Beginning optimisation run;line:%d"%lineid)           
                 while not self._l_converged(line,last):
                     last=self.total_power(line)                    
                     self.l[lineid]=(l_max+l_min)/2
@@ -129,14 +179,13 @@ class OSB(Algorithm):
                         l_min=self.l[lineid]
                     else:
                         l_max=self.l[lineid]
-                log.info("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
+                logit("Completed optimisation run;line:%d, l:%f"%(lineid,self.l[lineid]))         
 
             #End line loop
             
         #End while loop
-            
-                    
-                    
+        self.update_b_p()
+
     '''
     l converged
     Decides whether the line/bundle is done
@@ -153,7 +202,6 @@ class OSB(Algorithm):
             if (self.l_last == self.l).all():
                 #Optimisation done since all values the same as last time
                 assert (self.l > 0).all()
-                log.info("This = Last")
                 return True
             else:
                 #TODO Need to add rate checking in here for rate mode

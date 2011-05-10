@@ -25,10 +25,11 @@ class Algorithm(object):
     stats={}
 
         
-    def __init__(self,bundle,useGPU=False):
+    def __init__(self,bundle,useGPU=False, rate_search=True):
         assert isinstance(bundle,Bundle), "Did you give me a bundle to use?"
         self.bundle=bundle
         self.useGPU=useGPU
+        self.rate_search=rate_search
         
 
     def preamble(self):
@@ -61,9 +62,6 @@ class Algorithm(object):
             for k in range(self.bundle.K):
                 self.p[k]=self.bundle.calc_psd(self.b[k],k,gpu=False)#disable manual psd for the time being
         
-        for line in self.bundle.lines:
-            line.b=self.b[:,line.id]
-            line.p=self.p[:,line.id]
         
         self.bundle.calculate_snr()
         self.stats['end']=time.time()
@@ -75,6 +73,14 @@ class Algorithm(object):
 
         util.log.info("All Done Here, took %f, hit ratio of %.4f"%(self.stats['duration'],self.stats['hitratio']))
         
+    def update_b_p(self):
+        for line in self.bundle.lines:
+            line.b=self.b[:,line.id]
+            line.p=self.p[:,line.id]
+            
+            line.p_total = sum(map(util.dbmhz_to_watts,line.p))
+            line.b_total = sum(line.b)
+            util.log.info("Line:%d,Power:%fW,Rate:%dbpf"%(line.id,line.p_total,line.b_total))
 
     def eta(self,how_done,start=False):
         '''

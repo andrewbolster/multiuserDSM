@@ -39,6 +39,7 @@ class ISB(Algorithm):
                        'rate_target':False,
                        'min_step':500,      #was min_sl
                        'p_tol':0.0015,      #should be 0.015
+                       'rate_tol':10,
                        'GAMMA':self.bundle.GAMMA
                        }
         
@@ -64,8 +65,56 @@ class ISB(Algorithm):
         self.w_max=np.zeros((self.bundle.N))
                               
         #TODO Implement rate region searching
-        if (False and all(rate != self.defaults['rate_target'] for rate in self.rate_targets)):
-            log.info("Rate Region")
+        if self.rate_search and (all(line.rate_target != self.defaults['rate_target'] for line in self.bundle.lines)):
+            log.info("Rate Region Search: Warning: This doesn't work!")
+            while not self.bundle.rates_converged(self.defaults['rate_tol']):
+                for lineid,line in enumerate(self.bundle.lines):
+                    if self.rate_targets[lineid] == self.defaults['rate_target']:
+                        continue
+                    self._bisect_l()
+                    log.info("Line:%d,Current:%d,Target:%d,Weight:%.3f "%(lineid,line.rate(),line.rate_target,self.w[lineid]))
+                    if line.rate_converged(self.defaults['rate_tol']):
+                        log.info("Converged very early on line:%s"%lineid)
+                        continue
+                    if line.rate() > line.rate_target:
+                        log.info("Overshot line:%s"%lineid)
+                        self.w_max[lineid]=self.w[lineid]
+                        self.w[lineid]/=2
+                        while True:
+                            self._bisect_l()
+                            if line.rate()>line.rate_target:
+                                self.w_max[lineid]=self.w[lineid]
+                                self.w[lineid]/=2
+                            else:
+                                self.w_min[lineid]=self.w[lineid]
+                                break
+                    else: #Rate less than target
+                        log.info("Undershot line:%s"%lineid)
+                        self.w_min[lineid]=self.w[lineid]
+                        self.w[lineid]*=2
+                        while True:
+                            self._bisect_l()
+                            if line.rate()<line.rate_target:
+                                self.w_min[lineid]=self.w[lineid]
+                                self.w[lineid]*=2
+                            else:
+                                self.w_max[lineid]=self.w[lineid]
+                                break
+                    if  line.rate_converged(self.defaults['rate_tol']):
+                        continue
+                    else:
+                        self.w[lineid]=(self.w_max[lineid]+self.w_min[lineid])/2
+                        log.info("Rate Bisection on line %d starting at %.3f"%(lineid,self.w[lineid]))
+                        while True:
+                            self._bisect_l()
+                            if line.rate>line.rate_target:
+                                self.w_max[lineid]=self.w[lineid]
+                            else:
+                                self.w_min[lineid]=self.w[lineid]
+                            if line.rate_converged(self.defaults['rate_tol']):
+                                log.info("Rate Bisection on line %d converged at %.3f"%(lineid,self.w[lineid]))
+                                break
+            util.log.info("Rates converged")
         else:
             log.info("Bisection")
             self._bisect_l();
@@ -147,6 +196,7 @@ class ISB(Algorithm):
             #End line loop
             
         #End while loop
+        self.update_b_p()
     '''
     l converged
     Decides whether the line/bundle is done

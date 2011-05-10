@@ -162,29 +162,6 @@ int osb_bb::run()
 				_w[user] = (_w_max[user]+_w_min[user])/2;
 				printf("About to start rate bisection on line %d starting with w[%d] = %lf\n",user,user,_w[user]);	
 				while(1) {
-					/*_l_evals=0;
-					for (int user1=0;user1<lines;user1++) {
-						_l[user1]=0;
-						_best_l[user1]=0;
-					}
-					_p_distance=DBL_MAX;
-					_prev_p_distance=DBL_MAX;
-					_min_p_distance=DBL_MAX;
-					if (_started_dynamic)
-						_dynamic_lambda=true;
-					while(!powers_converged() || _l_evals == 0) {
-						print_vector(_l,"l");
-						//print_vector_to_file(_l,"l",_log);
-						optimise_p();
-						update_l();
-						if (_dynamic_lambda)
-							update_sl();
-						_l_evals++;
-						//fprintf(_log,"Number of lambda evaluations = %d\n",_l_evals);
-						//getchar();
-						printf("Current distance = %.15lf\n",calc_p_distance());
-					}
-					*/
 					bisect_l();
 					printf("Number of lambda evaluations = %d\n",_l_evals);
 					print_vector(_w,"w");
