@@ -645,6 +645,9 @@ class gpu_thread(threading.Thread):
             elif func=='isb_optimise_inc':
                 result=self.isb_optimise_inc(*args)
                 self.resqueue.put((func,result))
+            elif func=='mipb_update_cost':
+                result=self.mipb_update_cost(*args)
+                self.resqueue.put((func,result))
             elif func=='calc_psd':
                 result=self.calc_psd(*args)
                 self.resqueue.put((func,result))
@@ -692,6 +695,25 @@ class gpu_thread(threading.Thread):
         d_XTG.free()
         d_p.free()
         return h_p.astype(np.float64)
+    
+    #NOWHERE NEAR READY
+    def mipb_update_delta_p(self,tone,N):
+        for line in range(self.bundle.N):
+            self.argqueue.put((line,tone))
+        self.argqueue.join()
+        
+        delta_p=np.zeros((N,N))
+        while True:
+            try:
+                queueitem=self.resqueue.get_nowait()
+                (k,delta_p_k)=queueitem
+                delta_p[k]=delta_p_k
+            except Queue.Empty:
+                break
+            except ValueError:
+                util.log.error("Invalid Queueitem %s"%(str(queueitem)))
+                continue
+        return (delta_p)
     
     def osb_optimise_p(self,lambdas,w,xtalk_gain,k):
         #Number of expected permutations

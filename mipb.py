@@ -8,6 +8,7 @@ import numpy as np
 import pylab as pl
 import sys
 from itertools import product
+import threading, Queue
 
 #Local Imports
 from bundle import Bundle
@@ -20,13 +21,7 @@ try:
     using_gpu=True
 except:
     util.log.info("Not using GPU")
-    using_gpu=False
-    
-if util.mp:
-    #Thread Stuffs
-    from multiprocessing import Process, Queue, cpu_count
-    from Queue import Empty
- 
+    using_gpu=False 
 
 class MIPB(Algorithm):
     '''
@@ -71,6 +66,19 @@ class MIPB(Algorithm):
         self.line_b_last=np.copy(self.line_b)
         
         self.preamble()
+        
+        #Set up threadpool
+        self.argqueue=Queue.Queue()
+        self.resqueue=Queue.Queue()
+        
+        #Failed Experiment
+        self.threadpool = [None]*2
+        if False and not self.useGPU: #Build Treadpool
+            for dev in range(len(self.threadpool)):
+                self.threadpool[dev] = self._calc_delta_p_thread(self.argqueue,self.resqueue)
+                self.threadpool[dev].setDaemon(True)
+                self.threadpool[dev].start()
+        
         hold_counter=0
         self.stepsize=self.defaults['min_sw']
         if any(self.rate_targets):
@@ -153,9 +161,12 @@ class MIPB(Algorithm):
 
 
         self.update_cost_matrix(weights)
-
+        its=0
+        #Move this entire loop to gpu?
+        #No: Can't as it picks a min line; move update_* to gpu individually
         while not (self.finished == True).all():
-            util.log.debug("LineP:\n%s"%self.line_p)
+            its+=1
+            util.log.debug("Iteration:%s, LineP:\n%s"%(its,self.line_p))
             #and return mins = (k_min,user_min)
             mins=self.min_tone_cost()
             if mins: #If a minimum is found
@@ -170,10 +181,10 @@ class MIPB(Algorithm):
                 self.update_delta_p(k_min)
                 #Update the powers 
                 self.update_power(mins)
-                self.update_cost_matrix(weights, k_min)  
+                self.update_tone_cost(weights, k_min)  
             else:
-                util.log.info("%s"%self.cost)
-                #assert (self.finished == True).all(), "No min, but not finished"
+                util.log.info("After %d iterations, %s"%(its,self.cost))
+                assert (self.finished == True).all(), "No min, but not finished"
                 pass #Completed this run, all tones full
         #end while tones not full loop               
                     
@@ -195,15 +206,12 @@ class MIPB(Algorithm):
             return False
         
     def update_delta_p(self,tone):
-        if util.mp:
-            self.update_delta_p_MP(tone)
-        elif True:
-            self.delta_p[tone]=self.update_delta_p_GPU(tone,self.bundle.N)
+        if not self.useGPU:
+            self.delta_p[tone]=self.update_delta_p_CPU(tone,self.bundle.N)
         else:
-            for line in range(self.bundle.N):
-                self.delta_p[tone,line]=self._calc_delta_p(line,k=tone)
+            self.delta_p[tone]=self.bundle.gpu.mipb_update_delta_p(tone,self.bundle.N)
 
-    def update_delta_p_GPU(self,k,N):
+    def update_delta_p_CPU(self,k,N):
         _b=np.tile(util.mat2arr(self.b[k]),N).reshape(N,N)
         delta_p=np.zeros((N,N))
         for line in range(N):
@@ -217,37 +225,32 @@ class MIPB(Algorithm):
                     delta_p[line,xline]=new_p[xline]-self.p[k,xline]
         return delta_p
     
-    def update_delta_p_MP(self,tone):
-        queue=Queue()
-        for line in range(self.bundle.N):
-            queue.put(line)
-        threads = [Process(target=self._calc_delta_p, args=(queue,), kwargs={'k':tone}) for i in range(cpu_count())]
-        for p in threads:
-            p.start()
-        for p in threads:
-            p.join()
     
-    def _calc_delta_p(self,line,k=False):
+    
+    def _calc_delta_p_thread(self):
         '''
         (re)Calculate the delta_p matrix for powers in the bundle
         Since this implementation os Bundle.calc_psd does not update
         a global power setting, there is no need for a local old_p
         #FIXME Not Tested        
         '''
-        _b=util.mat2arr(self.b[k])
-        _b[line]+=1
-        new_p=self.bundle.calc_psd(_b,k)
-        delta_p=np.zeros(self.bundle.N)
-        for xline in range(self.bundle.N):
+        while True:
+            (line,k)=self.argqueue.get()
+            
+            _b=util.mat2arr(self.b[k])
+            _b[line]+=1
+            new_p=self.bundle.calc_psd(_b,k)
+            
             if new_p[xline]<0:
                 #Eliminate anyone else from talking to this line.
                 ##I Don't Think This Makes Any Sense...
-                delta_p[xline]=self.defaults['maxval']
+                delta_p=self.defaults['maxval']
             else:
-                delta_p[xline]=new_p[xline]-self.p[k,xline]
-        return delta_p
+                delta_p=new_p[xline]-self.p[k,xline]
+            self.resqueue(k,delta_p)
+            self.argqueue.task_done()
     
-    def update_cost_matrix(self,weights,tone=False):
+    def update_cost_matrix(self,weights):
         '''
         Update cost matrix and return a tuple of the minimum bit addition (tone,user)
         if not given a tone, assume operation of (min_cost/init_cost_matrix)
@@ -255,19 +258,13 @@ class MIPB(Algorithm):
         Raises NameError on no min found/all tones full
 
         '''
-        
-        if not isinstance(tone,bool):
-            #In this case, update was called with a tone to update, so
-            self.update_tone_cost(weights, tone)
-        else:
-            #recalculate costs matrix
-            for k in xrange(self.bundle.K):
-                self.update_tone_cost(weights,k)
-            #util.log.info("%s"%str(self.cost))
+        for k in xrange(self.bundle.K):
+            self.update_tone_cost(weights,k)
+        #util.log.info("%s"%str(self.cost))
     
     def update_tone_cost(self,weights,tone):
         '''
-        Experimental Single-shot cost generation
+        Single-shot cost generation
         '''
         N=self.bundle.N
         tonecost=np.zeros(N)
@@ -308,7 +305,6 @@ class MIPB(Algorithm):
     def update_power(self,(tone,line)):
         '''
         Update power totals for all lines for this line change
-        #FIXME Not Tested
         '''
         this_delta=0.0
         for xline in xrange(self.bundle.N):

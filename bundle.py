@@ -215,14 +215,22 @@ class Bundle(object):
     
     '''
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
-               
+        (vid,xid)=(victim.id,xtalker.id)
+        #Check first if there is any shared sector (swapping screws with abs() operation)
+        #Check if either v.lt or v.nt is between x.lt/x.nt
+        if  (xtalker.lt<victim.lt and victim.lt<xtalker.nt) or (xtalker.lt<victim.nt and victim.nt<xtalker.nt):
+            log.error("(V/X):(%d/%d):No Shared Sector"%(vid,xid))
+            return 0
+
+        
         if dir == "DOWNSTREAM":                 #If DOWNSTREAM, swap  and negate nt/lt's
             (D1,D2)=(-xtalker.lt,-xtalker.nt)
             (A,B)=(-victim.lt,-victim.nt)
         else: #Upstream
             (D1,D2)=(xtalker.nt,xtalker.lt)
             (A,B)=(victim.nt,victim.lt)
-            
+
+        
         #Shared length is the H2 Span
         shared_length=abs(max(A,D1)-min(B,D2))/1000.0
         #Head Length is the H1/H4 Span
@@ -251,7 +259,7 @@ class Bundle(object):
         try:
             gain = H * self.fext(freq, shared_length)
         except ValueError:
-            log.error("Failed on (A,B,D1,D2)=(%d,%d,%d,%d):Shared:%f"%(A,B,D1,D2,shared_length))
+            log.error("Failed on (V/X):(%d/%d):(A,B,D1,D2)=(%d,%d,%d,%d):Shared:%f"%(vid,xid,A,B,D1,D2,shared_length))
             raise
         
         return gain  
