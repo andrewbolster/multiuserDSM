@@ -388,7 +388,7 @@ class GPU(object):
         #Set up context for initial setup
         cuda.init()
         mydev=cuda.Device(0)
-        if isinstance(ngpu, bool):
+        if ngpu<1:
             self.devcount=mydev.count() 
         else: 
             self.devcount=min(mydev.count(),int(ngpu))
