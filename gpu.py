@@ -374,7 +374,7 @@ __global__ void isb_optimise_inc(FPT *A, FPT *P, FPT *d_XTG, FPT *LK, FPT *lambd
 """)
 
 class GPU(object):
-    def __init__(self,bundle):
+    def __init__(self,bundle,ngpu=False):
         if anythingbroken:
             util.log.error("GPU imports failed miserably")
         self.bundle=bundle
@@ -388,7 +388,7 @@ class GPU(object):
         #Set up context for initial setup
         cuda.init()
         mydev=cuda.Device(0)
-        self.devcount=mydev.count()
+        self.devcount=min(mydev.count(),ngpu) 
         ctx=mydev.make_context()
         
         #Work out some context sensitive runtime parameters (currently assumes homogenous gpus)

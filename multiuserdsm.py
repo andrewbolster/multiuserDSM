@@ -6,15 +6,10 @@ import matplotlib
 matplotlib.use("Agg")
 
 from optparse import OptionParser
-from bundle import Bundle
-from utility import *
-from osb import OSB
-from mipb import MIPB
-from isb import ISB
+
 from graphgenerator import graphgen
 import cProfile,os
 
-log.info("Starting Up...")
 parser = OptionParser()
 
 parser.add_option("-n","--network", dest="network", help="read network configuration from FILE",metavar="NETWORK",default="")
@@ -25,26 +20,40 @@ parser.add_option("-A","--altscenario", dest="altscenario", help="specify an exi
 parser.add_option("-G","--nographing",dest="graphing", action="store_false",help="disable graphing", default=True)
 parser.add_option("-p","--profiling",dest="profiling", action="store_true",help="enable profiling", default=False)
 parser.add_option("-c","--cache",dest="cache", action="store_true",help="attempt to read psd_cache from scenariofile", default=False)
-parser.add_option("-g","--gpu",dest="gpu", action="store_true",help="attempt to use gpu", default=False)
+parser.add_option("-g","--gpu",dest="gpu",action="store_true",help="attempt to use gpu", default=False)
 parser.add_option("-r","--rate",dest="rate_search", action="store_true",help="enable rate searching", default=False)
+parser.add_option("-l","--logfile", dest="logfile", help="specify logfile",metavar="LOGFILE",default="multiuserdsm.log")
+parser.add_option("--ngpu",dest="gpu",action="store",help="attempt to use gpu", default=False)
 
-
+from bundle import Bundle
+from osb import OSB
+from mipb import MIPB
+from isb import ISB
+import utility as util
 
 (options,args) = parser.parse_args()
-if os.path.isfile(rawdir+options.scenarioname+'-lines.npy') and options.network=="":
-    options.network=rawdir+options.scenarioname+'-lines.npy'
-if options.cache and os.path.isfile(rawdir+options.scenarioname+'-cache.npy'):
+
+h = util.logging.FileHandler(options.logfile)
+h.setFormatter(util.f)
+util.log.addHandler(h)
+
+if os.path.isfile(util.rawdir+options.scenarioname+'-lines.npy') and options.network=="":
+    options.network=util.rawdir+options.scenarioname+'-lines.npy'
+if options.cache and os.path.isfile(util.rawdir+options.scenarioname+'-cache.npy'):
     log.info("Using Cached PSD values. This is very dangerous")
-    options.cache=rawdir+options.scenarioname+'-cache.npy'    
+    options.cache=util.rawdir+options.scenarioname+'-cache.npy'
+
+util.log.info("Starting Up... logging to %s"%options.logfile)
 
 bundle = Bundle(network_file=options.network,K=options.K,scenarioname=options.scenarioname, cachefile=options.cache, useGPU=options.gpu)
 algos={"OSB":OSB,"MIPB":MIPB,"ISB":ISB}
 
 
+
 if __name__ == "__main__":
     
     if options.algo=="":
-        log.info("Generating scenario files %s and exiting"%options.scenarioname)
+        util.log.info("Generating scenario files %s and exiting"%options.scenarioname)
         sys.exit(0)
     
     '''

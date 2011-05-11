@@ -16,9 +16,6 @@ h = logging.StreamHandler()
 f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
 log.addHandler(h)
-h = logging.FileHandler('multiuserdsm.log')
-h.setFormatter(f)
-log.addHandler(h)
 
 #Directories
 rawdir="raw_results/"

@@ -89,7 +89,7 @@ class Bundle(object):
             log.info("Successfully read %d lines from %s"%(self.N,network_file))
 
         if(useGPU):
-            self.gpu=(GPU(self))
+            self.gpu=(GPU(self,ngpu=useGPU))
 
 
         log.info("Calculating the channel matrix for %d channels"%self.K)
@@ -133,7 +133,7 @@ class Bundle(object):
                         lx.gain[k] = self.xtalk_gain[k][x][v] = lx.transfer_fn(self.freq[k])
                     else:                               #Otherwise look at XT
                         self.xtalk_gain[k][x][v] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
-            if self.betamodel:
+            if self.betamodel and self.N>2:
                 self.xtalk_gain[k]*=self.offset[:self.N,:self.N] #I'm lazy
     '''
     Check Normalised XT Gains and xtalk symmetry 
@@ -325,12 +325,13 @@ class Bundle(object):
             #line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in xrange(self.K)] #TODO _calc_sym_err
             line.p_total = sum(map(dbmhz_to_watts,line.p))
             line.b_total = sum(line.b)
-            log.info("Line:%d,Power:%fW,Rate:%dbpf"%(line.id,line.p_total,line.b_total))
+            log.info("Line:%d,Power:%.3fmW,Rate:%dbpf"%(line.id,line.p_total,line.b_total))
             
             '''
             With This whole Fractional thing; 
             Are b/_b ever different? If its a fractional line is b[k] ever needed?
             '''
+        log.info("Bundle Rate:%dbpf"%sum([line.b_total for line in self.lines]))
     '''
     Calculate Symbol Error Rate on line
     :from symerr.c
