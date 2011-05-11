@@ -388,7 +388,10 @@ class GPU(object):
         #Set up context for initial setup
         cuda.init()
         mydev=cuda.Device(0)
-        self.devcount=min(mydev.count(),ngpu) 
+        if isinstance(ngpu, bool):
+            self.devcount=mydev.count() 
+        else: 
+            self.devcount=min(mydev.count(),int(ngpu))
         ctx=mydev.make_context()
         
         #Work out some context sensitive runtime parameters (currently assumes homogenous gpus)

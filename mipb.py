@@ -209,6 +209,7 @@ class MIPB(Algorithm):
         if not self.useGPU:
             self.delta_p[tone]=self.update_delta_p_CPU(tone,self.bundle.N)
         else:
+            util.log.error("GPU DOESN'T WORK AND THIS IS GOING TO DIE!!")
             self.delta_p[tone]=self.bundle.gpu.mipb_update_delta_p(tone,self.bundle.N)
 
     def update_delta_p_CPU(self,k,N):
