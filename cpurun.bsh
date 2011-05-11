@@ -7,17 +7,11 @@ NETWORKS="2-3k_5k-near_far.net 3-3k_5k-near_far.net 4-3k_5k-near_far.net 8-3k_5k
 
 ALGOS="OSB ISB" #Disabled MIPB for now (No GPU version)
 
-ngpu=1
 
 for net in $NETWORKS; do
   for algo in $ALGOS; do
     scenario="${algo}_${net}"
     ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_CPU -l ${scenario}_CPU.log
-    if [ "$algo" == "OSB" ]; then
-      for ngpu in "1 2 3 4"; do
-        ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_CPU -l ${scenario}_GPU_${ngpu}.log --ngpu ${ngpu}
-      done
-    fi
   done
 done
 

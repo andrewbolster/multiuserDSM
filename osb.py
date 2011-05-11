@@ -78,7 +78,7 @@ class OSB(Algorithm):
     '''
     def _bisect_l(self):
         self.l=np.tile(self.defaults['l'],(self.bundle.N))
-        logit=log.info
+        logit=log.debug
         logit("Beginning Bisection")
         self.p_total = np.zeros(self.bundle.N)
         self.p_total_last = np.tile(1.0,self.bundle.N)

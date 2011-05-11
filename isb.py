@@ -78,7 +78,7 @@ class ISB(Algorithm):
     :from isb3g.c
     '''
     def _bisect_l(self):
-        logit=log.info
+        logit=log.debug
         logit("Beginning Bisection")
         self.l=np.tile(self.defaults['l'],(self.bundle.N))
         self.p_total = np.zeros(self.bundle.N)
