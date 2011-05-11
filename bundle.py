@@ -97,7 +97,6 @@ class Bundle(object):
         self.calc_channel_matrix()
 
         #self.graph_channel_matrix()
-        log.info("Running self check:")
         self.check_xtalk_gains() #This is only ever used once; could be sent into calc_channel_matrix?
         self.tofile(scenarioname)
         
@@ -161,7 +160,6 @@ class Bundle(object):
         
         #Check symmetry if all lines are the same
         ntlt=set([(line.nt,line.lt) for line in self.lines])
-        log.info("%s"%str(ntlt))
         
         if len(ntlt)!=1:
             #Not all the lines are the same so the xtalk matrix cannot be symmetric
@@ -311,7 +309,6 @@ class Bundle(object):
             line.sanity()
             noise = np.zeros(self.K)
             
-            log.debug("fext\tgain\tcnr\tsnr")
             for tone in xrange(self.K):
                 try:
                     noise = line.calc_fext_noise(tone) + line.alien_xtalk(tone) + (line.noise)
@@ -404,12 +401,6 @@ class Bundle(object):
             P=self.gpu.solve(A,B,224)
         else:
             P=np.linalg.solve(A,B)
-        
-        #Useful debugging
-        
-        log.debug("A:\n%s"%str(A))
-        log.debug("B:\n%s"%str(B))
-        log.debug("P:\n%s"%str(P))
         
         P=P.T
 

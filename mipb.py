@@ -183,7 +183,7 @@ class MIPB(Algorithm):
                 self.update_power(mins)
                 self.update_tone_cost(weights, k_min)  
             else:
-                util.log.info("After %d iterations, %s"%(its,self.cost))
+                util.log.debug("After %d iterations, %s"%(its,self.cost))
                 assert (self.finished == True).all(), "No min, but not finished"
                 pass #Completed this run, all tones full
         #end while tones not full loop               
@@ -195,12 +195,10 @@ class MIPB(Algorithm):
         #Check Power
         for xline in range(self.bundle.N):
             if (self.line_p[xline] + self.delta_p[tone,line,xline] > self.power_budget[xline]):
-                #util.log.info("Power Broken: %g + %g > %g,(%d,%d),b=%d"%(self.line_p[xline],self.delta_p[tone,line,xline],self.power_budget[xline],tone,line,self.b[tone,line]))
                 return True
             
         #Check Spectral Mask
         if (self.p[tone,line] + self.delta_p[tone,line,line] > self.spectral_mask):
-            #util.log.info("Spectrum Broken: %g + %g > %g,(%d,%d),b=%d"%(self.p[tone,line],self.delta_p[tone,line,line],self.spectral_mask,tone,line,self.b[tone,line]))
             return True
         else: #If we got this far, all is well.
             return False
@@ -261,7 +259,6 @@ class MIPB(Algorithm):
         '''
         for k in xrange(self.bundle.K):
             self.update_tone_cost(weights,k)
-        #util.log.info("%s"%str(self.cost))
     
     def update_tone_cost(self,weights,tone):
         '''
@@ -284,10 +281,9 @@ class MIPB(Algorithm):
                         elif weights[xline]<1:
                             tonecost[line]+=(1-weights[xline])*self.delta_p[tone,line,xline]
             self.cost[tone]=tonecost
-            #util.log.info("Cost on tone %d\n%s"%(tone,str(self.cost[tone])))
             
         except:
-            util.log.info("W:%s,DP:%s"%(str(weights),str(self.cost[tone])))
+            util.log.debug("W:%s,DP:%s"%(str(weights),str(self.cost[tone])))
             raise
         #Fancy Functional stuff won't work with ratetarget==false
         
