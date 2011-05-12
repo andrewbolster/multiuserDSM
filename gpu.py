@@ -403,7 +403,7 @@ class GPU(object):
         self.threadmax=mydev.get_attribute(cuda.device_attribute.MAX_THREADS_PER_BLOCK)
         self.warpsize=mydev.get_attribute(cuda.device_attribute.WARP_SIZE)
         self.mps=mydev.get_attribute(cuda.device_attribute.MULTIPROCESSOR_COUNT)
-        self.blockpermp=32
+        self.blockpermp=16
         self.gridmax=min(self.blockpermp*self.mps,65535)
         
         ctx.pop()
@@ -669,7 +669,13 @@ class gpu_thread(threading.Thread):
             self.argqueue.task_done()#nothing seems to get past this
 
         #end queue loop
-        
+    def _workload_calc(self,worload):
+        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
+        warpperblock=max(1,min(8,warpcount))
+        threadCount=self.warpsize * warpperblock
+        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+        return (warpcount,warpperblock,threadCount,blockCount)
+
     def calc_psd(self,bitloads,xtalk):
         #Number of expected permutations
         Ncombinations=self.K
@@ -677,10 +683,7 @@ class gpu_thread(threading.Thread):
         gridsize=min(Ncombinations,self.gridmax)
 
         #Check if this is getting hairy and assign grid/block dimensions
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
-        warpperblock=max(1,min(8,warpcount))
-        threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+        (warpcount,warpperblock,threadCount,blockCount) = self._workload_calc(Ncombinations)
 
         #How many individual lk's
         memdim=blockCount*threadCount
@@ -734,10 +737,7 @@ class gpu_thread(threading.Thread):
         gridsize=min(Ncombinations,self.gridmax)
 
         #Check if this is getting hairy and assign grid/block dimensions
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
-        warpperblock=max(1,min(8,warpcount))
-        threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+        (warpcount,warpperblock,threadCount,blockCount) = self._workload_calc(Ncombinations)
 
         #How many individual lk's
         memdim=blockCount*threadCount
@@ -864,10 +864,7 @@ class gpu_thread(threading.Thread):
         gridsize=min(Ncombinations,self.gridmax)
 
         #Check if this is getting hairy and assign grid/block dimensions
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
-        warpperblock=max(1,min(8,warpcount))
-        threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+        (warpcount,warpperblock,threadCount,blockCount) = self._workload_calc(Ncombinations)
 
         #How many individual lk's
         memdim=blockCount*threadCount
@@ -1011,10 +1008,7 @@ class gpu_thread(threading.Thread):
         gridsize=min(Ncombinations,self.gridmax)
 
         #Check if this is getting hairy and assign grid/block dimensions
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
-        warpperblock=max(1,min(8,warpcount))
-        threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+        (warpcount,warpperblock,threadCount,blockCount) = self._workload_calc(Ncombinations)
 
         #How many individual lk's
         memdim=blockCount*threadCount
