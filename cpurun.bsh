@@ -5,7 +5,7 @@
 
 NETWORKS="2-3k_5k-near_far.net 3-3k_5k-near_far.net 4-3k_5k-near_far.net 8-3k_5k-near_far.net"
 
-ALGOS="OSB ISB" #Disabled MIPB for now (No GPU version)
+ALGOS="MIPB OSB ISB"
 
 
 for net in $NETWORKS; do

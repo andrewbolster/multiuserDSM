@@ -81,7 +81,7 @@ class MIPB(Algorithm):
         
         hold_counter=0
         self.stepsize=self.defaults['min_sw']
-        if any(self.rate_targets):
+        if any(self.rate_targets) and self.rate_search:
             util.log.info("Running with targets:%s"%str(self.rate_targets))
 
             while not self.converged():

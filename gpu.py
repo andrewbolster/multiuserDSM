@@ -803,9 +803,13 @@ class gpu_thread(threading.Thread):
                 self.k_osbsolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
                 cuda.Context.synchronize()
             except:
-                util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
-                raise            
-            
+                util.log.error("Failed on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s, retrying once"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
+                try:
+                    self.k_osbsolve(d_A,d_B,offset, grid=threadshare_grid, block=threadshare_block)
+                    cuda.Context.synchronize()
+                except:
+                    util.log.error("Failed again on Solve,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block)))
+                raise
             #Go Find the LK Values
             if k in monitor and gpudiag: self.meminfo(lkmax,k,o,threadshare_block,"Max")
             try:
