@@ -21,7 +21,7 @@ class Algorithm(object):
     '''
     MAXRATE = None #Need to set this for load_fm and ISB
     MAXPOWER = None
-    MAXBITSPERTONE = 15
+    MAXBITSPERTONE = 16 #max 15 + 0
     name="Default Algorithm Name; You should never see this!"
     stats={}
 

@@ -38,7 +38,7 @@ class ISB(Algorithm):
                        'p_budget':0.110,    #watts #from scenarios.c (0.110
                        'rate_target':False,
                        'min_step':500,      #was min_sl
-                       'p_tol':0.0015,      #should be 0.015
+                       'p_tol':0.015,      #should be 0.015
                        'rate_tol':10,
                        'GAMMA':self.bundle.GAMMA
                        }

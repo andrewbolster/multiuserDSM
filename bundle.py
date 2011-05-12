@@ -29,7 +29,7 @@ class Bundle(object):
     UGAMMA= get_GAMMA(1e-7, 4)       #Uncoded SNR Gap (setup elsewere)
     gamma_hat = pow(10,(UGAMMA+MARGIN-C_G)/10)
     NOISE=dbmhz_to_watts(-140)
-    MAXBITSPERTONE=15
+    MAXBITSPERTONE = 16 #max 15 + 0
     
     #Beta adjustment
     betamodel=True
