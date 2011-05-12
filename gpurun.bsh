@@ -14,10 +14,10 @@ for net in $NETWORKS; do
     scenario="${algo}_${net}"
     if [ "$algo" == "OSB" ]; then
       for ngpu in $NGPU; do
-        ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_CPU -l ${scenario}_GPU_${ngpu}.log --ngpu ${ngpu}
+        ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_GPU -l ${scenario}_GPU_${ngpu}.log --ngpu ${ngpu}
       done
     else
-      ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_CPU -l ${scenario}_GPU_4.log -g
+      ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_GPU -l ${scenario}_GPU_4.log -g
     fi
   done
 done

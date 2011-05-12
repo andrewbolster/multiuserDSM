@@ -388,11 +388,14 @@ class GPU(object):
         #Set up context for initial setup
         cuda.init()
         mydev=cuda.Device(0)
-        if ngpu < 1:
+        if isinstance(ngpu,bool):
             self.devcount=mydev.count() 
-        else: 
+        elif isinstance(ngpu,int): 
             self.devcount=min(mydev.count(),int(ngpu))
-        util.log.info("Asked:%d,Have:%d,Got:%d"%(ngpu,mydev.count(),self.devcount))
+            util.log.info("Asked:%d,Have:%d,Got:%d"%(ngpu,mydev.count(),self.devcount))
+        else:
+            util.log.error("Could not understand requested GPU allocation, trying my best anyway")
+            self.devcount=mydev.count() 
         ctx=mydev.make_context()
         
         #Work out some context sensitive runtime parameters (currently assumes homogenous gpus)
@@ -614,10 +617,11 @@ class gpu_thread(threading.Thread):
     def run(self):
         try:
             #Initialise this device
-            util.log.info("Initialising CUDA device")
             self.local.dev = cuda.Device(self.device)
             self.local.ctx = self.local.dev.make_context()
             self.local.ctx.push()
+            (free,total)=cuda.mem_get_info()
+            util.log.info("Initialising CUDA device %d:(%.2f%% Free)"%(self.device,(free*100.0/total)))
         except pycuda._driver.MemoryError:
             util.log.info("Balls")
             raise

@@ -13,7 +13,7 @@ log = logging.getLogger('multiuserdsm')
 log.setLevel(logging.INFO)
 
 h = logging.StreamHandler()
-f = logging.Formatter('%(levelname)-7s %(module)s %(lineno)d %(message)s')
+f = logging.Formatter('%(asctime)s:%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
 log.addHandler(h)
 
