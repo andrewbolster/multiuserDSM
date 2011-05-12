@@ -22,7 +22,7 @@ class graphgen():
         self.dest=util.graphdir
         
         if textfile:
-            self.scenario=textfile.split('/')[-1]
+            self.scenario=textfile.split('/')[-1].split('.')[0]
             self.importtext(textfile,type)
         else:
             self.scenario=scenario

@@ -208,8 +208,8 @@ __global__ void calc_psd(FPT *A, FPT *P, FPT *d_XTG, int *current_b, int N){
 //This probably hammers memory...
 __global__ void lk_osbprepare_permutations(FPT *A, FPT *B, FPT *d_XTG, int offset){
     //Don't need k as its sorted at the host stage for the creation of xtg
-    int j=threadIdx.x;
-    int myid=blockIdx.x;
+    int myid=(blockIdx.x*gridDim.x+threadIdx.x)/MAT1;
+    int j=(blockIdx.x*gridDim.x+threadIdx.x)%MAT1;
     int bitbangval=myid+offset;
 
     int bitload[MAT1], i;
@@ -610,9 +610,9 @@ class gpu_thread(threading.Thread):
         self.r_kernels = parent.r_kernels
         self.local=threading.local()
         self.monitor=[]
-        self.gpudiag=False
-        self.prepdiag=False
-        self.combodiag=False
+        self.gpudiag=True
+        self.prepdiag=True
+        self.combodiag=True
         
     def run(self):
         try:
@@ -670,10 +670,11 @@ class gpu_thread(threading.Thread):
 
         #end queue loop
     def _workload_calc(self,workload):
-        warpcount=(workload/self.warpsize)+(0 if ((workload%self.warpsize)==0)else 1)
+        warpcount=((workload/self.warpsize)+(0 if ((workload%self.warpsize)==0)else 1))
         warpperblock=max(1,min(8,warpcount))
         threadCount=self.warpsize * warpperblock
-        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))
+        blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1))) 
+        util.log.info((workload,warpcount,warpperblock,threadCount,blockCount))
         return (warpcount,warpperblock,threadCount,blockCount)
 
     def calc_psd(self,bitloads,xtalk):
@@ -775,7 +776,6 @@ class gpu_thread(threading.Thread):
                 if combodiag:
                     (free,total)=cuda.mem_get_info()
                     util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,str(lambdas),(free*100/total)))
-                    util.log.info("warpcount:%d,warpper:%d,threadC:%d,blockC:%d"%(warpcount,warpperblock,threadCount,blockCount))
             self.print_config=False
         
         #Perform LK Calculation and Maximisation for this channel, however many sectors it takes.
@@ -789,7 +789,7 @@ class gpu_thread(threading.Thread):
                 self.k_osbprepare(d_A,d_B,d_XTG,offset,grid=N_grid,block=N_block)
                 cuda.Context.synchronize()
             except (pycuda._driver.LaunchError,pycuda._driver.LogicError):
-                util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s"%(k,str(xtalk_gain.flatten()),str(N_grid),str(N_block)))
+                util.log.error("Failed on Prepare,Tone %d: XTG:%s\nGridDim:%s,BlockDim:%s\nWorkload:%s"%(k,str(xtalk_gain.flatten()),str(threadshare_grid),str(threadshare_block),self._workload_calc(Ncombinations)))
                 raise
 
             if prepdiag:
@@ -868,7 +868,7 @@ class gpu_thread(threading.Thread):
 
         #How many individual lk's
         memdim=blockCount*threadCount
-        assert memdim>Ncombinations, "Too many combinations for no loop construct"
+        assert memdim>Ncombinations, "Too many combinations for no loop construct:%s"%str(self._workload_calc(Ncombinations))
 
         memdim=Ncombinations
 
@@ -1011,14 +1011,8 @@ class gpu_thread(threading.Thread):
         (warpcount,warpperblock,threadCount,blockCount) = self._workload_calc(Ncombinations)
 
         #How many individual lk's
-        memdim=blockCount*threadCount
-        assert memdim>Ncombinations, "Too many combinations for no loop construct"
-
         memdim=Ncombinations
 
-        N_grid=((memdim),1)
-        N_block=(self.N,1,1)
-        
         #threadshare_grid=(blockCount,1)
         #threadshare_block=(threadCount,1,1)
         threadshare_grid=(self.K,1)
@@ -1083,11 +1077,10 @@ class gpu_thread(threading.Thread):
             cuda.Context.synchronize()
             
             if gpudiag:
-                util.log.info("Bitload:last This it:%d,%s"%(its,str(P.shape)))
+                util.log.info("Bitload:last This it:%d,"%(its))
                 for k in range(self.K):
-                    util.log.info("%s:%s:%s:%s"%(str(bitload[k]),str(lastload[k]),str(lk[k]),str(P[k])))
+                    util.log.info("%s:%s"%(str(bitload[k]),str(lastload[k])))
 
-        #util.log.info("Bitload:last This it:%d,%s,%s"%(its,str(P.shape),str(current_bitload.shape)))
         if gpudiag:
             (free,total)=cuda.mem_get_info()
             util.log.info("GPU ISB %d%% Free"%((free*100/total)))

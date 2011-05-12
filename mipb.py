@@ -106,6 +106,8 @@ class MIPB(Algorithm):
         else: #No Rate Targets Given
             util.log.info("No Target Given")
             self.load_bundle(self.w) #w defaults to 1 anyway, so no effect
+            self.update_totals()
+            util.log.info("After %d LoadBundle, b:%s:%d"%(self.stepsize,self.line_b, sum(self.line_b)))
         
         self.postscript()
     
@@ -159,20 +161,19 @@ class MIPB(Algorithm):
         for k in range(self.bundle.K):
             self.update_delta_p(k)
 
-
         self.update_cost_matrix(weights)
         its=0
         #Move this entire loop to gpu?
         #No: Can't as it picks a min line; move update_* to gpu individually
         while not (self.finished == True).all():
             its+=1
-            util.log.debug("Iteration:%s, LineP:\n%s"%(its,self.line_p))
+            util.log.debug("Iteration:%s, LineP:%s, LineB:%s"%(its,self.line_p,self.line_b))
             #and return mins = (k_min,user_min)
             mins=self.min_tone_cost()
             if mins: #If a minimum is found
                 (k_min,n_min)=mins
                 self.b[mins]+=bit_inc
-                assert (self.b[mins] <= MAXBITSPERTONE), "You cannot break the laws of physics! %d:%d,%d"%(self.b[mins],mins[0],mins[1])
+                assert (self.b[mins] < MAXBITSPERTONE), "You cannot break the laws of physics! %d:%d,%d"%(self.b[mins],mins[0],mins[1])
                 #according to mipb.c, greedy invokes update_wp(), not implemented here as per AMK
                 
                 #Recalculate delta-p's for all lines wrt this bit/power change
@@ -187,6 +188,7 @@ class MIPB(Algorithm):
                 assert (self.finished == True).all(), "No min, but not finished"
                 pass #Completed this run, all tones full
         #end while tones not full loop               
+        self.update_b_p()
                     
     def _constraints_broken(self,tone,line):
         '''
@@ -195,10 +197,12 @@ class MIPB(Algorithm):
         #Check Power
         for xline in range(self.bundle.N):
             if (self.line_p[xline] + self.delta_p[tone,line,xline] > self.power_budget[xline]):
+                util.log.debug("Broken Power Budget, (%d:%d,%d)"%(tone,line,xline))
                 return True
             
         #Check Spectral Mask
         if (self.p[tone,line] + self.delta_p[tone,line,line] > self.spectral_mask):
+            util.log.debug("Broken Mask, (%d:%d)"%(tone,line))
             return True
         else: #If we got this far, all is well.
             return False
@@ -220,6 +224,8 @@ class MIPB(Algorithm):
                 #gpuarray.ifpositive
                 if new_p[xline]<0:
                     delta_p[line,xline]=self.defaults['maxval']
+                    self.finished[k,line]=True
+                    util.log.debug("Finished (%d:%d)=%d: Constraints Broken"%(tone,line,_b[line,line]))
                 else:
                     delta_p[line,xline]=new_p[xline]-self.p[k,xline]
         return delta_p
@@ -269,8 +275,9 @@ class MIPB(Algorithm):
         try:
             for line in range(N):
                 #Check some blocking conditions first
-                if self._constraints_broken(tone, line) or self.b[tone,line]>=self.MAXBITSPERTONE:
+                if self._constraints_broken(tone, line) or not self.b[tone,line]<self.MAXBITSPERTONE-1:
                     self.finished[tone,line]=True
+                    util.log.debug("Finished (%d:%d)=%d: Constraints Broken"%(tone,line,self.b[tone,line]))
                 
                 if self.finished[tone,line]:
                     tonecost[line]=self.defaults['maxval']
@@ -281,12 +288,12 @@ class MIPB(Algorithm):
                         elif weights[xline]<1:
                             tonecost[line]+=(1-weights[xline])*self.delta_p[tone,line,xline]
             self.cost[tone]=tonecost
-            
         except:
             util.log.debug("W:%s,DP:%s"%(str(weights),str(self.cost[tone])))
             raise
         #Fancy Functional stuff won't work with ratetarget==false
-        
+        if tone == 0:
+            util.log.error("%s"%self.cost[0])
     def min_tone_cost(self):
         #TODO This could be replaced with a few ndarray operations
         min_cost=float(sys.maxint)
@@ -309,6 +316,8 @@ class MIPB(Algorithm):
             self.p[tone,xline]+=this_delta
             self.line_p[xline]+=this_delta
             self.p_ave+=this_delta/self.bundle.N
+
+            self.line_b[xline]=sum(self.b[tone])
         
     def update_totals(self):
         '''
