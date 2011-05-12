@@ -573,6 +573,9 @@ class gpu_thread(threading.Thread):
         self.gpudiag=True
         self.prepdiag=True
         self.combodiag=True
+        #self.gpudiag=False
+        #self.prepdiag=False
+        #self.combodiag=False
         
     def run(self):
         try:
@@ -729,7 +732,7 @@ class gpu_thread(threading.Thread):
             for o in range(0,Ncombinations,memdim):
                 if combodiag:
                     (free,total)=cuda.mem_get_info()
-                    util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o+memdim,Ncombinations,k,str(lambdas),(free*100/total)))
+                    util.log.info("Working on %d-%d combinations of %d for K:%d, L:%s, Mem %d%% Free"%(o,o-1+memdim,Ncombinations,k,str(lambdas),(free*100/total)))
             self.print_config=False
         
         #Perform LK Calculation and Maximisation for this channel, however many sectors it takes.
@@ -748,7 +751,8 @@ class gpu_thread(threading.Thread):
             #Bring LK results and power back to host
             lk=np.empty((memdim)).astype(self.type)
             cuda.memcpy_dtoh(lk,d_lk)
-            
+           
+            cuda.Context.synchronize()
             #find the max lk
             lk_maxid=np.argmax(lk)
             
@@ -963,8 +967,6 @@ class gpu_thread(threading.Thread):
             if combodiag:
                 (free,total)=cuda.mem_get_info()
                 util.log.info("Executing %d tests, L:%s, Mem %d%% Free"%(Ncombinations,str(lambdas),(free*100/total)))
-                util.log.info("warpcount:%d,warpper:%d,threadC:%d,blockC:%d"%(warpcount,warpperblock,threadCount,blockCount))
-
                 util.log.info("Grid:%s,Block:%s"%(str(threadshare_grid),str(threadshare_block)))
 
             self.print_config=False

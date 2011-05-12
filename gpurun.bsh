@@ -9,7 +9,7 @@ ALGOS="OSB ISB" #Disabled MIPB for now (No GPU version)
 
 NGPU=`yes | deviceQuery | awk -F[,=] '/NumDevs/{print $9}'`
 if [ "$NGPU" -gt 1 ]; then
-  NGPU="1 2 3 4"
+  NGPU="1 2"
 fi
 
 for net in $NETWORKS; do
@@ -20,7 +20,7 @@ for net in $NETWORKS; do
         ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_GPU -l ${scenario}_GPU_${ngpu}.log --ngpu ${ngpu}
       done
     else
-      ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_GPU -l ${scenario}_GPU_4.log -g
+      ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_GPU -l ${scenario}_GPU_1.log --ngpu 1
     fi
   done
 done
