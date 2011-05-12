@@ -23,7 +23,7 @@ parser.add_option("-c","--cache",dest="cache", action="store_true",help="attempt
 parser.add_option("-g","--gpu",dest="gpu",action="store_true",help="attempt to use gpu", default=False)
 parser.add_option("-r","--rate",dest="rate_search", action="store_true",help="enable rate searching", default=False)
 parser.add_option("-l","--logfile", dest="logfile", help="specify logfile",metavar="LOGFILE",default="multiuserdsm.log")
-parser.add_option("--ngpu",dest="gpu",action="store",help="attempt to use N gpus", default=False)
+parser.add_option("-N","--ngpu",dest="gpu",action="store", type="int", help="attempt to use N gpus", default=False)
 
 from bundle import Bundle
 from osb import OSB

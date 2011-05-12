@@ -16,6 +16,8 @@ for net in $NETWORKS; do
       for ngpu in $NGPU; do
         ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_CPU -l ${scenario}_GPU_${ngpu}.log --ngpu ${ngpu}
       done
+    else
+      ./multiuserdsm.py -n networks/$net -a $algo -S ${scenario}_CPU -l ${scenario}_GPU_4.log -g
     fi
   done
 done
