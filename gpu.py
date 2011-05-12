@@ -669,8 +669,8 @@ class gpu_thread(threading.Thread):
             self.argqueue.task_done()#nothing seems to get past this
 
         #end queue loop
-    def _workload_calc(self,worload):
-        warpcount=(Ncombinations/self.warpsize)+(0 if ((Ncombinations%self.warpsize)==0)else 1)
+    def _workload_calc(self,workload):
+        warpcount=(workload/self.warpsize)+(0 if ((workload%self.warpsize)==0)else 1)
         warpperblock=max(1,min(8,warpcount))
         threadCount=self.warpsize * warpperblock
         blockCount=min(self.gridmax,max(1,(warpcount/warpperblock)+(0 if ((warpcount%warpperblock)==0)else 1)))

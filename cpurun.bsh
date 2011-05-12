@@ -3,7 +3,7 @@
 #Magical Amazing Time Saving Wonder Script
 # TLDR Automated simulation runner
 
-NETWORKS="2-3k_5k-near_far.net 3-3k_5k-near_far.net 4-3k_5k-near_far.net 8-3k_5k-near_far.net"
+NETWORKS="2-3k_5k-near_far.net 3-3k_5k-near_far.net 4-3k_5k-near_far.net 6-rt.net" #8-3k_5k-near_far.net
 
 ALGOS="MIPB OSB ISB"
 
