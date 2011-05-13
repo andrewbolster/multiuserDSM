@@ -34,20 +34,19 @@ class MIPB(Algorithm):
     def run(self):
         '''
         Execute MIPB on the pre-initialised bundle
-        #FIXME Not Done
-
         '''
         self.name = "MIPB"
-        self.defaults = {'maxval':sys.maxint*1.0,
-                         'bit_inc':1,
-                         'rate_target':False,
-                         'p_budget':0.110,    #watts #from mipb.c _p_budget[user]=
-                         'w':1.0,
-                         'w_min':0.0,
-                         'min_sw':1,
-                         'rate_tol':10,
-                         'osc_tol':5
-                         }
+        self.defaults.update({
+            'maxval':sys.maxint*1.0,
+            'bit_inc':1,
+            'rate_target':False,
+            'p_budget':0.110,    #watts #from mipb.c _p_budget[user]=
+            'w':1.0,
+            'w_min':0.0,
+            'min_sw':1,
+            'rate_tol':10,
+            'osc_tol':5
+            })
         
         self.spectral_mask=util.dbmhz_to_watts(-30) #from mipb.c _spectral_mask
         self.p_ave=0.0
@@ -126,7 +125,6 @@ class MIPB(Algorithm):
     def oscillating(self):
         '''
         Simple enough, return true if the results are oscillating
-        #FIXME Parallelize
         '''
         osc_tol=self.defaults['osc_tol']
         delta_b=(self.line_b-self.rate_targets)
@@ -178,7 +176,6 @@ class MIPB(Algorithm):
                 
                 #Recalculate delta-p's for all lines wrt this bit/power change
                 #NB mins[0] -> min tone
-                #FIXME PARALLELISE
                 self.update_delta_p(k_min)
                 #Update the powers 
                 self.update_power(mins)
@@ -208,6 +205,9 @@ class MIPB(Algorithm):
             return False
         
     def update_delta_p(self,tone):
+    	"""
+    	Update the Delta P vector for one tone
+    	"""
         if not self.useGPU:
             self.delta_p[tone]=self.update_delta_p_CPU(tone,self.bundle.N)
         else:
@@ -215,6 +215,9 @@ class MIPB(Algorithm):
             self.delta_p[tone]=self.bundle.gpu.mipb_update_delta_p(tone,self.bundle.N)
 
     def update_delta_p_CPU(self,k,N):
+    	"""
+    	CPU Bound Delta P update
+    	"""
         _b=np.tile(util.mat2arr(self.b[k]),N).reshape(N,N)
         delta_p=np.zeros((N,N))
         for line in range(N):
@@ -237,7 +240,6 @@ class MIPB(Algorithm):
         (re)Calculate the delta_p matrix for powers in the bundle
         Since this implementation os Bundle.calc_psd does not update
         a global power setting, there is no need for a local old_p
-        #FIXME Not Tested        
         '''
         while True:
             (line,k)=self.argqueue.get()
@@ -257,18 +259,14 @@ class MIPB(Algorithm):
     
     def update_cost_matrix(self,weights):
         '''
-        Update cost matrix and return a tuple of the minimum bit addition (tone,user)
-        if not given a tone, assume operation of (min_cost/init_cost_matrix)
-        if given a tone, assume operation of (recalc_costs)
-        Raises NameError on no min found/all tones full
-
+        Update cost matrix
         '''
         for k in xrange(self.bundle.K):
             self.update_tone_cost(weights,k)
     
     def update_tone_cost(self,weights,tone):
         '''
-        Single-shot cost generation
+        Single-shot tone-cost vector generation
         '''
         N=self.bundle.N
         tonecost=np.zeros(N)
@@ -294,8 +292,11 @@ class MIPB(Algorithm):
         #Fancy Functional stuff won't work with ratetarget==false
         if tone == 0:
             util.log.error("%s"%self.cost[0])
+            
     def min_tone_cost(self):
-        #TODO This could be replaced with a few ndarray operations
+        """
+        Find the minimum-cost (tone,line) tuple and return it
+        """
         min_cost=float(sys.maxint)
 
         mindex=self.cost.argmin()
@@ -325,7 +326,7 @@ class MIPB(Algorithm):
         '''
         self.line_b_last=np.copy(self.line_b)
         self.w_last = np.copy(self.w)
-        self.line_b=np.sum(self.b,axis=0) #FIXME test this
+        self.line_b=np.sum(self.b,axis=0) 
     
     def update_w(self,weights):
         '''
@@ -335,6 +336,9 @@ class MIPB(Algorithm):
         return weights
     
     def _update_single_w(self,line):
+    	"""
+    	Update a single line weight
+    	"""
         current=self.w[line]
         ratio=0.0
         if not self.rate_targets[line]==False:
@@ -344,7 +348,6 @@ class MIPB(Algorithm):
             ratio= diff/self.rate_targets[line]
             #If we're within tolerance, do nothing, otherwise...
             if abs(diff)>rate_tol:
-                #TODO Need To Talk To AMK about this; I think its better. And its certainly faster.
                 #Need to deal with if b -> 0, so reset to a middling weight to recover
                 if ratio == 1:
                     new=1
@@ -359,4 +362,3 @@ class MIPB(Algorithm):
         util.log.debug("Weight on Line:%d,%f,ratio:%.3f"%(line,new,ratio))
 
         return new
-                

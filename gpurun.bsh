@@ -9,11 +9,12 @@ ALGOS="OSB ISB" #Disabled MIPB for now (No GPU version)
 
 NGPU=`yes | deviceQuery | awk -F[,=] '/NumDevs/{print $9}'`
 if [ "$NGPU" -gt 1 ]; then
-  NGPU="1 2"
+  NGPU={1..$NGPU}
 fi
 
-for net in $NETWORKS; do
+for net in $*; do
   for algo in $ALGOS; do
+    net=`basename $net`
     scenario="${algo}_${net%\.*}"
    if [ "$algo" == "OSB" ]; then
       for ngpu in $NGPU; do

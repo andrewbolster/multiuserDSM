@@ -118,11 +118,11 @@ class Bundle(object):
     def get_MBPT(self,mbpt=MAXBITSPERTONE):
         return mbpt
     
-    '''
-    Calculates the bundle channel gain matrix, generating xtalk_gain[][][]
-    :from channel_matrix.c
-    '''
     def calc_channel_matrix(self):
+        '''
+        Calculates the bundle channel gain matrix, generating xtalk_gain[][][]
+        :from channel_matrix.c
+        '''
         #Initialise the gains
         self.xtalk_gain = np.zeros((self.K,self.N,self.N))
         for k in range(self.K):                         #For Each Tone
@@ -134,14 +134,14 @@ class Bundle(object):
                         self.xtalk_gain[k][x][v] = self.calc_fext_xtalk_gain(lx,lv,self.freq[k],"DOWNSTREAM") #This makes more sense in passing line objects instead of id's
             if self.betamodel and self.N>2:
                 self.xtalk_gain[k]*=self.offset[:self.N,:self.N] #I'm lazy
-    '''
-    Check Normalised XT Gains and xtalk symmetry 
-    :from channel_matrix.c
-    Normalised Gains arn't really needed but its just as easy to keep it in
-    XTalk symmetry needs to be checked because if all the lines are NOT the same
-    the xtalk_gain matrix can NOT be symmetric in the [i,j] axis
-    '''
     def check_xtalk_gains(self):
+        '''
+        Check Normalised XT Gains and xtalk symmetry 
+        :from channel_matrix.c
+        Normalised Gains arn't really needed but its just as easy to keep it in
+        XTalk symmetry needs to be checked because if all the lines are NOT the same
+        the xtalk_gain matrix can NOT be symmetric in the [i,j] axis
+        '''
         yeses=0
         ''' Original Way to do it
         for k in self.K:            #tone
@@ -212,7 +212,7 @@ class Bundle(object):
     H4:victim before xtalker(3,6)
     
     '''
-    def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir): #TODO Currently does UPSTREAM only, swap lt/nt for victim and xtalker for downstream
+    def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir):
         (vid,xid)=(victim.id,xtalker.id)
         #Check first if there is any shared sector (swapping screws with abs() operation)
         #Check if either v.lt or v.nt is between x.lt/x.nt
@@ -286,7 +286,7 @@ class Bundle(object):
     Calculate Insertion Loss
     :from transfer_fn.c
     '''    
-    def insertion_loss(self,length,freq): #TODO: Reintroduce factor removed from C version?
+    def insertion_loss(self,length,freq):
         '''
         insertion loss makes more sense in the bundle as most of the time,
         it is looking at a common length between two lines
@@ -319,7 +319,6 @@ class Bundle(object):
                 
                 line.gamma_m[tone] = TodB(line.snr[tone]/pow(2,line.b[tone]-1))
                 
-            #line.symerr = [ self._calc_sym_err(line,xtalker) for xtalker in xrange(self.K)] #TODO _calc_sym_err
             line.p_total = sum(map(dbmhz_to_watts,line.p))
             line.b_total = sum(line.b)
             log.info("Line:%d,Power:%.3fmW,Rate:%dbpf"%(line.id,line.p_total,line.b_total))
@@ -329,18 +328,7 @@ class Bundle(object):
             Are b/_b ever different? If its a fractional line is b[k] ever needed?
             '''
         log.info("Bundle Rate:%dbpf"%sum([line.b_total for line in self.lines]))
-    '''
-    Calculate Symbol Error Rate on line
-    :from symerr.c
-    '''
-    def _calc_sym_err(self,line,k): #TODO
-        
-        M=pow(2,line.b[k])
-              
-        log.error("Tried to execute broken _calc_cym_error")
-        raise ValueError
-        return 1 - (1 - (1 - 1/sqrt(M)))#*ss.erf(sqrt((3*line.snr[k])/(2*(M-1)))))
-    
+
     '''
     Checks inter-service margins
     :from snr.c
@@ -418,16 +406,7 @@ class Bundle(object):
     '''
     def _h2(self,line1,line2,channel):
         return self.xtalk_gain[channel][line1.id][line2.id]
-    
-    '''    
-    Pretty Print channel Matrix
-    #TODO I've got no idea how to display this....
-    '''
-    def graph_channel_matrix(self):
-        pl.contourf(self.xtalk_gain[...,0])
-        pl.figure()
-        pl.show
-    
+
     '''
     Print CM and lines to file
     '''

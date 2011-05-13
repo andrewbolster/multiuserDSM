@@ -163,20 +163,18 @@ __device__ void generate_AB(FPT *A, FPT *P, FPT *d_XTG, int *bitload, int index,
 __device__ void lkcalc(int *bitload, FPT *lambdas, FPT *w, FPT *P, FPT *LK, int index){
     FPT lk = 0;
     int broken = 0;
-    if (index < MAXBITPERM){
-        for (int i=0;i<MAT1;i++){
-           //Need to check for negative P's
-            if (P[index*MAT1+i]<0)
-                broken++;
-            lk+=(bitload[i]*w[i])-(lambdas[i]*P[index*MAT1+i]);
-        }
-        //If anything is broken return a failing value (around -inf)
-        if (broken==0)
-            LK[index]=lk;
-        else
-            LK[index]=FAILVALUE;
-    } else
-    LK[index]=FAILVALUE;
+    for (int i=0;i<MAT1;i++){
+       //Need to check for negative P's
+        if (P[index*MAT1+i]<0)
+            broken++;
+        lk+=(bitload[i]*w[i])-(lambdas[i]*P[index*MAT1+i]);
+    }
+    //If anything is broken return a failing value (around -inf)
+    if (broken==0)
+        LK[index]=lk;
+    else
+        LK[index]=FAILVALUE;
+    
 }
 __device__ void d_calc_psd(FPT *A, FPT *P, FPT *d_XTG, int *bitload, int index){
     //Aim: Given space for A and P, and current_b[N*MAT1] populate P with the psds
@@ -220,9 +218,9 @@ __global__ void osb_optimise_p(FPT *A, FPT *P, FPT *XTG, FPT *lambdas, FPT *weig
     }
     if (id+offset<MAXBITPERM){
         d_calc_psd(A, P, XTG, bitload, id);
+        lkcalc(bitload,lambdas,weights,P,LK,id);
     }
-    __syncthreads();
-    lkcalc(bitload,lambdas,weights,P,LK,id);
+
 }
 
 //Generate the A and B for all possible bitloads (in this offset)

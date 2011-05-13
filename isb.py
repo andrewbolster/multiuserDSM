@@ -28,22 +28,22 @@ class ISB(Algorithm):
         #Tolerance of rate-targets (how close is close enough)
         self.target_tolerance=1
         #Default values
-        self.defaults={'maxval':sys.maxint*1.0,
-                       'l':1.0,             #From osb_bb.c::bisect_l() (modified from 0)
-                       'l_min':0.0,
-                       'l_max':1.0,
-                       'w':1.0, #same behaviour for any real value
-                       'w_max':100,
-                       'w_min':0.001,
-                       'p_budget':0.110,    #watts #from scenarios.c (0.110
-                       'rate_target':False,
-                       'min_step':500,      #was min_sl
-                       'p_tol':0.015,      #should be 0.015
-                       'rate_tol':10,
-                       'GAMMA':self.bundle.GAMMA
-                       }
+        self.defaults.update({
+            'maxval':sys.maxint*1.0,
+            'l':1.0,             #From osb_bb.c::bisect_l() (modified from 0)
+            'l_min':0.0,
+            'l_max':1.0,
+            'w':1.0, #same behaviour for any real value
+            'w_max':100,
+            'w_min':0.001,
+            'p_budget':0.110,    #watts #from scenarios.c (0.110
+            'rate_target':False,
+            'min_step':500,      #was min_sl
+            'p_tol':0.015,      #should be 0.015
+            'rate_tol':10,
+            'GAMMA':self.bundle.GAMMA
+            })
         
-        #rate targeting #TODO
         self.rate_targets=np.tile(self.defaults['rate_target'], self.bundle.N)
         self.power_budget=np.tile(self.defaults['p_budget'], self.bundle.N)
         
@@ -64,7 +64,6 @@ class ISB(Algorithm):
         self.w_min=np.zeros((self.bundle.N))
         self.w_max=np.zeros((self.bundle.N))
                               
-        #TODO Implement rate region searching
         if self.rate_search and (all(line.rate_target != self.defaults['rate_target'] for line in self.bundle.lines)):
             self.rate_bisect(self._bisect_l)
         else:
@@ -73,11 +72,12 @@ class ISB(Algorithm):
         #init_lines() What the hell is this?
         self.postscript()
         return
-    '''
-    Lambda Bisection
-    :from isb3g.c
-    '''
+
     def _bisect_l(self):
+        '''
+        Lambda Bisection
+        :from isb3g.c
+        '''
         logit=log.info
         logit("Beginning Bisection")
         self.l=np.tile(self.defaults['l'],(self.bundle.N))
@@ -152,13 +152,11 @@ class ISB(Algorithm):
         #End while loop
         self.update_b_p()   
     
-                
-    '''
-    Optimise Power (aka optimise_s)
-    :from OSB_original.pdf paper
-    '''   
+                   
     def optimise_p(self,lambdas,weights):
-        #Maybe try this? http://sites.google.com/site/sachinkagarwal/home/code-snippets/parallelizing-multiprocessing-commands-using-python
+        '''
+        Optimise Power (aka optimise_s)
+        '''
         if (self.useGPU):
             #Multideviceable GPU execution
             (self.p,self.b)=self.bundle.gpu.isb_optimise_p(lambdas,weights,self.bundle.xtalk_gain)
@@ -168,6 +166,9 @@ class ISB(Algorithm):
             #Now we have b hopefully optimised
             
     def optimise_p_k(self,lambdas,weights):
+        '''
+        Optimise Power per tone, CPU bound version
+        '''
         for k in range(self.bundle.K):
             #Convergence value check
             b_this=np.tile(0,self.bundle.N)
@@ -199,6 +200,9 @@ class ISB(Algorithm):
         #end while
         
     def optimise_p_k_alt(self,lambdas, weights):
+        '''
+        Optimise Power: Alternative version used to verify GPU algorithmic loop folding
+        '''
         #Convergence value check
         b_this=np.tile(0,(self.bundle.K,self.bundle.N))
         b_last=np.tile(-1,(self.bundle.K,self.bundle.N))

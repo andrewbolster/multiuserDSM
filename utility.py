@@ -11,7 +11,6 @@ import logging
 # Log everything, and send it to stderr.
 log = logging.getLogger('multiuserdsm')
 log.setLevel(logging.INFO)
-
 h = logging.StreamHandler()
 f = logging.Formatter('%(asctime)s:%(levelname)-7s %(module)s %(lineno)d %(message)s')
 h.setFormatter(f)
@@ -290,27 +289,12 @@ def erfc(x):
             return erfc5(x)
 CHANNEL_BANDWIDTH = 4312.5 #from include/multiuser_load.h
 
-'''
-Fancy memoise decorator to make my life easy
-'''
-def memoize(fctn):
-    memory = {}
-    @functools.wraps(fctn)
-    def memo(*args,**kwargs):
-        haxh = cPickle.dumps((args, sorted(kwargs.iteritems())))
-        if haxh not in memory:
-            memory[haxh] = fctn(*args,**kwargs)
-        return memory[haxh]
-    if memo.__doc__:
-        memo.__doc__ = "\n".join([memo.__doc__,"This function is memoized."])
-    return memo   
-
-'''
-Let the transfer function default to type 2;
+def do_transfer_function(length,freq,type=3, measure="m"):
+    '''
+    Let the transfer function default to type 3;
     Allows for easy default change later
     Allows for easy 'case-based' changes
-'''
-def do_transfer_function(length,freq,type=3, measure="m"):
+    '''
     '''
     Z=impedance/l, Y=admittance/l
     Z=R+jwL, Y=G+jwC
@@ -318,7 +302,7 @@ def do_transfer_function(length,freq,type=3, measure="m"):
     Z0=sqrt(Z/Y), gamma=sqrt(Z*Y)
     Should Use PyGSL, but start off with cmath
     '''
-    
+
     #Length must be in KM
     if measure == "m":
         length /= 1000
@@ -348,7 +332,7 @@ def do_transfer_function(length,freq,type=3, measure="m"):
 
 def _R(freq):
     '''
-    Return R Parameter for transfer function
+    Return Resistance Parameter for transfer function
     '''
     c_partial = pow(material[t]["a_c"]*freq*freq+pow(material[t]["r_0c"],4),(0.25))
 
@@ -361,16 +345,22 @@ def _R(freq):
     
 def _L(freq):
     '''
-    Return L Parameter for transfer function
+    Return Inductance Parameter for transfer function
     '''
     upper=(material[t]["l_0"]+material[t]["l_inf"]*pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
     lower=(1+pow(freq*1e-3/material[t]["f_m"],material[t]["b"]))
     return (upper/lower)
 
 def _C(freq):
+    '''
+    Return Capacitance Parameter for transfer function
+    '''
     return material[t]["c_inf"]+material[t]["c_0"]*pow(freq,-material[t]["c_e"])
 
 def _G(freq):
+    '''
+    Return Conductance Parameter for transfer function
+    '''
     return material[t]["g_0"]*pow(freq,material[t]["g_e"])
 
 '''
@@ -397,9 +387,9 @@ def TodB(input):
         return 10*log10(input)
     except ValueError:
         #log.debug("Caught Exception on TodB(%f)"%input)
-        return -np.inf #FIXME Either make it dynamic across the package or use something like -inf; 
+        return -np.inf
 
-def freq_on_tone(K): #TODO Memoize
+def freq_on_tone(K):
         '''
         Assume ADSL downstream for now
         '''
@@ -422,7 +412,6 @@ def get_GAMMA(Pe,M):
 
 #Combination Generator with replacements
 def combinations(iterable, r,type=int):
-    #FIXME Creation of a iterable for every tone for every loop is pointless
     # combinations_with_replacement('ABC', 2) --> AA AB AC BB BC CC
     pool = tuple(iterable)
     n = len(pool)
