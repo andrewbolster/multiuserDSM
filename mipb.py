@@ -290,8 +290,6 @@ class MIPB(Algorithm):
             util.log.debug("W:%s,DP:%s"%(str(weights),str(self.cost[tone])))
             raise
         #Fancy Functional stuff won't work with ratetarget==false
-        if tone == 0:
-            util.log.error("%s"%self.cost[0])
             
     def min_tone_cost(self):
         """
