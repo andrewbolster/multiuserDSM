@@ -175,44 +175,44 @@ class Bundle(object):
             
         log.info("Total:%d,%%Yes:%f%%"%(len(gainratio),yeses/(1.0*len(gainratio))))
     
-    '''
-    Calculate Far End XT Gain
-    :from channel_matrix.c 
-    Uses:
-        transfer_func
-        insertion_loss
-        fext
-    (Upstream/Downstream) Cases:
-        victim and xtalker == lt
-            victim length < xtalker length (4/8)
-            victim length > xtalker length (6/2)
-            victim and xtalker == length (5)
-        victim lt < xtalker lt
-            victim nt < xtalker nt (1/9)
-            victim nt > xtalker nt (3)
-        victim lt > xtalker lt
-            victim nt > xtalker nt (9/1)
-            victim nt < xtalker nt (7)
-        victim and xtalker == nt
-            victim length < xtalker length (8/4)
-            victim length > xtalker length (2/6)
-        victim nt <= xtalker lt (0)
-        victim lt >= xtalker nt (0)
-    
-    What do the cases mean?
-    http://www.nordstrom.nu/tomas/publications/BalEtAl_2003_ETSITM6_033w07.pdf
-    "Proposed Method on Crosstalk Calculations in a Distributed Environment"
-    In Section 2: Top line is 'victim', A->B is nt->lt
-    
-    
-    4 bundle segment types for 2 lines (xtalker and victim);
-    H1:xtalker before victim (1,4,7)
-    H2:xtalker and victim (all)
-    H3:victim after xtalker(1,2,3)
-    H4:victim before xtalker(3,6)
-    
-    '''
     def calc_fext_xtalk_gain(self,victim,xtalker,freq,dir):
+        '''
+        Calculate Far End XT Gain
+        :adapted from channel_matrix.c 
+        Uses:
+            transfer_func
+            insertion_loss
+            fext
+        (Upstream/Downstream) Cases:
+            victim and xtalker == lt
+                victim length < xtalker length (4/8)
+                victim length > xtalker length (6/2)
+                victim and xtalker == length (5)
+            victim lt < xtalker lt
+                victim nt < xtalker nt (1/9)
+                victim nt > xtalker nt (3)
+            victim lt > xtalker lt
+                victim nt > xtalker nt (9/1)
+                victim nt < xtalker nt (7)
+            victim and xtalker == nt
+                victim length < xtalker length (8/4)
+                victim length > xtalker length (2/6)
+            victim nt <= xtalker lt (0)
+            victim lt >= xtalker nt (0)
+        
+        What do the cases mean?
+        http://www.nordstrom.nu/tomas/publications/BalEtAl_2003_ETSITM6_033w07.pdf
+        "Proposed Method on Crosstalk Calculations in a Distributed Environment"
+        In Section 2: Top line is 'victim', A->B is nt->lt
+        
+        
+        4 bundle segment types for 2 lines (xtalker and victim);
+        H1:xtalker before victim (1,4,7)
+        H2:xtalker and victim (all)
+        H3:victim after xtalker(1,2,3)
+        H4:victim before xtalker(3,6)
+        
+        '''
         (vid,xid)=(victim.id,xtalker.id)
         #Check first if there is any shared sector (swapping screws with abs() operation)
         #Check if either v.lt or v.nt is between x.lt/x.nt
@@ -248,9 +248,6 @@ class Bundle(object):
         
         NB, insertion_loss(<0,f)=1
         
-        I think AMK's Case1/9 fext(length) is wrong. Should be the
-        common length between the victim and xtalker, not the combined
-        length
         '''
         H = h1*h2*h3
         

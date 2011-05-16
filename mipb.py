@@ -228,7 +228,7 @@ class MIPB(Algorithm):
                 if new_p[xline]<0:
                     delta_p[line,xline]=self.defaults['maxval']
                     self.finished[k,line]=True
-                    util.log.debug("Finished (%d:%d)=%d: Constraints Broken"%(tone,line,_b[line,line]))
+                    util.log.debug("Finished (%d:%d)=%d: Constraints Broken"%(k,line,_b[line,line]))
                 else:
                     delta_p[line,xline]=new_p[xline]-self.p[k,xline]
         return delta_p

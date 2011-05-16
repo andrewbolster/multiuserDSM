@@ -583,18 +583,23 @@ class GPU(object):
     def isb_optimise_p(self,lambdas,w,xtalk_gain):
         funcname='isb_optimise_inc'
         try:
-            #construct the queue
-            self.argqueue.put((funcname,lambdas,w,xtalk_gain))
+            #Split the channels up based on number of devices
+            assert len(xtalk_gain)%len(self.threadpool)==0, "Non-modulo devcount/channelcount:(%d,%d)"%(len(xtalk_gain),len(self.threadpool))
+            K=len(xtalk_gain)
+            step=K/len(self.threadpool)
+            for k in range(0,K,step):
+                #construct the queue
+                self.argqueue.put((funcname,lambdas,w,k,xtalk_gain[k:k+step]))
             
             #Wait for everything to end
             self.argqueue.join()
                   
             p=np.zeros((self.K,self.N)) #per tone per user power in watts
-            b=np.asmatrix(np.zeros((self.K,self.N)))        
+            b=np.zeros((self.K,self.N))
             while True:
                 try:
                     queueitem=self.resqueue.get_nowait()
-                    (func,(power,bitload))=queueitem
+                    (func,(k,power,bitload))=queueitem
                 except Queue.Empty:
                     break
                 except ValueError:
@@ -602,12 +607,12 @@ class GPU(object):
                     continue
                 
                 if func==funcname:
-                    p=power
-                    b=np.asmatrix(bitload)
+                    p[k:k+step]=power
+                    b[k:k+step]=bitload
                     #util.log.info("%d:%s:%s"%(k,str(bitload),str(power)))
                 else:
                     util.log.error("Invalid Functions %s"%(str(queueitem)))
-            return (p,b)
+            return (p,np.asmatrix(b))
         except(KeyboardInterrupt,SystemExit):
             util.log.error("Suicide Error: Results tainted, quitting incase")            
             raise Exception
@@ -1020,10 +1025,11 @@ class gpu_thread(threading.Thread):
         d_XTG.free()
         return (k,power,bitload)
     
-    def isb_optimise_inc(self,lambdas,w,xtalk_gain):
+    def isb_optimise_inc(self,lambdas,w,k,xtalk_gain):
         #For all permutations on all channels, calculate each users next bitload
         #Number of expected permutations
-        Ncombinations=self.mbpt*self.K
+        K=len(xtalk_gain)
+        Ncombinations=self.mbpt*len(xtalk_gain)
         
         #Check if this is getting hairy and assign grid/block dimensions
         #(warpcount,warpperblock,threadCount,blockCount) = self._workload_calc(Ncombinations)
@@ -1032,7 +1038,7 @@ class gpu_thread(threading.Thread):
         #How many individual lk's
         memdim=Ncombinations
 
-        threadshare_grid=(self.K,1)
+        threadshare_grid=(K,1)
         threadshare_block=(self.mbpt,1,1)
         
         monitor=self.monitor
@@ -1044,9 +1050,9 @@ class gpu_thread(threading.Thread):
         d_A=cuda.mem_alloc(np.zeros((memdim*self.N*self.N)).astype(self.type).nbytes)
         d_B=cuda.mem_alloc(np.zeros((memdim*self.N)).astype(self.type).nbytes)
         d_lk=cuda.mem_alloc(np.empty((memdim)).astype(self.type).nbytes)
-        d_XTG=cuda.mem_alloc(np.zeros((self.K*self.N*self.N)).astype(self.type).nbytes)
+        d_XTG=cuda.mem_alloc(np.zeros((K*self.N*self.N)).astype(self.type).nbytes)
         d_lambdas=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
-        d_bitload=cuda.mem_alloc(np.empty((self.K*self.N)).astype(np.int32).nbytes)
+        d_bitload=cuda.mem_alloc(np.empty((K*self.N)).astype(np.int32).nbytes)
         d_w=cuda.mem_alloc(np.empty((self.N)).astype(self.type).nbytes)
 
         #copy arguments to device
@@ -1055,7 +1061,7 @@ class gpu_thread(threading.Thread):
         cuda.memcpy_htod(d_w,w.astype(self.type))
 
         #Bitload locations
-        bitload=np.tile(0,(self.K,self.N)).astype(np.int32)
+        bitload=np.tile(0,(K,self.N)).astype(np.int32)
         lastload=np.tile(-1,(bitload.shape)).astype(np.int32)
            
         #Print some information regarding the thread execution structure
@@ -1093,7 +1099,7 @@ class gpu_thread(threading.Thread):
             
             if gpudiag:
                 util.log.info("Bitload:last This it:%d,"%(its))
-                for k in range(self.K):
+                for k in range(K):
                     util.log.info("%s:%s"%(str(bitload[k]),str(lastload[k])))
 
         if gpudiag:
@@ -1110,7 +1116,8 @@ class gpu_thread(threading.Thread):
         
         #Sick of this this, get someone else to calculate it!
         power=self.calc_psd(bitload, xtalk_gain)
-        return (power,bitload)
+        return (k,power,bitload)
+
     def meminfo(self,kernel,k=-1,o=-1,threads=[],name=""):
         (free,total)=cuda.mem_get_info()
         shared=kernel.shared_size_bytes

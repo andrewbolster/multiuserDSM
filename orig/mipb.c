@@ -1232,58 +1232,22 @@ int mipb::update_wp()
 	}
 	p_ave/=div;
 	for (int user=0;user<lines;user++) {
-		//double x=(_p_used[user]*100/_p_budget[user])-p_ave;
-		//double x = _p_used[user] - (_p_ave+_p_lead[user]);
-		//double x = _p_used[user] - _p_ave;
 		double x = _p_used[user] - p_ave;
-		//_wp[user] = UNdB(2000/(100*(p_ave+0.00001))*(x));
-		//_wp[user] = UNdB(10*(_p_used[user]*100/_p_budget[user] - _p_ave));
-		//_wp[user] = pow(exp((_p_used[user] - _p_ave)),100);
-		//linear plus sigmoid
-		//_wp[user] = a*x+1.001-(a*x+1)*exp(-c*x)/(exp(-c*x) + b);
-		// linear	
-		/*		
-		double grad = 1/(1.5*fabs(x));
-		_wp[user] = grad*x+1;
-		if (_behind[user])
-			_wp[user]=1;
-		*/
-		//_wp[user]=1e2*x+1;
-		//_wxt[user] = grad*x/10 + 1;
-		//
 		if (_behind[user]) {
 			_wp[user]=0;
 			continue;
 		}
 		if (x < -100e-3) {
-			//printf("Looks like used %d is behind\n",user);
 			_behind[user]=true;
-			/*
-			printf("p_ave = %g\n",p_ave);
-			for (int user=0;user<lines;user++) {
-				printf("p_used[%d] =%g\n",user,_p_used[user]);
-			}
-			*/
 			for (int tone=0;tone<DMTCHANNELS;tone++) {
 				_F[tone][user]=1;
 			}
 			continue;
 		}
-		/*		
-		_wp[user] = 1e3*(x/_last_bit_cost)+1;
-		if (_wp[user] < 0)	
-			_wp[user]=10*DBL_MIN;
-		*/
 		if (x > 0) {
-			//_behind[user]=0;
-			//_wp[user] = (1e5/_last_bit_cost)*x+1;
 			assert(_last_bit_cost > 0);
 			double z = MIN(x/_last_bit_cost,709);
 			_wp[user] = exp(0.25*z);
-			//double z = x/_last_bit_cost;
-			//_wp[user] = 1e6*x+1;
-			//double z = x;
-			//_wp[user] = exp(100000*z);
 			if (_wp[user] >= DBL_MAX) {
 				printf("x = %6.4g\n",x);
 				printf("z = %lf\n",z);

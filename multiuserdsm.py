@@ -40,7 +40,7 @@ util.log.addHandler(h)
 if os.path.isfile(util.rawdir+options.scenarioname+'-lines.npy') and options.network=="":
     options.network=util.rawdir+options.scenarioname+'-lines.npy'
 if options.cache and os.path.isfile(util.rawdir+options.scenarioname+'-cache.npy'):
-    log.info("Using Cached PSD values. This is very dangerous")
+    util.log.info("Using Cached PSD values. This is very dangerous")
     options.cache=util.rawdir+options.scenarioname+'-cache.npy'
 
 util.log.info("Starting Up... logging to %s"%options.logfile)
@@ -61,10 +61,10 @@ if __name__ == "__main__":
     '''
     algo = algos[options.algo](bundle,options.gpu, options.rate_search)
     if options.profiling:
-        log.info("Profiling Run")
-        if not os.path.isdir(profdir):
+        util.log.info("Profiling Run")
+        if not os.path.isdir(util.profdir):
             os.makedirs(profdir)
-        cProfile.run('algo.run()',profdir+options.scenarioname)
+        cProfile.run('algo.run()',util.profdir+options.scenarioname)
     else:
         algo.run()
     algo.tofile(options.scenarioname)
