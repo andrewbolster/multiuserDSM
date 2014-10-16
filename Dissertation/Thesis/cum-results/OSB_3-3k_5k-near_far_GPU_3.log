@@ -1,0 +1,174 @@
+2011-05-17 12:22:39,245:INFO    multiuserdsm 46 Starting Up... logging to OSB_3-3k_5k-near_far_GPU_3.log
+2011-05-17 12:22:39,247:INFO    bundle 67 Reading fresh Network File networks/3-3k_5k-near_far.net
+2011-05-17 12:22:39,247:INFO    bundle 89 Successfully read 3 lines from networks/3-3k_5k-near_far.net
+2011-05-17 12:22:41,292:INFO    gpu 418 Asked:3,Have:4,Got:3
+2011-05-17 12:22:41,424:INFO    gpu 462 Spawning 3 GPU Threads
+2011-05-17 12:22:41,493:INFO    gpu 655 Initialising CUDA device 0:(98.69% Free)
+2011-05-17 12:22:41,569:INFO    gpu 655 Initialising CUDA device 1:(98.69% Free)
+2011-05-17 12:22:41,645:INFO    gpu 655 Initialising CUDA device 2:(98.69% Free)
+2011-05-17 12:22:41,645:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-17 12:22:41,788:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-17 12:22:41,802:INFO    bundle 176 Total:672,%Yes:1.413690%
+2011-05-17 12:22:41,886:INFO    algorithm 65 Starting Spectrum Balancing using OSB
+2011-05-17 12:22:41,886:INFO    osb 69 Bisection
+2011-05-17 12:22:41,886:INFO    osb 82 Beginning Bisection
+2011-05-17 12:22:41,886:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-17 12:22:42,328:INFO    osb 104 Missed power budget:linepower:152.817,lastdrop:100%,budget:0.11
+2011-05-17 12:22:42,729:INFO    osb 104 Missed power budget:linepower:95.368,lastdrop:38%,budget:0.11
+2011-05-17 12:22:43,159:INFO    osb 104 Missed power budget:linepower:56.028,lastdrop:41%,budget:0.11
+2011-05-17 12:22:43,612:INFO    osb 104 Missed power budget:linepower:30.990,lastdrop:45%,budget:0.11
+2011-05-17 12:22:44,037:INFO    osb 104 Missed power budget:linepower:15.947,lastdrop:49%,budget:0.11
+2011-05-17 12:22:44,506:INFO    osb 104 Missed power budget:linepower:8.149,lastdrop:49%,budget:0.11
+2011-05-17 12:22:44,922:INFO    osb 104 Missed power budget:linepower:4.042,lastdrop:50%,budget:0.11
+2011-05-17 12:22:45,384:INFO    osb 104 Missed power budget:linepower:1.984,lastdrop:51%,budget:0.11
+2011-05-17 12:22:45,784:INFO    osb 104 Missed power budget:linepower:0.945,lastdrop:52%,budget:0.11
+2011-05-17 12:22:46,213:INFO    osb 104 Missed power budget:linepower:0.456,lastdrop:52%,budget:0.11
+2011-05-17 12:22:46,661:INFO    osb 104 Missed power budget:linepower:0.214,lastdrop:53%,budget:0.11
+2011-05-17 12:22:47,076:INFO    osb 111 Satisfied power budget:linepower:0.09876,budget:0.11
+2011-05-17 12:22:47,076:INFO    osb 117 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 12:22:47,077:INFO    osb 122 Beginning optimisation run;line:0
+2011-05-17 12:22:47,956:INFO    osb 134 Completed optimisation run;line:0, l:1792.000000
+2011-05-17 12:22:47,956:INFO    osb 98 Beginning l-range hunt;line:1
+2011-05-17 12:22:48,422:INFO    osb 111 Satisfied power budget:linepower:0.00029,budget:0.11
+2011-05-17 12:22:48,422:INFO    osb 117 Completed l-range hunt; max:1.000000,min:0.500000
+2011-05-17 12:22:48,422:INFO    osb 122 Beginning optimisation run;line:1
+2011-05-17 12:22:48,842:INFO    osb 134 Completed optimisation run;line:1, l:0.750000
+2011-05-17 12:22:48,842:INFO    osb 98 Beginning l-range hunt;line:2
+2011-05-17 12:22:49,321:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:100%,budget:0.11
+2011-05-17 12:22:49,737:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:0%,budget:0.11
+2011-05-17 12:22:50,167:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:0%,budget:0.11
+2011-05-17 12:22:50,592:INFO    osb 104 Missed power budget:linepower:8.657,lastdrop:10%,budget:0.11
+2011-05-17 12:22:50,985:INFO    osb 104 Missed power budget:linepower:6.186,lastdrop:29%,budget:0.11
+2011-05-17 12:22:51,455:INFO    osb 104 Missed power budget:linepower:4.004,lastdrop:35%,budget:0.11
+2011-05-17 12:22:51,884:INFO    osb 104 Missed power budget:linepower:2.464,lastdrop:38%,budget:0.11
+2011-05-17 12:22:52,350:INFO    osb 104 Missed power budget:linepower:1.475,lastdrop:40%,budget:0.11
+2011-05-17 12:22:52,752:INFO    osb 104 Missed power budget:linepower:0.869,lastdrop:41%,budget:0.11
+2011-05-17 12:22:53,168:INFO    osb 104 Missed power budget:linepower:0.507,lastdrop:42%,budget:0.11
+2011-05-17 12:22:53,608:INFO    osb 104 Missed power budget:linepower:0.212,lastdrop:58%,budget:0.11
+2011-05-17 12:22:54,010:INFO    osb 111 Satisfied power budget:linepower:0.10355,budget:0.11
+2011-05-17 12:22:54,011:INFO    osb 117 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 12:22:54,011:INFO    osb 122 Beginning optimisation run;line:2
+2011-05-17 12:22:54,864:INFO    osb 134 Completed optimisation run;line:2, l:1792.000000
+2011-05-17 12:22:55,079:INFO    bundle 302 Cache Hits:0
+2011-05-17 12:22:55,079:INFO    bundle 303 Cache Mises:0
+2011-05-17 12:22:55,095:INFO    bundle 321 Line:0,Power:966.123mW,Rate:723bpf
+2011-05-17 12:22:55,112:INFO    bundle 321 Line:1,Power:966.075mW,Rate:569bpf
+2011-05-17 12:22:55,128:INFO    bundle 321 Line:2,Power:966.119mW,Rate:2308bpf
+2011-05-17 12:22:55,128:INFO    bundle 327 Bundle Rate:3600bpf
+2011-05-17 12:22:55,141:INFO    algorithm 101 All Done Here, took 13.242595, hit ratio of 0.0000
+2011-05-17 12:38:33,412:INFO    multiuserdsm 46 Starting Up... logging to OSB_3-3k_5k-near_far_GPU_3.log
+2011-05-17 12:38:33,414:INFO    bundle 67 Reading fresh Network File networks/3-3k_5k-near_far.net
+2011-05-17 12:38:33,414:INFO    bundle 89 Successfully read 3 lines from networks/3-3k_5k-near_far.net
+2011-05-17 12:38:35,547:INFO    gpu 418 Asked:3,Have:4,Got:3
+2011-05-17 12:38:35,678:INFO    gpu 462 Spawning 3 GPU Threads
+2011-05-17 12:38:35,746:INFO    gpu 655 Initialising CUDA device 0:(98.69% Free)
+2011-05-17 12:38:35,825:INFO    gpu 655 Initialising CUDA device 1:(98.69% Free)
+2011-05-17 12:38:35,913:INFO    gpu 655 Initialising CUDA device 2:(98.69% Free)
+2011-05-17 12:38:35,914:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-17 12:38:36,040:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-17 12:38:36,044:INFO    bundle 176 Total:672,%Yes:1.413690%
+2011-05-17 12:38:36,130:INFO    algorithm 65 Starting Spectrum Balancing using OSB
+2011-05-17 12:38:36,130:INFO    osb 69 Bisection
+2011-05-17 12:38:36,130:INFO    osb 82 Beginning Bisection
+2011-05-17 12:38:36,130:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-17 12:38:36,574:INFO    osb 104 Missed power budget:linepower:152.817,lastdrop:100%,budget:0.11
+2011-05-17 12:38:36,970:INFO    osb 104 Missed power budget:linepower:95.368,lastdrop:38%,budget:0.11
+2011-05-17 12:38:37,383:INFO    osb 104 Missed power budget:linepower:56.028,lastdrop:41%,budget:0.11
+2011-05-17 12:38:37,824:INFO    osb 104 Missed power budget:linepower:30.990,lastdrop:45%,budget:0.11
+2011-05-17 12:38:38,219:INFO    osb 104 Missed power budget:linepower:15.947,lastdrop:49%,budget:0.11
+2011-05-17 12:38:38,663:INFO    osb 104 Missed power budget:linepower:8.149,lastdrop:49%,budget:0.11
+2011-05-17 12:38:39,060:INFO    osb 104 Missed power budget:linepower:4.042,lastdrop:50%,budget:0.11
+2011-05-17 12:38:39,490:INFO    osb 104 Missed power budget:linepower:1.984,lastdrop:51%,budget:0.11
+2011-05-17 12:38:39,927:INFO    osb 104 Missed power budget:linepower:0.945,lastdrop:52%,budget:0.11
+2011-05-17 12:38:40,345:INFO    osb 104 Missed power budget:linepower:0.456,lastdrop:52%,budget:0.11
+2011-05-17 12:38:40,801:INFO    osb 104 Missed power budget:linepower:0.214,lastdrop:53%,budget:0.11
+2011-05-17 12:38:41,196:INFO    osb 111 Satisfied power budget:linepower:0.09876,budget:0.11
+2011-05-17 12:38:41,196:INFO    osb 117 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 12:38:41,197:INFO    osb 122 Beginning optimisation run;line:0
+2011-05-17 12:38:42,042:INFO    osb 134 Completed optimisation run;line:0, l:1792.000000
+2011-05-17 12:38:42,042:INFO    osb 98 Beginning l-range hunt;line:1
+2011-05-17 12:38:42,464:INFO    osb 111 Satisfied power budget:linepower:0.00029,budget:0.11
+2011-05-17 12:38:42,465:INFO    osb 117 Completed l-range hunt; max:1.000000,min:0.500000
+2011-05-17 12:38:42,465:INFO    osb 122 Beginning optimisation run;line:1
+2011-05-17 12:38:42,888:INFO    osb 134 Completed optimisation run;line:1, l:0.750000
+2011-05-17 12:38:42,888:INFO    osb 98 Beginning l-range hunt;line:2
+2011-05-17 12:38:43,298:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:100%,budget:0.11
+2011-05-17 12:38:43,751:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:0%,budget:0.11
+2011-05-17 12:38:44,159:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:0%,budget:0.11
+2011-05-17 12:38:44,628:INFO    osb 104 Missed power budget:linepower:8.657,lastdrop:10%,budget:0.11
+2011-05-17 12:38:45,045:INFO    osb 104 Missed power budget:linepower:6.186,lastdrop:29%,budget:0.11
+2011-05-17 12:38:45,483:INFO    osb 104 Missed power budget:linepower:4.004,lastdrop:35%,budget:0.11
+2011-05-17 12:38:45,904:INFO    osb 104 Missed power budget:linepower:2.464,lastdrop:38%,budget:0.11
+2011-05-17 12:38:46,305:INFO    osb 104 Missed power budget:linepower:1.475,lastdrop:40%,budget:0.11
+2011-05-17 12:38:46,776:INFO    osb 104 Missed power budget:linepower:0.869,lastdrop:41%,budget:0.11
+2011-05-17 12:38:47,204:INFO    osb 104 Missed power budget:linepower:0.507,lastdrop:42%,budget:0.11
+2011-05-17 12:38:47,664:INFO    osb 104 Missed power budget:linepower:0.212,lastdrop:58%,budget:0.11
+2011-05-17 12:38:48,063:INFO    osb 111 Satisfied power budget:linepower:0.10355,budget:0.11
+2011-05-17 12:38:48,063:INFO    osb 117 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 12:38:48,063:INFO    osb 122 Beginning optimisation run;line:2
+2011-05-17 12:38:48,911:INFO    osb 134 Completed optimisation run;line:2, l:1792.000000
+2011-05-17 12:38:49,122:INFO    bundle 302 Cache Hits:0
+2011-05-17 12:38:49,122:INFO    bundle 303 Cache Mises:0
+2011-05-17 12:38:49,139:INFO    bundle 321 Line:0,Power:966.123mW,Rate:723bpf
+2011-05-17 12:38:49,155:INFO    bundle 321 Line:1,Power:966.075mW,Rate:569bpf
+2011-05-17 12:38:49,171:INFO    bundle 321 Line:2,Power:966.119mW,Rate:2308bpf
+2011-05-17 12:38:49,171:INFO    bundle 327 Bundle Rate:3600bpf
+2011-05-17 12:38:49,184:INFO    algorithm 101 All Done Here, took 13.041661, hit ratio of 0.0000
+2011-05-17 12:49:18,090:INFO    multiuserdsm 46 Starting Up... logging to OSB_3-3k_5k-near_far_GPU_3.log
+2011-05-17 12:49:18,092:INFO    bundle 67 Reading fresh Network File networks/3-3k_5k-near_far.net
+2011-05-17 12:49:18,092:INFO    bundle 89 Successfully read 3 lines from networks/3-3k_5k-near_far.net
+2011-05-17 12:49:20,189:INFO    gpu 418 Asked:3,Have:4,Got:3
+2011-05-17 12:49:20,320:INFO    gpu 462 Spawning 3 GPU Threads
+2011-05-17 12:49:20,389:INFO    gpu 654 Initialising CUDA device 0:(98.69% Free)
+2011-05-17 12:49:20,465:INFO    gpu 654 Initialising CUDA device 1:(98.69% Free)
+2011-05-17 12:49:20,541:INFO    gpu 654 Initialising CUDA device 2:(98.69% Free)
+2011-05-17 12:49:20,542:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-17 12:49:20,706:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-17 12:49:20,715:INFO    bundle 176 Total:672,%Yes:1.413690%
+2011-05-17 12:49:20,798:INFO    algorithm 65 Starting Spectrum Balancing using OSB
+2011-05-17 12:49:20,798:INFO    osb 69 Bisection
+2011-05-17 12:49:20,798:INFO    osb 82 Beginning Bisection
+2011-05-17 12:49:20,799:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-17 12:49:21,266:INFO    osb 104 Missed power budget:linepower:152.817,lastdrop:100%,budget:0.11
+2011-05-17 12:49:21,643:INFO    osb 104 Missed power budget:linepower:95.368,lastdrop:38%,budget:0.11
+2011-05-17 12:49:22,020:INFO    osb 104 Missed power budget:linepower:56.028,lastdrop:41%,budget:0.11
+2011-05-17 12:49:22,459:INFO    osb 104 Missed power budget:linepower:30.990,lastdrop:45%,budget:0.11
+2011-05-17 12:49:22,853:INFO    osb 104 Missed power budget:linepower:15.947,lastdrop:49%,budget:0.11
+2011-05-17 12:49:23,293:INFO    osb 104 Missed power budget:linepower:8.149,lastdrop:49%,budget:0.11
+2011-05-17 12:49:23,671:INFO    osb 104 Missed power budget:linepower:4.042,lastdrop:50%,budget:0.11
+2011-05-17 12:49:24,061:INFO    osb 104 Missed power budget:linepower:1.984,lastdrop:51%,budget:0.11
+2011-05-17 12:49:24,491:INFO    osb 104 Missed power budget:linepower:0.945,lastdrop:52%,budget:0.11
+2011-05-17 12:49:24,887:INFO    osb 104 Missed power budget:linepower:0.456,lastdrop:52%,budget:0.11
+2011-05-17 12:49:25,331:INFO    osb 104 Missed power budget:linepower:0.214,lastdrop:53%,budget:0.11
+2011-05-17 12:49:25,727:INFO    osb 111 Satisfied power budget:linepower:0.09876,budget:0.11
+2011-05-17 12:49:25,727:INFO    osb 117 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 12:49:25,727:INFO    osb 122 Beginning optimisation run;line:0
+2011-05-17 12:49:26,561:INFO    osb 134 Completed optimisation run;line:0, l:1792.000000
+2011-05-17 12:49:26,561:INFO    osb 98 Beginning l-range hunt;line:1
+2011-05-17 12:49:26,951:INFO    osb 111 Satisfied power budget:linepower:0.00029,budget:0.11
+2011-05-17 12:49:26,952:INFO    osb 117 Completed l-range hunt; max:1.000000,min:0.500000
+2011-05-17 12:49:26,952:INFO    osb 122 Beginning optimisation run;line:1
+2011-05-17 12:49:27,391:INFO    osb 134 Completed optimisation run;line:1, l:0.750000
+2011-05-17 12:49:27,391:INFO    osb 98 Beginning l-range hunt;line:2
+2011-05-17 12:49:27,782:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:100%,budget:0.11
+2011-05-17 12:49:28,234:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:0%,budget:0.11
+2011-05-17 12:49:28,609:INFO    osb 104 Missed power budget:linepower:9.633,lastdrop:0%,budget:0.11
+2011-05-17 12:49:29,003:INFO    osb 104 Missed power budget:linepower:8.657,lastdrop:10%,budget:0.11
+2011-05-17 12:49:29,453:INFO    osb 104 Missed power budget:linepower:6.186,lastdrop:29%,budget:0.11
+2011-05-17 12:49:29,878:INFO    osb 104 Missed power budget:linepower:4.004,lastdrop:35%,budget:0.11
+2011-05-17 12:49:30,338:INFO    osb 104 Missed power budget:linepower:2.464,lastdrop:38%,budget:0.11
+2011-05-17 12:49:30,755:INFO    osb 104 Missed power budget:linepower:1.475,lastdrop:40%,budget:0.11
+2011-05-17 12:49:31,212:INFO    osb 104 Missed power budget:linepower:0.869,lastdrop:41%,budget:0.11
+2011-05-17 12:49:31,625:INFO    osb 104 Missed power budget:linepower:0.507,lastdrop:42%,budget:0.11
+2011-05-17 12:49:32,050:INFO    osb 104 Missed power budget:linepower:0.212,lastdrop:58%,budget:0.11
+2011-05-17 12:49:32,505:INFO    osb 111 Satisfied power budget:linepower:0.10355,budget:0.11
+2011-05-17 12:49:32,505:INFO    osb 117 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 12:49:32,505:INFO    osb 122 Beginning optimisation run;line:2
+2011-05-17 12:49:33,380:INFO    osb 134 Completed optimisation run;line:2, l:1792.000000
+2011-05-17 12:49:33,600:INFO    bundle 302 Cache Hits:0
+2011-05-17 12:49:33,600:INFO    bundle 303 Cache Mises:0
+2011-05-17 12:49:33,616:INFO    bundle 321 Line:0,Power:966.123mW,Rate:723bpf
+2011-05-17 12:49:33,633:INFO    bundle 321 Line:1,Power:966.075mW,Rate:569bpf
+2011-05-17 12:49:33,649:INFO    bundle 321 Line:2,Power:966.119mW,Rate:2308bpf
+2011-05-17 12:49:33,649:INFO    bundle 327 Bundle Rate:3600bpf
+2011-05-17 12:49:33,662:INFO    algorithm 101 All Done Here, took 12.851401, hit ratio of 0.0000

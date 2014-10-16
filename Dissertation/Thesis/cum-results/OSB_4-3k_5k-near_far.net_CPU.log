@@ -1,0 +1,48 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_CPU.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 100 Running self check:
+INFO    bundle 164 set([(0, 5000), (4000, 7000)])
+INFO    bundle 168 Lines are different, xtalk should not be symmetric
+INFO    bundle 178 Total:896,%Yes:1.610491%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    osb 82 Beginning Bisection
+INFO    osb 98 Beginning l-range hunt;line:0
+INFO    osb 104 Missed power budget:linepower:104.829,lastdrop:100%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:76.075,lastdrop:27%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:44.519,lastdrop:41%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:22.607,lastdrop:49%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:11.122,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:5.450,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:2.514,lastdrop:54%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.163,lastdrop:54%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.516,lastdrop:56%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.234,lastdrop:55%,budget:0.11
+INFO    osb 111 Satisfied power budget:linepower:0.10324,budget:0.11
+INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+INFO    osb 122 Beginning optimisation run;line:0
+2011-05-12 05:21:28,186:INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_CPU.log
+2011-05-12 05:21:28,188:INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+2011-05-12 05:21:28,188:INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+2011-05-12 05:21:28,188:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 05:21:28,440:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 05:21:28,445:INFO    bundle 176 Total:896,%Yes:1.610491%
+2011-05-12 05:21:28,505:INFO    algorithm 48 Starting Spectrum Balancing using OSB
+2011-05-12 05:21:28,506:INFO    osb 70 Bisection
+2011-05-12 05:21:28,506:INFO    osb 82 Beginning Bisection
+2011-05-12 05:21:28,506:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-12 05:30:18,559:INFO    osb 104 Missed power budget:linepower:104.829,lastdrop:100%,budget:0.11
+2011-05-12 05:38:28,516:INFO    osb 104 Missed power budget:linepower:76.075,lastdrop:27%,budget:0.11
+2011-05-12 05:48:49,227:INFO    osb 104 Missed power budget:linepower:44.519,lastdrop:41%,budget:0.11
+2011-05-12 06:01:15,006:INFO    osb 104 Missed power budget:linepower:22.607,lastdrop:49%,budget:0.11
+2011-05-12 06:15:56,128:INFO    osb 104 Missed power budget:linepower:11.122,lastdrop:51%,budget:0.11
+2011-05-12 06:32:34,081:INFO    osb 104 Missed power budget:linepower:5.450,lastdrop:51%,budget:0.11
+2011-05-12 06:52:37,932:INFO    osb 104 Missed power budget:linepower:2.514,lastdrop:54%,budget:0.11
+2011-05-12 07:17:17,984:INFO    osb 104 Missed power budget:linepower:1.163,lastdrop:54%,budget:0.11
+2011-05-12 07:44:03,798:INFO    osb 104 Missed power budget:linepower:0.516,lastdrop:56%,budget:0.11
+2011-05-12 08:13:04,167:INFO    osb 104 Missed power budget:linepower:0.234,lastdrop:55%,budget:0.11
+2011-05-12 08:44:05,808:INFO    osb 111 Satisfied power budget:linepower:0.10324,budget:0.11
+2011-05-12 08:44:05,809:INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+2011-05-12 08:44:05,809:INFO    osb 122 Beginning optimisation run;line:0

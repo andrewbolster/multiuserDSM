@@ -1,0 +1,39 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_3-3k_5k-near_far.net_GPU_3.log
+INFO    bundle 67 Reading fresh Network File networks/3-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 3 lines from networks/3-3k_5k-near_far.net
+INFO    gpu 435 Spawning 3 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:672,%Yes:1.413690%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:966.122mW,Rate:723bpf
+INFO    bundle 325 Line:1,Power:966.073mW,Rate:569bpf
+INFO    bundle 325 Line:2,Power:966.119mW,Rate:2305bpf
+INFO    bundle 331 Bundle Rate:3597bpf
+INFO    algorithm 84 All Done Here, took 11.538721, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_3-3k_5k-near_far.net_GPU_3.log
+INFO    bundle 67 Reading fresh Network File networks/3-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 3 lines from networks/3-3k_5k-near_far.net
+INFO    gpu 395 Asked:3,Have:4,Got:3
+INFO    gpu 439 Spawning 3 GPU Threads
+INFO    gpu 620 Initialising CUDA device
+INFO    gpu 620 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    gpu 620 Initialising CUDA device
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:672,%Yes:1.413690%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:966.122mW,Rate:723bpf
+INFO    bundle 325 Line:1,Power:966.073mW,Rate:569bpf
+INFO    bundle 325 Line:2,Power:966.119mW,Rate:2305bpf
+INFO    bundle 331 Bundle Rate:3597bpf
+INFO    algorithm 84 All Done Here, took 11.185615, hit ratio of 0.0000

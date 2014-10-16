@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Dynamic Spectrum Management Introduction</TITLE>
+<META NAME="description" CONTENT="Dynamic Spectrum Management Introduction">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node12.html">
+<LINK REL="previous" HREF="node8.html">
+<LINK REL="up" HREF="node6.html">
+<LINK REL="next" HREF="node12.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html411"
+  HREF="node12.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html407"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html401"
+  HREF="node10.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html409"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html412"
+  HREF="node12.html">DSM Level 0/1</A>
+<B> Up:</B> <A NAME="tex2html408"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html402"
+  HREF="node10.html">Crosstalk Modelling</A>
+ &nbsp; <B>  <A NAME="tex2html410"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00313000000000000000">
+Dynamic Spectrum Management Introduction</A>
+</H2><SMALL CLASS="SMALL">
+A general solution to this rate-region problem has been the use of Static Spectrum Management (SSM), where each line has a pre-defined power spectral density (PSDPSDPower Spectral Density) profile under which it operates. This is sometimes called Spectral Masking. Unfortunately this masking is done once (or a few times, if lines are added to / removed from the bundle), and additionally assumes that each line will be fully utilised at all times. This a major abstraction from reality, and has driven the development of spectrum management systems that can dynamically re-allocate PSD's based on near-real-time usage. From <A
+ HREF="node65.html#STC07">Seong Taek Chung (2007)</A>:
+</SMALL>
+<P>
+
+<BLOCKQUOTE><SMALL CLASS="SMALL">Suppose that 25 copper lines exist in a cable bundle. Depending on the time (day versus night, weekday versus weekend) and the location (commercial versus residential area), the demand for DSL services varies. For example, the data traffic load at an office is heavy during the daytime and may be close to zero at night. Furthermore, depending on the specific loop topologies, the interference caused by one line to another varies. Some pairs might be physically close in the binder over a very short distance; hence, the interference between these pairs might be very small. On the other hand, other pairs might be proximate along most of the loop length, which leads to a very strong interference between those two pairs
+...
+Revisiting the example where 25 copper lines exist in a telephone bundle, suppose that in the middle of the night at school, one Ph.D. student is trying to download a large paper from a website using DSL. If static spectrum management is used, the speed is as slow at night as during the day, when many other students are also using their DSLs. However, if the DSL network uses [Dynamic Spectrum Management], the speed at night can be much faster than during the daytime because the bit-rate on the line in use can be optimised to take advantage of the low-noise conditions.
+</SMALL></BLOCKQUOTE>
+<P>
+<SMALL CLASS="SMALL">It is clear that with the addition of some usage-based intelligence, the bundle could be much more effectively used. Dynamic Spectrum Management systems allow for power and rate allocations for each line to be dynamically controlled, but are classified into four general levels, based on the amount of coordination between lines, ranging from completely autonomous operation<A NAME="tex2html13"
+  HREF="footnode.html#foot642"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">7</SPAN></SUP></A> to centralised signal vectoring and control, as summarised in Figure <A HREF="#tab:DSMLevelTable">7</A>, adapted from <A
+ HREF="node65.html#JC06">J.&nbsp;Cioffi (2006)</A> and <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="tab:DSMLevelTable"></A><A NAME="661"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 7:</STRONG>
+Summary of DSM Algorithm Level Characteristics with Examples</CAPTION>
+<TR><TD><TABLE  WIDTH="100%">
+<TR><TD>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER" WIDTH="100%">
+<TR><TD ALIGN="CENTER">DSM Level</TD>
+<TD ALIGN="LEFT">Description</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Examples</TD>
+</TR>
+<TR><TD ALIGN="CENTER">0</TD>
+<TD ALIGN="LEFT">No DSM, Completely Autonomous per-modem Spectrum Management</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>NA</TD>
+</TR>
+<TR><TD ALIGN="CENTER">1</TD>
+<TD ALIGN="LEFT">Single line spectrum balancing with politeness and signal impulse control</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>IWF<A NAME="tex2html14"
+  HREF="#footmp652"><SUP><SPAN CLASS="arabic">1</SPAN></SUP></A>,ASB<A NAME="tex2html15"
+  HREF="#footmp653"><SUP><SPAN CLASS="arabic">2</SPAN></SUP></A></TD>
+</TR>
+<TR><TD ALIGN="CENTER">2</TD>
+<TD ALIGN="LEFT">Multiple line spectrum balancing with spectra controls</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>OSB<A NAME="tex2html16"
+  HREF="#footmp654"><SUP><SPAN CLASS="arabic">3</SPAN></SUP></A>, ISB<A NAME="tex2html17"
+  HREF="#footmp655"><SUP><SPAN CLASS="arabic">4</SPAN></SUP></A>,SCALE<A NAME="tex2html18"
+  HREF="#footmp1166"><SUP><SPAN CLASS="arabic">5</SPAN></SUP></A></TD>
+</TR>
+<TR><TD ALIGN="CENTER">3</TD>
+<TD ALIGN="LEFT">Multiple line signal coordination (vectoring)</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Vectored-DMT<A
+ HREF="node65.html#GG00">G.&nbsp;Ginis (2000)</A>, SVD<A NAME="tex2html19"
+  HREF="#footmp1167"><SUP><SPAN CLASS="arabic">6</SPAN></SUP></A></TD>
+</TR>
+</TABLE></TD></TR>
+<TR ALIGN="LEFT">
+<TD><DL>
+<DD><A NAME="footmp652"><SUP><SPAN CLASS="arabic">1</SPAN></SUP></A> Iterative Water Filling
+</DD>
+
+<DD><A NAME="footmp653"><SUP><SPAN CLASS="arabic">2</SPAN></SUP></A> Autonomous Spectrum Balancing
+</DD>
+
+<DD><A NAME="footmp654"><SUP><SPAN CLASS="arabic">3</SPAN></SUP></A> Optimal Spectrum Balancing
+</DD>
+
+<DD><A NAME="footmp655"><SUP><SPAN CLASS="arabic">4</SPAN></SUP></A> Iterative Spectrum Balancing
+</DD>
+
+<DD><A NAME="footmp1166"><SUP><SPAN CLASS="arabic">5</SPAN></SUP></A> Successive Convex Approximation for Low ComplExity<A
+ HREF="node65.html#Pap06">Papandriopoulos (2006)</A>
+</DD>
+
+<DD><A NAME="footmp1167"><SUP><SPAN CLASS="arabic">6</SPAN></SUP></A> Single Vector Decomposition<A
+ HREF="node65.html#GTaWH00">Georg Taubock and Werner Henkel (2000)</A>
+</DD>
+</DL></TD></TR>
+</TABLE></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">This coordination (where applicable) is controlled centrally from a Spectrum Maintenance Centre (SMCSMCSpectrum Maintenance Centre), which receives data from Customer Premises Equipment (CPECPECustomer Premises Equipment) via an Auto-Configuration Server (ACSACSAuto-Configuration Server), and/or from DSLAMsDSLAMDSL Access Multiplexer and LT-side equipment via an Element Management System (EMSEMSElement Management System). The SMC then collates the received information, and distributes profile settings for the DSLs.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html411"
+  HREF="node12.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html407"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html401"
+  HREF="node10.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html409"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html412"
+  HREF="node12.html">DSM Level 0/1</A>
+<B> Up:</B> <A NAME="tex2html408"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html402"
+  HREF="node10.html">Crosstalk Modelling</A>
+ &nbsp; <B>  <A NAME="tex2html410"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

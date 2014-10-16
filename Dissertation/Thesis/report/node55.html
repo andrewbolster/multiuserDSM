@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Relative Speed-up</TITLE>
+<META NAME="description" CONTENT="Relative Speed-up">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node54.html">
+<LINK REL="up" HREF="node53.html">
+<LINK REL="next" HREF="node56.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html970"
+  HREF="node56.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html966"
+  HREF="node53.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html962"
+  HREF="node54.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html968"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html971"
+  HREF="node56.html">ISB GPU Performance and</A>
+<B> Up:</B> <A NAME="tex2html967"
+  HREF="node53.html">OSB GPU Performance and</A>
+<B> Previous:</B> <A NAME="tex2html963"
+  HREF="node54.html">Runtime vs Bundle Size</A>
+ &nbsp; <B>  <A NAME="tex2html969"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00522000000000000000">
+Relative Speed-up</A>
+</H2><SMALL CLASS="SMALL">
+In order to assess the viability of using GPU for this application, it's important to put these results in the context of serial calculations.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">To do so, the Parallel Speed-up ratio is applied to the results, such that <!-- MATH
+ $S_p=\frac{T_1}{T_p}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="58" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img135.png"
+ ALT="$ S_p=\frac{T_1}{T_p}$"></SPAN> where <SPAN CLASS="MATH"><IMG
+ WIDTH="18" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img136.png"
+ ALT="$ T_1$"></SPAN> is the execution time for a serial instance, and <SPAN CLASS="MATH"><IMG
+ WIDTH="18" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img137.png"
+ ALT="$ T_p$"></SPAN> is the parallel execution time. This is a particularly difficult relationship to apply to GPU; should one count each device as a parallelisation unit, or each SM on each device? This is not so much a problem when calculating the pure speed up of an application, as the number of processing units is not a factor, but is a serious consideration when looking at the parallel efficiency, <!-- MATH
+ $E_p=\frac{S_p}{P}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="60" HEIGHT="36" ALIGN="MIDDLE" BORDER="0"
+ SRC="img138.png"
+ ALT="$ E_p=\frac{S_p}{P}$"></SPAN> where <SPAN CLASS="MATH"><IMG
+ WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img104.png"
+ ALT="$ P$"></SPAN> is the number of parallel processing units. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Initially looking purely at the parallel speed-up attained, the results speak for themselves.
+</SMALL>
+<DIV ALIGN="CENTER">
+
+<P><A NAME="fig:GPU-OSB-speedup"></A><A NAME="fig:GPU-OSB-efficiency"></A></P>
+<DIV ALIGN="CENTER">
+
+</DIV>
+[OSB Parallel Speedup]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./OSB-gpuspeedup.png"
+ ALT="Image OSB-gpuspeedup">
+[OSB Parallel Efficiency]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./OSB-gpuefficiency.png"
+ ALT="Image OSB-gpuefficiency">
+
+</DIV>
+<P>
+<SMALL CLASS="SMALL">It is clear again that the expected workload is a major factor; the two line bundle 'bottoms out' very quickly, and its speed-up does not grow with additional resourcing. However, the three line bundle reaches a peak at a speed-up of 50.7x faster than CPU, and starts to drop. This echo’s the idea that each workload has a particular 'optimal' processing unit count, and going beyond that count degrades performance.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Looking towards parallel efficiency, strictly speaking each device has 240 PUs<A NAME="tex2html121"
+  HREF="footnode.html#foot2798"><SUP><SPAN CLASS="arabic">4</SPAN>.<SPAN CLASS="arabic">1</SPAN></SUP></A>, so to be fair to the CPU comparison, this is factored into the efficiency calculation thus; <!-- MATH
+ $E_p=\frac{S_p}{240 \times P}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="85" HEIGHT="36" ALIGN="MIDDLE" BORDER="0"
+ SRC="img139.png"
+ ALT="$ E_p=\frac{S_p}{240 \times P}$"></SPAN> where <SPAN CLASS="MATH"><IMG
+ WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img104.png"
+ ALT="$ P$"></SPAN> is taken as the number of GPUs.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">While this looks like an appalling figure, the cost comparison must be made between having 240 PUs sitting on one device in a home computer, versus 240 CPUs stocked in a server farm. 
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html970"
+  HREF="node56.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html966"
+  HREF="node53.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html962"
+  HREF="node54.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html968"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html971"
+  HREF="node56.html">ISB GPU Performance and</A>
+<B> Up:</B> <A NAME="tex2html967"
+  HREF="node53.html">OSB GPU Performance and</A>
+<B> Previous:</B> <A NAME="tex2html963"
+  HREF="node54.html">Runtime vs Bundle Size</A>
+ &nbsp; <B>  <A NAME="tex2html969"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

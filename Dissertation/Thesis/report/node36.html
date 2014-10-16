@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>CPU-bound Algorithm Development and Verification</TITLE>
+<META NAME="description" CONTENT="CPU-bound Algorithm Development and Verification">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node37.html">
+<LINK REL="previous" HREF="node35.html">
+<LINK REL="up" HREF="node33.html">
+<LINK REL="next" HREF="node37.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html731"
+  HREF="node37.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html727"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html721"
+  HREF="node35.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html729"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html732"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+<B> Up:</B> <A NAME="tex2html728"
+  HREF="node33.html">Development and Solution</A>
+<B> Previous:</B> <A NAME="tex2html722"
+  HREF="node35.html">Simulation Framework Architecture</A>
+ &nbsp; <B>  <A NAME="tex2html730"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00430000000000000000"></A>
+<A NAME="sec:algo-dev-cpu"></A>
+<BR>
+CPU-bound Algorithm Development and Verification
+</H1><SMALL CLASS="SMALL">
+Before tackling the GPU implementation head on, in order to gain a more in-depth and practical understanding of the different DSM algorithms, pure Python, CPU-bound implementations of OSB, ISB and Greedy bit-loading were created. Due to the previously mentioned Object Oriented model, this process was greatly simplified by having each different algorithm class being a 'child' of a generic 'Algorithm' class; inheriting from that parent operations common to all algorithms, such as defining and instantiating universal variables, performing timing operations, verifying PSD 'sanity', file I/O functionality, and general 'build-up/tear-down' operations. This reduced the complexity of each algorithm class (slightly) and ensured that each algorithm was being tested in a consistent and repeatable fashion.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Since OSB is the 'simplest' DSM algorithm, it was implemented first (without per line rate targeting<A NAME="tex2html89"
+  HREF="footnode.html#foot2301"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">6</SPAN></SUP></A>, but with PSD caching), largely from the work covered in <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>, with operation as stated previously. Due to Python's efficient syntax and the functionality available in the Numpy math library, this was a fairly straightforward task in terms of implementing mathematical formulae in a structured way, but with commonly neglected areas such as algorithmic convergence and numerous boundary cases that are not covered in any of the technical papers cited, this was a process of iterative 'run it; it breaks; find new edge case; implement edge case; repeat'. Such edge cases range from ensuring that while PSD's can have negative values, that a negative PSD value indicates a 'failed' bit-load<A NAME="tex2html90"
+  HREF="footnode.html#foot2303"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">7</SPAN></SUP></A> to ensuring that assigned line Lagrangian co-factor bisection did not reduce factors to infinitesimal values given very different line sections. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The in this case, the generation of power spectral density values for each attempted bit combination is accomplished using the Numpy linear algebra library. This development and implementation was carried out in parallel with the generation of the general simulation framework. This joint development allowed for very early-stage verification of the work currently applied, specifically verification of cross-talk matrices and subsequent bit-loads against values derived from <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A> and <A
+ HREF="node65.html#RC04">R.&nbsp;Cendrillon (2004)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The development of the line and bundle objects, as well as the general framework structure, allowing for programmatic 'hooks' for objects (classes) for different algorithms, automatic generation of post-bit-loading graph data represents more than half of the development time applied to the project<A NAME="tex2html91"
+  HREF="footnode.html#foot2306"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">8</SPAN></SUP></A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Verification of the OSB algorithm was done in a similar way to the verification of the gain-matrix generation; comparison with known-good results. In this case this takes the form of analysing the resultant PSD and bit assignments for the lines graphically, as shown in Figure&nbsp;<A HREF="#fig:osbComparison">34</A>. While these do not match each other perfectly, this can be explained by two factors;propagated floating point representation differences, and updated beta-offset implementations. The McKinley implementation was built on a 32-bit floating point representation system, while the presented implementation leverages Numpy's support for 64-bit floating point values. Additionally the selected beta-offset model application in the bundle differs from the McKinley implementation in that in the McKinley model, random beta offset values are applied to the lines sequentially where in this implementation, an offset matrix is applied globally to the bundle using Numpy functionality. Given the inherent numerical instability of the calculation of the Lagrangian sum, fractional changes in cross-talk gains can significantly affect the final resultant bit-loading assignments, while maintaining a close rate-approximation between the two implementations.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:osbComparison"></A><A NAME="2313"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 34:</STRONG>
+Visual comparison of known-good (McKinley) and Python implementations of OSB show that they are near-identical</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [McKinley Bit-loading]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2_line_bitload_AMK.png"
+ ALT="Image 2_line_bitload_AMK">
+  [Implementation Bit-loading]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2_line_bitload_MINE.png"
+ ALT="Image 2_line_bitload_MINE">
+<BR>  [McKinley PSD]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2_line_power_AMK.png"
+ ALT="Image 2_line_power_AMK">
+  [Implementation PSD]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2_line_power_MINE.png"
+ ALT="Image 2_line_power_MINE"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">After OSB was implemented, verified and their operation confirmed by Dr McKinley, Greedy bit-loading (MIPB) with rate targets was developed from <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>. One modification that was made to MIPB as in <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A> was the introduction of a modified line weight updating algorithm that used the ratio-to-target rather than distance-to-target as a weight-shifting factor, giving on average half the number of iterations while maintaining expected bit-loads.<A NAME="tex2html93"
+  HREF="footnode.html#foot2318"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">9</SPAN></SUP></A></SMALL>
+<P>
+<SMALL CLASS="SMALL">An implementation of ISB soon followed, and verified in the same manner. One particular additional version was made of the ISB algorithm in preparation for GPU parallelisation; loop reversal of the inner optimisation step. 'Classic' ISB iterates over each line individually, internally repeating bit incrementing steps until bit-load convergence is achieved, shown in Figure <A HREF="#fig:isb-standard-loop">35</A>. An alternative but equivalent loop construct is to do the per-channel incrementing inside a global bit-convergence loop, as shown in Figure <A HREF="#fig:isb-alternate-loop">36</A>. This manipulation is safe since each channel is ideally independent to the power conditions of other tones.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:isb-standard-loop"></A><A NAME="2330"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 35:</STRONG>
+Standard ISB Loop construct</CAPTION>
+<TR><TD><IMG
+ WIDTH="100" HEIGHT="18" BORDER="0"
+ SRC="img125.png"
+ ALT="\begin{figure}\begin{algorithmic}
+\FORALL{channels}
+\REPEAT
+\FORALL{lines}
+\...
+... \ENDFOR
+\UNTIL{Bit-load Convergence}
+\ENDFOR
+\end{algorithmic}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:isb-alternate-loop"></A><A NAME="2342"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 36:</STRONG>
+Exchanged ISB Loop construct</CAPTION>
+<TR><TD><IMG
+ WIDTH="100" HEIGHT="18" BORDER="0"
+ SRC="img126.png"
+ ALT="\begin{figure}\begin{algorithmic}
+\REPEAT
+\FORALL{channels}
+\FORALL{lines}
+\...
+... \ENDFOR
+\ENDFOR
+\UNTIL{Bit-load Convergence}
+\end{algorithmic}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">As part of second-stage verification and re-factoring, significant functional portions of OSB and ISB were moved into the Algorithm super-class, such as lambda bisection and rate metric functions, since both algorithms do largely the same thing within the outer loops of the implementation. Since the only differences between the two algorithms is their inner optimisation function, these are included in this document as Appendices <A HREF="#apx:osb-optimise-p-cpu">B</A> and <A HREF="#apx:isb-optimise-p-cpu">C</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">For completeness, figure <A HREF="#fig:mipbComparison">37</A> and <A HREF="#fig:isbComparison">38</A> show like for like comparison of bit load and power spectra between this solution and the McKinley implementation given a standard two line near-far scenario (as shown in <A HREF="node8.html#fig:2-3k5k-nearfar">3a</A>)<A NAME="tex2html96"
+  HREF="footnode.html#foot2350"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">10</SPAN></SUP></A></SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:mipbComparison"></A><A NAME="2356"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 37:</STRONG>
+Visual comparison of known-good bit-load and power spectra for Greedy (MIPB), with rates targeted to OSB, show that the implementations are equivalent</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [McKinley Bit-loading]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./b_and_p_stats_2lines_near_far_mipb3g_224_371_2451-bitrate.png"
+ ALT="Image b_and_p_stats_2lines_near_far_mipb3g_224_371_2451-bitrate">
+  [Implementation Bit-loading]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./mipbtest2-bitrate.png"
+ ALT="Image mipbtest2-bitrate">
+<BR>  [McKinley PSD]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./b_and_p_stats_2lines_near_far_mipb3g_224_371_2451-power.png"
+ ALT="Image b_and_p_stats_2lines_near_far_mipb3g_224_371_2451-power">
+  [Implementation PSD]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./mipbtest2-power.png"
+ ALT="Image mipbtest2-power"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:isbComparison"></A><A NAME="2364"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 38:</STRONG>
+Visual comparison of known-good bit-load and power spectra for ISB, show that the implementations are equivalent</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [McKinley Bit-loading]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./b_and_p_stats_2lines_near_far_ISB_224-bitrate.png"
+ ALT="Image b_and_p_stats_2lines_near_far_ISB_224-bitrate">
+  [Implementation Bit-loading]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_2-3k_5k-near_far_CPU-bitrate.png"
+ ALT="Image ISB_2-3k_5k-near_far_CPU-bitrate">
+<BR>  [McKinley PSD]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./b_and_p_stats_2lines_near_far_ISB_224-power.png"
+ ALT="Image b_and_p_stats_2lines_near_far_ISB_224-power">
+  [Implementation PSD]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_2-3k_5k-near_far_CPU-power.png"
+ ALT="Image ISB_2-3k_5k-near_far_CPU-power"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html731"
+  HREF="node37.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html727"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html721"
+  HREF="node35.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html729"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html732"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+<B> Up:</B> <A NAME="tex2html728"
+  HREF="node33.html">Development and Solution</A>
+<B> Previous:</B> <A NAME="tex2html722"
+  HREF="node35.html">Simulation Framework Architecture</A>
+ &nbsp; <B>  <A NAME="tex2html730"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

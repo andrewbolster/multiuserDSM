@@ -1,0 +1,727 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Crosstalk Modelling</TITLE>
+<META NAME="description" CONTENT="Crosstalk Modelling">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node9.html">
+<LINK REL="up" HREF="node8.html">
+<LINK REL="next" HREF="node11.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html399"
+  HREF="node11.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html395"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html391"
+  HREF="node9.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html397"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html400"
+  HREF="node11.html">Dynamic Spectrum Management Introduction</A>
+<B> Up:</B> <A NAME="tex2html396"
+  HREF="node8.html">DSL System Architecture</A>
+<B> Previous:</B> <A NAME="tex2html392"
+  HREF="node9.html">DSL System Modelling</A>
+ &nbsp; <B>  <A NAME="tex2html398"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00312200000000000000"></A>
+<A NAME="sec:XTmodel"></A>
+<BR>
+Crosstalk Modelling
+</H3>
+<P>
+<SMALL CLASS="SMALL">The above model allows the generation of 'idealised gains' for a given line, ignoring all external effects, such as the aforementioned cross-talk. To bring cross-talk into the picture, assuming that NEXT is eliminated completely by FDD, we can model FEXT based on the industry standard ETSI 1% <A
+ HREF="node65.html#ETSI03">ANS (2003)</A> model (equation&nbsp;(<A HREF="#eq:ETSIFEXT">2.7</A>))
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:ETSIFEXT"></A><!-- MATH
+ \begin{equation}
+|H_{FEXT}(f)|^2=N^{0.06}K_{FEXT}f^2 |H_{channel}(f,L)|^2
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="339" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img36.png"
+ ALT="$\displaystyle \vert H_{FEXT}(f)\vert^2=N^{0.06}K_{FEXT}f^2 \vert H_{channel}(f,L)\vert^2$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">7</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">The "1%" in this case represents the worst-case-scenario, and in a real deployment would not be encountered 99% of the time. This is partially driven from systemic pessimism, but partially comes from the fact that this worst-case scenario allows for a modelling function that is smooth with frequency.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In most cases, this 1% model is over zealous in its estimations of cross-talk coupling, and also ignores spatiality within the bundle <A NAME="tex2html9"
+  HREF="footnode.html#foot445"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">4</SPAN></SUP></A>. Using real data from a four sub-bundle, 100x100 DSL binder, the existing model can be modified to more closely match the coupling data of the 'real' bundle.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:ATTFEXT"></A><!-- MATH
+ \begin{equation}
+|H^{j,k}_{FEXT}(f)|^2=|H^{j,k}_{FEXT}(f)|^2 \times 10^{\frac{X_{dB}}{10}}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="271" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
+ SRC="img37.png"
+ ALT="$\displaystyle \vert H^{j,k}_{FEXT}(f)\vert^2=\vert H^{j,k}_{FEXT}(f)\vert^2 \times 10^{\frac{X_{dB}}{10}}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">8</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where the modifier <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img38.png"
+ ALT="$ X$"></SPAN> is selected based on a Beta probability distribution of sample data, for example, <A
+ HREF="node65.html#Alc07">Alcatel-Lucent (2007)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As stated, DSL is a cross-talk-limited system, and as such, the effect of cross-talkers also effects some of the fundamental assumptions that must be made about the transmission characteristics of the lines in the bundle.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">From <A
+ HREF="node65.html#SJ08">Sumanth Jagannathan (2008)</A>, the approximate Shannon Gap for a DSL system based on M-QAM is derived thus. From the Central Limit Theorem, as the number of cross-talkers increases, the effects of those cross-talkers approximates to a Gaussian Distribution<A
+ HREF="node65.html#KK93">K.J. Kerpez (1993)</A>. Therefore, a DSL channel can be approximated as an Additive White Gaussian Noise (AWGN) channel, which is described <A
+ HREF="node65.html#CS48">C.E. Shannon. (1948)</A>:
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:AWGN"></A><!-- MATH
+ \begin{equation}
+C(k)=log_2(1+SNR(k))
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="182" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img39.png"
+ ALT="$\displaystyle C(k)=log_2(1+SNR(k))$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">9</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">This represents the maximum possible capacity (in bits) on a given channel (<SPAN CLASS="MATH"><IMG
+ WIDTH="35" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img40.png"
+ ALT="$ C(k)$"></SPAN>), ignoring practical considerations such as coding complexity and processing delays. From <A
+ HREF="node65.html#CS48">C.E. Shannon. (1948)</A> and <A
+ HREF="node65.html#JMC91">J. M. Cioffi. (1991)</A>, the probability of a symbol error for an uncoded M-QAM constellation <A NAME="tex2html10"
+  HREF="footnode.html#foot464"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">5</SPAN></SUP></A> on a given sub-channel is shown in equation&nbsp;(<A HREF="#eq:PeMQAM">2.10</A>)
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:PeMQAM"></A><!-- MATH
+ \begin{equation}
+P_e\approx N_eQ\left(\sqrt{\frac{3}{M-1}SNR}\right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="202" HEIGHT="60" ALIGN="MIDDLE" BORDER="0"
+ SRC="img42.png"
+ ALT="$\displaystyle P_e\approx N_eQ\left(\sqrt{\frac{3}{M-1}SNR}\right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">10</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where <SPAN CLASS="MATH"><IMG
+ WIDTH="36" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img43.png"
+ ALT="$ Q(x)$"></SPAN> is the probability of unitary Gaussian variable will will exceed <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img44.png"
+ ALT="$ x$"></SPAN>, given in equation&nbsp;(<A HREF="#eq:QxQAM">2.11</A>). In general, DSL systems aim for this probability of symbol error (<SPAN CLASS="MATH"><IMG
+ WIDTH="19" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img45.png"
+ ALT="$ P_e$"></SPAN>) to be around <SPAN CLASS="MATH"><IMG
+ WIDTH="34" HEIGHT="18" ALIGN="BOTTOM" BORDER="0"
+ SRC="img46.png"
+ ALT="$ 1e^{-7}$"></SPAN>.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:QxQAM"></A><!-- MATH
+ \begin{equation}
+Q(x)=\int_x^{\infty}\frac{1}{\sqrt{2\pi}}e^{-u^2/2} du
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="186" HEIGHT="50" ALIGN="MIDDLE" BORDER="0"
+ SRC="img47.png"
+ ALT="$\displaystyle Q(x)=\int_x^{\infty}\frac{1}{\sqrt{2\pi}}e^{-u^2/2} du$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">11</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">(<A HREF="#eq:QxQAM">2.11</A>) is generally rewritten in terms of the standard error function <SPAN CLASS="MATH"><IMG
+ WIDTH="48" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img48.png"
+ ALT="$ erf(x)$"></SPAN>, shown in equations&nbsp;(<A HREF="#eq:QxQAMerf">2.12</A>) and&nbsp;(<A HREF="#eq:QxQAMerf2">2.13</A>).
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:QxQAMerf"></A><!-- MATH
+ \begin{equation}
+Q(x)=\frac{1}{2}\left(1-erf(\frac{x}{\sqrt{2}})\right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="184" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
+ SRC="img49.png"
+ ALT="$\displaystyle Q(x)=\frac{1}{2}\left(1-erf(\frac{x}{\sqrt{2}})\right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">12</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:QxQAMerf2"></A><!-- MATH
+ \begin{equation}
+Q^{-1}(x)=\sqrt{2} erf^{-1}(1-2x)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="194" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img50.png"
+ ALT="$\displaystyle Q^{-1}(x)=\sqrt{2} erf^{-1}(1-2x)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">13</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Rearranging&nbsp;(<A HREF="#eq:PeMQAM">2.10</A>) for <SPAN CLASS="MATH"><IMG
+ WIDTH="19" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img51.png"
+ ALT="$ M$"></SPAN> gives&nbsp;(<A HREF="#eq:QAM4M">2.14</A>)
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:QAM4M"></A><!-- MATH
+ \begin{equation}
+M=1+\frac{SNR}{\frac{1}{3}(Q^{-1}(\frac{P_e}{N_e})^2)}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="163" HEIGHT="49" ALIGN="MIDDLE" BORDER="0"
+ SRC="img52.png"
+ ALT="$\displaystyle M=1+\frac{SNR}{\frac{1}{3}(Q^{-1}(\frac{P_e}{N_e})^2)}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">14</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Revisiting&nbsp;(<A HREF="node7.html#eq:MQAMb">2.1</A>),&nbsp;(<A HREF="#eq:MQAMbmax">2.15</A>) can be obtained, expressing the number of bits that can be encoded on a sub-channel.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:MQAMbmax"></A><!-- MATH
+ \begin{equation}
+b=log_2\left(1+\frac{SNR}{\frac{1}{3}(Q^{-1}(\frac{P_e}{N_e})^2)}\right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="208" HEIGHT="60" ALIGN="MIDDLE" BORDER="0"
+ SRC="img53.png"
+ ALT="$\displaystyle b=log_2\left(1+\frac{SNR}{\frac{1}{3}(Q^{-1}(\frac{P_e}{N_e})^2)}\right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">15</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Contrasting&nbsp;(<A HREF="#eq:MQAMbmax">2.15</A>) with&nbsp;(<A HREF="#eq:AWGN">2.9</A>), the uncoded channel gap is defined in equation&nbsp;(<A HREF="#eq:GAMMAuncoded">2.16</A>).
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:GAMMAuncoded"></A><!-- MATH
+ \begin{equation}
+\Gamma_{uncoded}=\frac{1}{3}\left(Q^{-1}(\frac{P_e}{N_e}\right)^2
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="184" HEIGHT="58" ALIGN="MIDDLE" BORDER="0"
+ SRC="img54.png"
+ ALT="$\displaystyle \Gamma_{uncoded}=\frac{1}{3}\left(Q^{-1}(\frac{P_e}{N_e}\right)^2$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">16</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">This allows simplification of equation&nbsp;(<A HREF="#eq:MQAMbmax">2.15</A>) with respect to&nbsp;(<A HREF="#eq:GAMMAuncoded">2.16</A>) into&nbsp;(<A HREF="#eq:GAMMAb">2.17</A>)
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:GAMMAb"></A><!-- MATH
+ \begin{equation}
+b=log_2\left(1+\frac{SNR}{\Gamma_{uncoded}}\right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="172" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
+ SRC="img55.png"
+ ALT="$\displaystyle b=log_2\left(1+\frac{SNR}{\Gamma_{uncoded}}\right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">17</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">This characterisation of the Shannon Gap is not quite complete, and represents the best-case scenario within a DSL system, while ignoring potential coding gains from Forward Error Correction such as the Trellis<A
+ HREF="node65.html#GU82">G. Ungerboeck (1982)</A> or Reed-Solomon<A
+ HREF="node65.html#Ree59">I. S. Reed and G. Solomon (1959)</A> coding schemes.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As such, two additional modifiers are added to the <SPAN CLASS="MATH"><IMG
+ WIDTH="12" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img56.png"
+ ALT="$ \Gamma$"></SPAN> calculation; a performance margin <SPAN CLASS="MATH"><IMG
+ WIDTH="22" HEIGHT="18" ALIGN="MIDDLE" BORDER="0"
+ SRC="img57.png"
+ ALT="$ \gamma_m$"></SPAN> which allows for SNR 'headroom' to maintain error rates during temporarily bad noise conditions, and a coding gain <!-- MATH
+ $\gamma_{eg}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="18" ALIGN="MIDDLE" BORDER="0"
+ SRC="img58.png"
+ ALT="$ \gamma_{eg}$"></SPAN> which incorporates any error correction modulation in place. This gives a final <SPAN CLASS="MATH"><IMG
+ WIDTH="12" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img56.png"
+ ALT="$ \Gamma$"></SPAN> sum shown in equation&nbsp;(<A HREF="#eq:GAMMAsum">2.18</A>)
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:GAMMAsum"></A><!-- MATH
+ \begin{equation}
+\Gamma=\Gamma_{uncoded}+\gamma_m+\gamma_{eg}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="171" HEIGHT="24" ALIGN="MIDDLE" BORDER="0"
+ SRC="img59.png"
+ ALT="$\displaystyle \Gamma=\Gamma_{uncoded}+\gamma_m+\gamma_{eg}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">18</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">In <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A> it is demonstrated that cross-talk coupling can be assumed not to have any practically relevant effect on sub-channels other than the sub-channel from which that cross-talk originates, such as when DMT blocks are transmitted and received synchronously or when cyclic prefixing and pulse shaping ("Zipper" DMT<A
+ HREF="node65.html#FSJ99">F.&nbsp;Sjoberg and jesson. (1999)</A>) is used.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">From <A
+ HREF="node65.html#CA06">C.M.&nbsp;Akujuobi (2006)</A>, equation&nbsp;(<A HREF="#DSLSystemModel">2.19</A>) shows the maximally optimal bit-loading on line <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN> of <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> users, and tone <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN> of <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img7.png"
+ ALT="$ K$"></SPAN> total sub-channels, including the above derivation for FEXT coupling.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="DSLSystemModel"></A><!-- MATH
+ \begin{equation}
+b_n(k)=log_2\left(1+\frac{p_n(k) |h_{nn}(k)|^2}{\Gamma \left( \sigma_n^2(k)+\sum_{j\neq n}^N p_j(k)|h_{jn}(k)|^2 \right)} \right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="379" HEIGHT="70" ALIGN="MIDDLE" BORDER="0"
+ SRC="img62.png"
+ ALT="$\displaystyle b_n(k)=log_2\left(1+\frac{p_n(k) \vert h_{nn}(k)\vert^2}{\Gamma \left( \sigma_n^2(k)+\sum_{j\neq n}^N p_j(k)\vert h_{jn}(k)\vert^2 \right)} \right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">19</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">In equation&nbsp;(<A HREF="#DSLSystemModel">2.19</A>), the following definitions are provided for clarity;
+</SMALL>
+<P>
+
+<UL>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="43" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img63.png"
+ ALT="$ h_{ij}(k)$"></SPAN><SPAN CLASS="MATH"><IMG
+ WIDTH="43" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img63.png"
+ ALT="$ h_{ij}(k)$"></SPAN>XTG from user <SPAN CLASS="MATH"><IMG
+ WIDTH="7" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img64.png"
+ ALT="$ i$"></SPAN> to user <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img65.png"
+ ALT="$ j$"></SPAN> on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN>:The cross-talk gain from user <SPAN CLASS="MATH"><IMG
+ WIDTH="7" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img64.png"
+ ALT="$ i$"></SPAN> to user <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img65.png"
+ ALT="$ j$"></SPAN> on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN>
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="40" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img66.png"
+ ALT="$ p_n(k)$"></SPAN><SPAN CLASS="MATH"><IMG
+ WIDTH="40" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img66.png"
+ ALT="$ p_n(k)$"></SPAN>Power provisioned on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN> for user <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN> :The power provisioned on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN> for user <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN>
+</LI>
+<LI><!-- MATH
+ $\sigma^2_n(k)$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="40" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+ SRC="img67.png"
+ ALT="$ \sigma^2_n(k)$"></SPAN><!-- MATH
+ $\sigma^2_n(k)$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="40" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+ SRC="img67.png"
+ ALT="$ \sigma^2_n(k)$"></SPAN>Background noise power experiences by user <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN> on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN> :The background noise power experienced by user <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN> on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN>
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="12" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img56.png"
+ ALT="$ \Gamma$"></SPAN> <SPAN CLASS="MATH"><IMG
+ WIDTH="12" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img56.png"
+ ALT="$ \Gamma$"></SPAN>The Shannon Gap derived from equation (<A HREF="#eq:GAMMAsum">2.18</A>):The Shannon Gap derived from&nbsp;(<A HREF="#eq:GAMMAsum">2.18</A>)
+</LI>
+</UL>
+<P>
+<SMALL CLASS="SMALL">By letting <!-- MATH
+ $f(b_n(k))=\Gamma(2^{b_n(k)}-1)$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="170" HEIGHT="34" ALIGN="MIDDLE" BORDER="0"
+ SRC="img68.png"
+ ALT="$ f(b_n(k))=\Gamma(2^{b_n(k)}-1)$"></SPAN>,&nbsp;(<A HREF="#DSLSystemModel">2.19</A>) can be rearranged to&nbsp;(<A HREF="#eq:DSLSystemModelAlt">2.20</A>)
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:DSLSystemModelAlt"></A><!-- MATH
+ \begin{equation}
+p_n(k)-f(b_n(k))\sum_{j\neq n}^N p_j(k) \frac{|h_{jn}(k)|^2}{|h_{nn}(k)|^2}=f(b_n(k))\frac{\sigma_n^2(k)}{|h_{nn}(k)|^2}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="396" HEIGHT="62" ALIGN="MIDDLE" BORDER="0"
+ SRC="img69.png"
+ ALT="$\displaystyle p_n(k)-f(b_n(k))\sum_{j\neq n}^N p_j(k) \frac{\vert h_{jn}(k)\vert^2}{\vert h_{nn}(k)\vert^2}=f(b_n(k))\frac{\sigma_n^2(k)}{\vert h_{nn}(k)\vert^2}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">20</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">It is clear that equation&nbsp;(<A HREF="#eq:DSLSystemModelAlt">2.20</A>) can be characterised as an N-dimensional linear system of equations, of the form 
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:SysModMat"></A><!-- MATH
+ \begin{equation}
+A(k)P(k)=B(k)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="124" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img70.png"
+ ALT="$\displaystyle A(k)P(k)=B(k)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">21</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:SysModA"></A><!-- MATH
+ \begin{equation}
+A(k)_{ij}=\begin{cases} 1, & \mbox{for } i = j \\\frac{-f(b_i(k))|h_{ji}|^2}{|h_{ii}|^2}, & \mbox{for } i \neq j \end{cases}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="280" HEIGHT="53" ALIGN="MIDDLE" BORDER="0"
+ SRC="img71.png"
+ ALT="$\displaystyle A(k)_{ij}=\begin{cases}1, &amp; \mbox{for } i = j \\ \frac{-f(b_i(k))\vert h_{ji}\vert^2}{\vert h_{ii}\vert^2}, &amp; \mbox{for } i \neq j \end{cases}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">22</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:SysModP"></A><!-- MATH
+ \begin{equation}
+P(k)=[p_1(k) \dots p_i(k) \dots p_N(k)]^T
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="235" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img72.png"
+ ALT="$\displaystyle P(k)=[p_1(k) \dots p_i(k) \dots p_N(k)]^T$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">23</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:SysModB"></A><!-- MATH
+ \begin{equation}
+B(k)=\left[\frac{f(b_1(k)) \sigma^2_1}{|h_{11}|^2} \dots \frac{f(b_i(k)) \sigma^2_i}{|h_{ii}|^2} \dots \frac{f(b_N(k))\sigma^2_N}{|h_{NN}|^2}\right]^T
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="372" HEIGHT="60" ALIGN="MIDDLE" BORDER="0"
+ SRC="img73.png"
+ ALT="$\displaystyle B(k)=\left[\frac{f(b_1(k)) \sigma^2_1}{\vert h_{11}\vert^2} \dots...
+...t h_{ii}\vert^2} \dots \frac{f(b_N(k))\sigma^2_N}{\vert h_{NN}\vert^2}\right]^T$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">24</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">As such, the vector <SPAN CLASS="MATH"><IMG
+ WIDTH="36" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img74.png"
+ ALT="$ B(k)$"></SPAN>, as a function of <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img75.png"
+ ALT="$ b(k$"></SPAN>, describes the amount of bits loaded onto each user's line on tone <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN>, and <SPAN CLASS="MATH"><IMG
+ WIDTH="35" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img76.png"
+ ALT="$ P(k)$"></SPAN> prescribes the power required on each line to support the vector <SPAN CLASS="MATH"><IMG
+ WIDTH="36" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img74.png"
+ ALT="$ B(k)$"></SPAN> of bits loaded onto those lines on channel <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN>. It is the solution and optimisation of this system of equations that is the fundamental limiting factor, and drive for, DSM systems. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The reasoning for this is primarily visible looking at the concept of rate-regions, i.e an <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN>-dimensional surface of possible maximum line bit-loads for each user <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN>. Figure&nbsp;<A HREF="#fig:RateRegionExample">6</A> shows the relationship between two given users, <SPAN CLASS="MATH"><IMG
+ WIDTH="21" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img77.png"
+ ALT="$ R_1$"></SPAN> and <SPAN CLASS="MATH"><IMG
+ WIDTH="27" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img78.png"
+ ALT="$ R_2)$"></SPAN> within a given bundle. It is evident that one <SPAN  CLASS="textit">could</SPAN> achieve an very high data-rate on one line, but at great expense to the other. Mathematically, the search for optimal bit-loading is summed up in&nbsp;(<A HREF="#fig:RateRegionEqu">2.25</A>).
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:RateRegionExample"></A><A NAME="1162"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 6:</STRONG>
+Example of a ADSL rate Region for two users from <A
+ HREF="node65.html#TS03">Thomas&nbsp;Starr (2003)</A></CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="499" HEIGHT="189" ALIGN="BOTTOM" BORDER="0"
+ SRC="./rateregion.png"
+ ALT="Image rateregion"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:RateRegionEqu"></A><!-- MATH
+ \begin{equation}
+\max\limits_{\{p_n\in P_n\}_n} \sum_n w_n R_n
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="130" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
+ SRC="img79.png"
+ ALT="$\displaystyle \max\limits_{\{p_n\in P_n\}_n} \sum_n w_n R_n$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">25</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Using an optimal rate-region, of the style demonstrated in equation&nbsp;<A HREF="#fig:RateRegionEqu">2.25</A> can be generated algorithmically from the above equations. But often these algorithms can be computationally intractable, and less computationally expensive (but sub-optimal) algorithms are used instead, producing reduced rate regions, as shown, which do not take full advantage of the available spectrum given the same cross-talk and bundle noise characteristics.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In essence, this Spectrum Management Problem, as stated in equation&nbsp;(<A HREF="#fig:RateRegionEqu">2.25</A>), can be expanded based on line-weighting; where some lines get 'preferential treatment', either because they are paying more, or as part of a lead-and-lag rate-compensation system<A NAME="tex2html12"
+  HREF="footnode.html#foot621"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">6</SPAN></SUP></A>. Thus, the Spectrum Management Problem can be generalised to <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> users as a maximisation of a weighted sum of data rates within a bundle, as shown in equation&nbsp;(<A HREF="#fig:WeightedDSLSystemModel">2.26</A>).
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:WeightedDSLSystemModel"></A><!-- MATH
+ \begin{equation}
+\begin{array}{rc}
+\sum\limits_{n=1}^N w_n \sum\limits_{k=1}^K & log_2 \left(1+\frac{p_n(k_|h_{nn}(k)|^2}{\Gamma\left(\sigma_n^2(k)+\sum\limits_{m\neq n}^N p_m(k)|h_{jm}(k)|^2\right)}\right)\\
+ &s.t.\sum_{k=1}^Kp_n(k) \leq P_{max,n} \forall n
+\end{array}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="346" HEIGHT="100" BORDER="0"
+ SRC="img80.png"
+ ALT="\begin{displaymath}\begin{array}{rc} \sum\limits_{n=1}^N w_n \sum\limits_{k=1}^K...
+...\\ &amp;s.t.\sum_{k=1}^Kp_n(k) \leq P_{max,n} \forall n \end{array}\end{displaymath}"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">26</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">The optimisation of this problem in a dynamic near-realtime time-frame is the major focus of DSM research, which is summarised next.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html399"
+  HREF="node11.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html395"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html391"
+  HREF="node9.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html397"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html400"
+  HREF="node11.html">Dynamic Spectrum Management Introduction</A>
+<B> Up:</B> <A NAME="tex2html396"
+  HREF="node8.html">DSL System Architecture</A>
+<B> Previous:</B> <A NAME="tex2html392"
+  HREF="node9.html">DSL System Modelling</A>
+ &nbsp; <B>  <A NAME="tex2html398"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,3 @@
+2011-05-17 13:18:47,718:INFO    multiuserdsm 46 Starting Up... logging to OSB_6-2rt_GPU_2.log
+2011-05-17 13:18:47,734:INFO    bundle 67 Reading fresh Network File networks/6-2rt.net
+2011-05-17 13:18:47,735:INFO    bundle 89 Successfully read 6 lines from networks/6-2rt.net

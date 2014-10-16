@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>DSM Level 0/1</TITLE>
+<META NAME="description" CONTENT="DSM Level 0/1">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node14.html">
+<LINK REL="previous" HREF="node11.html">
+<LINK REL="up" HREF="node6.html">
+<LINK REL="next" HREF="node13.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html423"
+  HREF="node13.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html419"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html413"
+  HREF="node11.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html421"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html424"
+  HREF="node13.html">Iterative Water Filling</A>
+<B> Up:</B> <A NAME="tex2html420"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html414"
+  HREF="node11.html">Dynamic Spectrum Management Introduction</A>
+ &nbsp; <B>  <A NAME="tex2html422"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00314000000000000000">
+DSM Level 0/1</A>
+</H2><SMALL CLASS="SMALL">
+For clarity, levels 0 and 1 are generally grouped, as the only major difference is that while in level 0<A NAME="tex2html21"
+  HREF="footnode.html#foot675"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">8</SPAN></SUP></A>, equipment is completely autonomous in terms of its own spectrum management; level 1 systems receive power and rate limitations from the SMC, within which they must operate. Level 0 is currently the most commen method of DSM utilied currently, but some ISPs are moving to level 1 systems, such as Virgin.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Thinking back to the initial discussion of DMT spectrum balancing, the most common technique for autonomous spectrum assignments is based on Water-filling <A
+ HREF="node65.html#CS48">C.E. Shannon. (1948)</A>, and refined for DSL in <A
+ HREF="node65.html#WYaJC00">Wei Yu and J.M. Cioffi (2000)</A> <A
+ HREF="node65.html#WY01">Wei&nbsp;Yu (2001)</A>
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">For the single user case, refer to figure&nbsp;<A HREF="#fig:WaterFillingSingleExample">8a</A>, but in the multi-user case, water-filling attempts must be iteratively refined (Hence, Iterative Water-Filling, or IWFIWFIterative Water-Filling); so as to allow the 'other' lines to see each lines new noise profile, see figure&nbsp;<A HREF="#fig:WaterFillingMultiExample">8b</A> for a graphical example of this. This helps to reduce the effects of the so-called "Near Far Problem", whereby the received signal from cross-talker which is closer to the receiver, is stronger than its direct line transmitter signal.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:WaterFillingSingleExample"></A><A NAME="fig:WaterFillingMultiExample"></A><A NAME="688"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 8:</STRONG>
+Example of Water Filling</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [Single User]<IMG
+  WIDTH="472" HEIGHT="400" ALIGN="BOTTOM" BORDER="0"
+ SRC="./wf.png"
+ ALT="Image wf">
+  [Iterative Multiple User]<IMG
+  WIDTH="454" HEIGHT="510" ALIGN="BOTTOM" BORDER="0"
+ SRC="./iwf.png"
+ ALT="Image iwf"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">The water-filling algorithm produces the optimal solution<A NAME="tex2html23"
+  HREF="footnode.html#foot1170"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">9</SPAN></SUP></A>, maximising channel capacity for a single user with a continuous bit-assignment <A NAME="tex2html24"
+  HREF="footnode.html#foot692"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">10</SPAN></SUP></A>. In practise this is incorrect, as integer bits must be assigned to each channel for transmission. When this integer condition is applied, it is known as "Discrete Water-filling". Discrete water-filling has two variations; one which focuses on maximising bit-rate with respect to a stated power budget, known as Rate-Adaptive (RARARate Adaptive water filling); and another which focuses on minimising the power requirements with respect to a stated bit-rate, known as Fixed-Margin (FMFMFixed-Margin water filling). These two conditions are mathematically phrased in&nbsp;(<A HREF="#RADefine">2.28</A>)&nbsp;(<A HREF="#FMDefine">2.27</A>)<A
+ HREF="node65.html#TS99">Thomas&nbsp;Starr (1999)</A>.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="FMDefine"></A><!-- MATH
+ \begin{equation}
+\begin{array}{rcl}
+  max R&=&\sum_{k=1}^Kb(k)\\
+  s.t.&&\sum\limits_{k=1}^Kp(k)\leq P_{budget}
+  \end{array}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="180" HEIGHT="59" BORDER="0"
+ SRC="img81.png"
+ ALT="\begin{displaymath}\begin{array}{rcl} max R&amp;=&amp;\sum_{k=1}^Kb(k)\\ s.t.&amp;&amp;\sum\limits_{k=1}^Kp(k)\leq P_{budget} \end{array}\end{displaymath}"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">27</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="RADefine"></A><!-- MATH
+ \begin{equation}
+\begin{array}{rcl}
+  min &&\sum\limits_{k=1}^Kp(k)\\
+  s.t.&&\sum\limits_{k=1}^Kb(k)\geq B_{budget}
+  \end{array}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="153" HEIGHT="78" BORDER="0"
+ SRC="img82.png"
+ ALT="\begin{displaymath}\begin{array}{rcl} min &amp;&amp;\sum\limits_{k=1}^Kp(k)\\ s.t.&amp;&amp;\sum\limits_{k=1}^Kb(k)\geq B_{budget} \end{array}\end{displaymath}"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">28</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">The resolution of both of these forms of water-filling is surprisingly simple in theory; find the tone with the lowest bit-addition energy <A NAME="tex2html25"
+  HREF="footnode.html#foot1171"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">11</SPAN></SUP></A>, and add a bit to it. This continues until either the power or rate budget is reached, depending on the mode applied. This basic algorithm is the Levin-Campello (LCLCLevin-Campello Algorithm) Algorithm<A
+ HREF="node65.html#H.L01">H.Levin (2001)</A>.
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html425"
+  HREF="node13.html">Iterative Water Filling</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html423"
+  HREF="node13.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html419"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html413"
+  HREF="node11.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html421"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html424"
+  HREF="node13.html">Iterative Water Filling</A>
+<B> Up:</B> <A NAME="tex2html420"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html414"
+  HREF="node11.html">Dynamic Spectrum Management Introduction</A>
+ &nbsp; <B>  <A NAME="tex2html422"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Opportunities for Parallel Decomposition of DSM Algorithms</TITLE>
+<META NAME="description" CONTENT="Opportunities for Parallel Decomposition of DSM Algorithms">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node20.html">
+<LINK REL="up" HREF="node5.html">
+<LINK REL="next" HREF="node30.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html629"
+  HREF="node30.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html625"
+  HREF="node5.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html621"
+  HREF="node28.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html627"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html630"
+  HREF="node30.html">Parallel OSB</A>
+<B> Up:</B> <A NAME="tex2html626"
+  HREF="node5.html">Research &amp; Background</A>
+<B> Previous:</B> <A NAME="tex2html622"
+  HREF="node28.html">CUDA Memory architecture</A>
+ &nbsp; <B>  <A NAME="tex2html628"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00330000000000000000">
+Opportunities for Parallel Decomposition of DSM Algorithms</A>
+</H1><SMALL CLASS="SMALL">
+With an understanding of the mathematical challenges presented in the DSM problem, and the current availability of Parallel Computing technologies (specifically those presented by innovations in GPGPU), it is worthwhile to pause and analyse potential decomposition techniques that could be applied to algorithmic acceleration.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>, McKinley observes that the majority of computational time accrued in the generation of optimal and near-optimal bit-loading configurations is in the calculation of power spectral densities of candidate bit-loads. This naturally stems from the previously discussed exponential relationship between number of lines, maximum bits-per-tone, and the resultant number of possible bit-combinations. The calculation of PSDs is the solution of <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> linear systems, as stated in equation&nbsp;(<A HREF="node10.html#eq:SysModMat">2.21</A>).
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As discussed in Section&nbsp;<A HREF="node20.html#sec:ParallelComputing">2.2</A>, parallel computation is ideal, especially under the CUDA model, for solving systems of linear equations with high <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN>. The downside is that to utilise parallelism effectively, the number of systems must be quite large (100+, see Figure&nbsp;<A HREF="node28.html#fig:CPU_GPU_MATMUL_SMALL">31</A>). Since in general DSM bundles consist of 50 lines, and range up to 100, there is no rational justification for offloading this work to existing libraries such as cuBLAS, as they will perform significantly worse than equally optimised CPU-bound libraries.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Even so, the small <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> also can be an advantage; considering the previously discussed memory architecture of CUDA, it is feasible to create a small, customised, linear system solver that resides in-thread; i.e, each thread solving one small system of equations. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">To restate the DSM problem in general; the process of generating optimal bit-load configurations is a <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> dimensional optimisation problem, and as such stands as one of the most difficult problems in computation, which has not completely been 'solved' in either the sequential or parallel realms <A
+ HREF="node65.html#JDJZW03">J.E. Dennis Jr; Zhijun Wu (2003)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">This allows a simplified reclassification of the previously discussed DSM algorithms in terms of purely their qualitative searching techniques; OSB exhibits <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> dimensional exhaustive search behaviour, ISB exhibits behaviour similar to segmented linear search schemes, and MIPB takes a heuristic increment-and-search approach. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The range of these behaviours immediately indicates that no 'one-size-fits-all' solution is going to work; each problem will have to be tackled individually.
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html631"
+  HREF="node30.html">Parallel OSB</A>
+<LI><A NAME="tex2html632"
+  HREF="node31.html">Parallel ISB</A>
+<LI><A NAME="tex2html633"
+  HREF="node32.html">Parallel MIPB</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html629"
+  HREF="node30.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html625"
+  HREF="node5.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html621"
+  HREF="node28.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html627"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html630"
+  HREF="node30.html">Parallel OSB</A>
+<B> Up:</B> <A NAME="tex2html626"
+  HREF="node5.html">Research &amp; Background</A>
+<B> Previous:</B> <A NAME="tex2html622"
+  HREF="node28.html">CUDA Memory architecture</A>
+ &nbsp; <B>  <A NAME="tex2html628"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

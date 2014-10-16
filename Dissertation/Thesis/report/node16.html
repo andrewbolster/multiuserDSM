@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Iterative Spectrum Balancing</TITLE>
+<META NAME="description" CONTENT="Iterative Spectrum Balancing">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node17.html">
+<LINK REL="previous" HREF="node15.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node17.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html474"
+  HREF="node17.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html470"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html464"
+  HREF="node15.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html472"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html475"
+  HREF="node17.html">Multi-User Greedy Spectrum Balancing</A>
+<B> Up:</B> <A NAME="tex2html471"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html465"
+  HREF="node15.html">Optimal Spectrum Balancing</A>
+ &nbsp; <B>  <A NAME="tex2html473"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00315200000000000000">
+Iterative Spectrum Balancing</A>
+</H3><SMALL CLASS="SMALL">
+ISB is based on the same Lagrangian decomposition as OSB, but instead of an exhaustive search across the bit-space within the Lagrangian, each line in turn is optimised, i.e a linear search instead of OSB's <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN>-vector-search. It was presented<A
+ HREF="node65.html#Cen05">Cendrillon (2005)</A> by Cendrillon and Moonen in 2005 and thoroughly investigated by Yu and Lui<A
+ HREF="node65.html#WYaRL06">Wei Yu and R. Lui. (2006)</A> in 2006, and is near-optimal, but is not guaranteed to converge on a global maximum.<A
+ HREF="node65.html#Cen05">Cendrillon (2005)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The improvement in computational complexity is great; OSB has a <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> complexity of <!-- MATH
+ $O(b_{\text{max}}^N)$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="60" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
+ SRC="img93.png"
+ ALT="$ O(b_{\text{max}}^N)$"></SPAN>, whereas ISB attains a complexity of <SPAN CLASS="MATH"><IMG
+ WIDTH="48" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+ SRC="img94.png"
+ ALT="$ O(N^2)$"></SPAN>, meaning that for slightly more practical bundle sizes, ISB is computationally tractable. The ISB algorithm is shown in figure&nbsp;<A HREF="#fig:ISBAlgorithm">11</A>
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:ISBAlgorithm"></A><A NAME="814"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 11:</STRONG>
+ISB Algorithm</CAPTION>
+<TR><TD><IMG
+ WIDTH="593" HEIGHT="43" BORDER="0"
+ SRC="img95.png"
+ ALT="\begin{figure}\begin{algorithmic}
+\REPEAT
+\FOR{\(k=1\dots K\)}
+\REPEAT
+\FOR{\(n=...
+...Kb_n(k)-R_n^{target})\)
+\UNTIL{\(w\) convergence}
+\end{algorithmic}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

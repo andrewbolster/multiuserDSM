@@ -1,0 +1,18 @@
+2011-05-12 12:14:35,883:INFO    multiuserdsm 46 Starting Up... logging to MIPB_6-rt.net_CPU.log
+2011-05-12 12:14:35,905:INFO    bundle 67 Reading fresh Network File networks/6-rt.net
+2011-05-12 12:14:35,906:INFO    bundle 89 Successfully read 6 lines from networks/6-rt.net
+2011-05-12 12:14:35,907:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 12:14:36,522:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 12:14:36,527:INFO    bundle 176 Total:1344,%Yes:1.000000%
+2011-05-12 12:14:36,588:INFO    algorithm 48 Starting Spectrum Balancing using MIPB
+2011-05-12 12:14:36,588:INFO    mipb 107 No Target Given
+2011-05-12 12:15:33,372:INFO    bundle 305 Cache Hits:0
+2011-05-12 12:15:33,412:INFO    bundle 306 Cache Mises:87672
+2011-05-12 12:15:33,422:INFO    bundle 325 Line:0,Power:0.216mW,Rate:448bpf
+2011-05-12 12:15:33,432:INFO    bundle 325 Line:1,Power:0.216mW,Rate:448bpf
+2011-05-12 12:15:33,602:INFO    bundle 325 Line:2,Power:0.216mW,Rate:448bpf
+2011-05-12 12:15:33,612:INFO    bundle 325 Line:3,Power:0.216mW,Rate:448bpf
+2011-05-12 12:15:33,622:INFO    bundle 325 Line:4,Power:0.216mW,Rate:448bpf
+2011-05-12 12:15:33,632:INFO    bundle 325 Line:5,Power:0.216mW,Rate:448bpf
+2011-05-12 12:15:33,632:INFO    bundle 331 Bundle Rate:2688bpf
+2011-05-12 12:15:33,633:INFO    algorithm 84 All Done Here, took 57.044324, hit ratio of 0.0000

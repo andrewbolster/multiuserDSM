@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Optimal Spectrum Balancing</TITLE>
+<META NAME="description" CONTENT="Optimal Spectrum Balancing">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node16.html">
+<LINK REL="previous" HREF="node14.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node16.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html462"
+  HREF="node16.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html458"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html452"
+  HREF="node14.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html460"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html463"
+  HREF="node16.html">Iterative Spectrum Balancing</A>
+<B> Up:</B> <A NAME="tex2html459"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html453"
+  HREF="node14.html">DSM Level 2</A>
+ &nbsp; <B>  <A NAME="tex2html461"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00315100000000000000">
+Optimal Spectrum Balancing</A>
+</H3><SMALL CLASS="SMALL">
+From <A
+ HREF="node65.html#RC04">R.&nbsp;Cendrillon (2004)</A>, OSB optimally solves the Spectrum Management Problem for multiple users, but is highly computationally intensive and generally cannot be practically computed for more than four lines <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>. The avenue taken by OSB in solving the Spectrum Management Problem is a mathematically complex one. The solution is centred around the use of a Lagrangian dual decomposition of the initially states Spectrum Management Problem&nbsp;(<A HREF="node10.html#fig:WeightedDSLSystemModel">2.26</A>). To explain what this process entails, one must look closer at the problem; from <A
+ HREF="node65.html#RC04">R.&nbsp;Cendrillon (2004)</A>
+</SMALL>
+<P>
+
+<BLOCKQUOTE><SMALL CLASS="SMALL">The fundamental problem is that the total power constraints on the modems couple the optimisation across frequency. As such optimisation must be done jointly across all tones, which leads to an exponential complexity in <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img7.png"
+ ALT="$ K$"></SPAN>. We overcome this problem through the use of the dual decomposition method. This technique allows us to replace the constrained optimisation problem with an unconstrained maximization of a Lagrangian<A NAME="tex2html27"
+  HREF="footnode.html#foot743"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">12</SPAN></SUP></A> The Lagrangian incorporated the constraints implicitly into the cost function, removing the need for the constraints to be explicitly enforces. As a result, the optimisation can be decoupled across frequency, and an optimal solution can be found in a per-tone fashion. This leads to a linear rather than exponential complexity in <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img7.png"
+ ALT="$ K$"></SPAN> and a computationally tractable problem.
+</SMALL></BLOCKQUOTE>
+<P>
+<SMALL CLASS="SMALL">In practical terms, that means that the Spectrum Management Problem can be 'simplified' to include the pan-channel power constraints, meaning that instead of generating many solutions to the general (first line of&nbsp;(<A HREF="node10.html#fig:WeightedDSLSystemModel">2.26</A>)) problem, and then subsequently discarding those as they do not satisfy the bundle power constraints, global power is a focal consideration. The Lagrangian decomposition of&nbsp;(<A HREF="node10.html#fig:WeightedDSLSystemModel">2.26</A>), encompassing the power constraints, is shown in&nbsp;(<A HREF="#fig:LagrangianModel">2.29</A>)
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:LagrangianModel"></A><!-- MATH
+ \begin{equation}
+L=\sum\limits_{n=1}^N w_n \sum\limits_{k=1}^K log_2 \left(1+\frac{p_n(k_|h_{nn}(k)|^2}{\Gamma\left(\sigma_n^2(k)+\sum\limits_{m\neq n}^N p_m(k)|h_{jm}(k)|^2\right)}\right)-\lambda_n\left(\sum\limits_{k=1}^K p_n(k)\right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="555" HEIGHT="98" ALIGN="MIDDLE" BORDER="0"
+ SRC="img86.png"
+ ALT="$\displaystyle L=\sum\limits_{n=1}^N w_n \sum\limits_{k=1}^K log_2 \left(1+\frac...
+..._{jm}(k)\vert^2\right)}\right)-\lambda_n\left(\sum\limits_{k=1}^K p_n(k)\right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">29</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Is was shown by Yu and Lui<A
+ HREF="node65.html#WYaRL06">Wei Yu and R. Lui. (2006)</A> that this decomposition is an exact match to the originally stated problem for large numbers of channels.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">It is also stated in <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A> that&nbsp;(<A HREF="#fig:LagrangianModel">2.29</A>) can be tonally decoupled, and a (unfortunately non-convex) Lagrangian expression for each channel generated, as in&nbsp;(<A HREF="#fig:LagrangianDecoupled">2.30</A>), and by optimising for a maximal per-tone Lagrangian, and searching <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img87.png"
+ ALT="$ \lambda$"></SPAN> space<A NAME="tex2html28"
+  HREF="footnode.html#foot761"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">13</SPAN></SUP></A>, the original problem can be solved.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:LagrangianDecoupled"></A><!-- MATH
+ \begin{equation}
+L(k)\nomenclature{\(L_k\)}{The Lagrangian sum of a bitloaded channel}=\sum\limits_{n=1}^Nw_nb_n(k)-\sum\limits_{n=1}^N\lambda_np_n(k)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="186" HEIGHT="37" ALIGN="BOTTOM" BORDER="0"
+ SRC="img88.png"
+ ALT="$\displaystyle L(k)\nomenclature{\(L_k\)}{The Lagrangian sum of a bitloaded channel}=\sum\limits_{n=1}^Nw_nb_n(k)-\sum\limits_{n=1}^N\lambda_np_n(k)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">30</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Since&nbsp;(<A HREF="#fig:LagrangianDecoupled">2.30</A>) is non-convex, an exhaustive search across <SPAN CLASS="MATH"><IMG
+ WIDTH="17" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img89.png"
+ ALT="$ b_n$"></SPAN> space is required<A NAME="tex2html29"
+  HREF="footnode.html#foot1175"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">14</SPAN></SUP></A>Even with the Lagrangian decomposition, the computationally explosive nature of this exhaustive bit-field search renders OSB computationally intractable for more than four or five lines. Some run-times from <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A> are shown in figure&nbsp;<A HREF="node18.html#tab:TractibilityTable">13</A>
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The generalised algorithm for OSB is shown in figure <A HREF="#fig:OSBAlgorithm">10</A>
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:OSBAlgorithm"></A><A NAME="789"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 10:</STRONG>
+OSB Algorithm</CAPTION>
+<TR><TD><IMG
+ WIDTH="598" HEIGHT="43" BORDER="0"
+ SRC="img92.png"
+ ALT="\begin{figure}\begin{algorithmic}
+\REPEAT
+\REPEAT
+\FOR{\(k=1\dots K\)}
+\STATE \(...
+...Kb_n(k)-R_n^{target})\)
+\UNTIL{\(w\) convergence}
+\end{algorithmic}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">OSB can be augmented using a Branch and Bound searching structure into Branch and Bound OSB (BBOSB). BBOSB is covered in detail in <A
+ HREF="node65.html#PT06">P.&nbsp;Tsiaflakis (2006)</A>, but suffice to say, even with the improved searching structure, BBOSB is still exponential in <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN>, but with a lower complexity coefficient; where OSB is only tractable for 4-5 lines, BBOSB is tractable up to approximately 10 lines <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html462"
+  HREF="node16.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html458"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html452"
+  HREF="node14.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html460"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html463"
+  HREF="node16.html">Iterative Spectrum Balancing</A>
+<B> Up:</B> <A NAME="tex2html459"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html453"
+  HREF="node14.html">DSM Level 2</A>
+ &nbsp; <B>  <A NAME="tex2html461"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

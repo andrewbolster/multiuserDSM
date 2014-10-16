@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Development of generalised GPU workload sharing model</TITLE>
+<META NAME="description" CONTENT="Development of generalised GPU workload sharing model">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node44.html">
+<LINK REL="previous" HREF="node42.html">
+<LINK REL="up" HREF="node41.html">
+<LINK REL="next" HREF="node44.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html822"
+  HREF="node44.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html818"
+  HREF="node41.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html812"
+  HREF="node42.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html820"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html823"
+  HREF="node44.html">Development of generalised multi-device</A>
+<B> Up:</B> <A NAME="tex2html819"
+  HREF="node41.html">Greedy: Avenues of parallelisation</A>
+<B> Previous:</B> <A NAME="tex2html813"
+  HREF="node42.html">ISB: Avenues of parallelisation</A>
+ &nbsp; <B>  <A NAME="tex2html821"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00443200000000000000">
+Development of generalised GPU workload sharing model</A>
+</H3><SMALL CLASS="SMALL">
+One of the most significant drawbacks of CUDA is its computational simplicity; that is to say that CUDA has relatively little workload partitioning and runtime optimisation when compared to systems such as OpenCL or OpenMP. As such, and from the insights found previously in this section, a generalised workload model was developed to produce near-optimal grid and block dimensions for generic kernels. Although these design patterns are configured with the computation of single PSD/Lagrangian calculations in mind, the same theories of block, warp, grid and device partitioning can easily be applied to any computing problem on GPU's<A NAME="tex2html107"
+  HREF="footnode.html#foot2404"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">18</SPAN></SUP></A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Each CUDA device has an optimal occupancy ratio for a particular kernel, involving the number of SP's available on the device, expected memory accesses, etc., and as such these patterns will not be perfect. They are simply 'quite good', and attempt to dynamically assess optimal block and grid assignments based on individual hardware configurations without having to inspect the kernels being executed. The first of these patterns is a per-device workload calculation. This queries the device for information such as the number of SP's, number of threads per warp, and the maximum permitted threads per block <A NAME="tex2html108"
+  HREF="footnode.html#foot2405"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">19</SPAN></SUP></A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Given a maximum value of 'workload', in this case the number of thread executions ideally desired, the number of warps that this workload requires is calculated. This is scaled to the number of threads per warp and rounded up to the nearest multiple of the warp size (usually 32) to give an optimal 'thread per block' count. This value is then used, along with a maximum thread-count ceiling, termed 'gridmax', to find the optimal number of blocks to execute these threads within while staying within device limits. The python code for this function is shown in figure&nbsp;<A HREF="#fig:workload-calc">40</A>. Note that this code is developed for 1-D grids and blocks, but could easily be extended for multi-dimensionality or for cooperative thread execution.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:workload-calc"></A><A NAME="2409"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 40:</STRONG>
+Sanitised Python function for near-optimal Grid and Block dimensions for thread-independent operations</CAPTION>
+<TR><TD></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html822"
+  HREF="node44.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html818"
+  HREF="node41.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html812"
+  HREF="node42.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html820"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html823"
+  HREF="node44.html">Development of generalised multi-device</A>
+<B> Up:</B> <A NAME="tex2html819"
+  HREF="node41.html">Greedy: Avenues of parallelisation</A>
+<B> Previous:</B> <A NAME="tex2html813"
+  HREF="node42.html">ISB: Avenues of parallelisation</A>
+ &nbsp; <B>  <A NAME="tex2html821"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

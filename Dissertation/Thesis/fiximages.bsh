@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+imgdir="images/"
+
+for file in `ls ${imgdir}*| grep -v '*,png'`; do
+  name=${file%\.*}
+  convert ${file} ${name}.png
+  echo $name Converted
+done
+
+rm $imgdir*.png.png
+
+

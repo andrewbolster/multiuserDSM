@@ -1,0 +1,16 @@
+2011-05-12 05:21:14,166:INFO    multiuserdsm 46 Starting Up... logging to MIPB_4-3k_5k-near_far.net_CPU.log
+2011-05-12 05:21:14,168:INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+2011-05-12 05:21:14,169:INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+2011-05-12 05:21:14,169:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 05:21:14,416:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 05:21:14,421:INFO    bundle 176 Total:896,%Yes:1.610491%
+2011-05-12 05:21:14,465:INFO    algorithm 48 Starting Spectrum Balancing using MIPB
+2011-05-12 05:21:14,465:INFO    mipb 107 No Target Given
+2011-05-12 05:21:25,927:INFO    bundle 305 Cache Hits:0
+2011-05-12 05:21:25,927:INFO    bundle 306 Cache Mises:19236
+2011-05-12 05:21:25,936:INFO    bundle 325 Line:0,Power:0.216mW,Rate:448bpf
+2011-05-12 05:21:25,945:INFO    bundle 325 Line:1,Power:0.216mW,Rate:448bpf
+2011-05-12 05:21:25,953:INFO    bundle 325 Line:2,Power:0.216mW,Rate:448bpf
+2011-05-12 05:21:25,961:INFO    bundle 325 Line:3,Power:0.216mW,Rate:448bpf
+2011-05-12 05:21:25,961:INFO    bundle 331 Bundle Rate:1792bpf
+2011-05-12 05:21:25,962:INFO    algorithm 84 All Done Here, took 11.496489, hit ratio of 0.0000

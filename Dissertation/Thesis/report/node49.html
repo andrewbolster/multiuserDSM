@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Verification</TITLE>
+<META NAME="description" CONTENT="Verification">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node48.html">
+<LINK REL="up" HREF="node48.html">
+<LINK REL="next" HREF="node50.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html893"
+  HREF="node50.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html889"
+  HREF="node48.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html885"
+  HREF="node48.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html891"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html894"
+  HREF="node50.html">MIPB GPU</A>
+<B> Up:</B> <A NAME="tex2html890"
+  HREF="node48.html">ISB GPU</A>
+<B> Previous:</B> <A NAME="tex2html886"
+  HREF="node48.html">ISB GPU</A>
+ &nbsp; <B>  <A NAME="tex2html892"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00452100000000000000">
+Verification</A>
+</H3><SMALL CLASS="SMALL">
+Again, the simplest way to verify operation is direct comparison to CPU bound implementations (Figure <A HREF="#fig:cpugpuISBComparison">42</A>) In this case the graphs tell a very different story than that of OSB; as can be seen, the GPU implementation has power convergence problems between the green and red lines, but the bit-loads applied are nearly a perfect match. This is again due to numerical representation problems, where by the PSD/LK calculations produce vanishingly small differences between these two line segments, leading to oscillation of bit-load allocations across these lines. Again, the end result of this is a global bundle rate that is within 3% margin of error between CPU/GPU implementations.
+</SMALL>
+<DIV ALIGN="CENTER"><A NAME="fig:cpugpuISBComparison"></A><A NAME="2448"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 42:</STRONG>
+Comparison of three line, near far scenario ISB: CPU/GPU</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [ISB CPU Power Allocation]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_3-3k_5k-near_far_CPU-power.png"
+ ALT="Image ISB_3-3k_5k-near_far_CPU-power">
+  [ISB GPU Power Allocation]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_3-3k_5k-near_far_GPU_1-power.png"
+ ALT="Image ISB_3-3k_5k-near_far_GPU_1-power">
+<BR>  [ISB CPU Bit-load]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_3-3k_5k-near_far_CPU-bitrate.png"
+ ALT="Image ISB_3-3k_5k-near_far_CPU-bitrate">
+  [ISB GPU Bit-load]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_3-3k_5k-near_far_GPU_1-bitrate.png"
+ ALT="Image ISB_3-3k_5k-near_far_GPU_1-bitrate"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html893"
+  HREF="node50.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html889"
+  HREF="node48.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html885"
+  HREF="node48.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html891"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html894"
+  HREF="node50.html">MIPB GPU</A>
+<B> Up:</B> <A NAME="tex2html890"
+  HREF="node48.html">ISB GPU</A>
+<B> Previous:</B> <A NAME="tex2html886"
+  HREF="node48.html">ISB GPU</A>
+ &nbsp; <B>  <A NAME="tex2html892"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

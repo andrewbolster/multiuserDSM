@@ -1,0 +1,35 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_2.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+INFO    gpu 435 Spawning 2 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:896,%Yes:1.610491%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:1018.254mW,Rate:1251bpf
+INFO    bundle 325 Line:1,Power:966.123mW,Rate:2496bpf
+INFO    bundle 325 Line:2,Power:966.114mW,Rate:388bpf
+INFO    bundle 325 Line:3,Power:966.118mW,Rate:2489bpf
+INFO    bundle 331 Bundle Rate:6624bpf
+INFO    algorithm 84 All Done Here, took 126.860341, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_2.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+2011-05-12 01:30:47,579:INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_2.log
+2011-05-12 01:30:47,582:INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+2011-05-12 01:30:47,582:INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+2011-05-12 01:30:49,853:INFO    gpu 395 Asked:2,Have:4,Got:2
+2011-05-12 01:30:49,989:INFO    gpu 439 Spawning 2 GPU Threads
+2011-05-12 01:30:49,989:INFO    gpu 620 Initialising CUDA device
+2011-05-12 01:30:50,061:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 01:30:50,062:INFO    gpu 620 Initialising CUDA device
+2011-05-12 01:30:50,410:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 01:30:50,417:INFO    bundle 176 Total:896,%Yes:1.610491%
+2011-05-12 01:30:50,579:INFO    algorithm 48 Starting Spectrum Balancing using OSB
+2011-05-12 01:30:50,579:INFO    osb 70 Bisection
+2011-05-12 01:31:57,700:ERROR   gpu 553 Suicide Error: Results tainted, quitting incase

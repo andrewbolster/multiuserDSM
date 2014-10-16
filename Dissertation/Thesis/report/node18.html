@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Multi-User Incremental Power Balancing</TITLE>
+<META NAME="description" CONTENT="Multi-User Incremental Power Balancing">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node17.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node19.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html496"
+  HREF="node19.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html492"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html488"
+  HREF="node17.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html494"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html497"
+  HREF="node19.html">DSM Level 3</A>
+<B> Up:</B> <A NAME="tex2html493"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html489"
+  HREF="node17.html">Multi-User Greedy Spectrum Balancing</A>
+ &nbsp; <B>  <A NAME="tex2html495"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00315400000000000000">
+Multi-User Incremental Power Balancing</A>
+</H3><SMALL CLASS="SMALL">
+In <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>, McKinley details the development of MIPB as coming from a critical analysis of Multi-User Greedy Spectrum Balancing. One of the major deficiencies of Greedy is the (significant) possibility of the algorithm getting stuck in local minima, or getting 'deadlocked', whereby bits cannot be added to any lines due to any other line in the bundle attempting to violate  its power constraint to accommodate the additional cross talk incurred, (see&nbsp;<A HREF="node17.html#eq:GreedyCost">2.31</A>). To remedy this, an adaptive power penalty function is used to stop 'clean' lines being continuously loaded up to their power budget, and then 'locking' all other lines, and to instead force all the lines to be more or less equalised as the algorithm progresses. The algorithm for MIPB is shown in figure <A HREF="#fig:MIPBAlgorithm">12</A>. The final bundle efficiency of MIPB, while non-optimal, is very close, but the real improvement is in runtime performance; 10 lines with rate targeting applied in under five minutes.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:MIPBAlgorithm"></A><A NAME="851"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 12:</STRONG>
+MIPB/Greedy algorithm</CAPTION>
+<TR><TD><IMG
+ WIDTH="555" HEIGHT="56" BORDER="0"
+ SRC="img100.png"
+ ALT="\begin{figure}\begin{algorithmic}
+\REPEAT
+\STATE \(\text{argmin}_{n,k} C\)
+\STAT...
+...y function
+\ENDFOR
+\ENDFOR
+\UNTIL All tones full
+\end{algorithmic}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="tab:TractibilityTable"></A><A NAME="868"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 13:</STRONG>
+Adapted from McKinley '09, 'Caching' implies the use of PSD key-value caching, and * signified unmeasured/invalid execution times</CAPTION>
+<TR><TD><IMG
+ WIDTH="107" HEIGHT="137" BORDER="0"
+ SRC="img101.png"
+ ALT="\begin{figure}\begin{tabularx}{1.1\textwidth}{\vert X\vert c\vert c\vert c\vert ...
+... N^2 N^3)\)&amp;0.19s&amp;3.89s&amp;10.96s&amp;49.97s&amp;*&amp;*&amp;*\\ \hline
+\end{tabularx}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html496"
+  HREF="node19.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html492"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html488"
+  HREF="node17.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html494"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html497"
+  HREF="node19.html">DSM Level 3</A>
+<B> Up:</B> <A NAME="tex2html493"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html489"
+  HREF="node17.html">Multi-User Greedy Spectrum Balancing</A>
+ &nbsp; <B>  <A NAME="tex2html495"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

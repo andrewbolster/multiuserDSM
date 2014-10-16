@@ -1,0 +1,430 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>report</TITLE>
+<META NAME="description" CONTENT="report">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node1.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html127"
+  HREF="node1.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up_g.png"> 
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev_g.png"> 
+<A NAME="tex2html125"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html128"
+  HREF="node1.html">Contents</A>
+ &nbsp; <B>  <A NAME="tex2html126"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+documentclass[a4paper,10pt]book
+renewedcommandbaselinestretch1.25
+par
+usepackageafterpage
+usepackagealgorithmic
+usepackageamssymb,amsmath
+usepackageappendix
+usepackagebooktabs
+usepackage[margin=20pt,justification=centerlast]caption
+usepackagechngcntr
+usepackagecolor
+usepackagefancyhdr
+usepackagefixltx2e
+usepackageflafter
+usepackagefloat
+usepackagefullpage
+usepackagelayout
+usepackagelistings,textcomp
+usepackagemdwlist
+usepackagemultirow
+usepackagenag
+usepackagenatbib
+usepackagenomencl
+usepackagenumprint
+usepackage[official]eurosym
+usepackagepdfpages
+usepackagegraphicx
+usepackageepstopdf
+usepackagehyperref
+usepackage[scaled]helvet
+usepackagesubfig
+usepackagetabularx
+usepackageucs
+usepackageulem
+usepackage[utf8x]inputenc
+usepackagevarioref
+usepackagecomment
+renewedcommandrmdefaultcmss
+renewedcommandttdefaultpcr
+par
+makenomenclature
+makeindex
+par
+setcountersecnumdepth3
+setcountertocdepth3
+par
+bibliographystyleunsrtnat
+bibpunct[];s,,
+par
+counterwithoutfigurechapter
+par
+makeatletter
+renewedcommandparagraphstartsectionparagraph40mm-baselineskip.5baselineskipnormalfontnormalsizebfseries
+makeatother
+par
+setlengthparindent0pt
+setlengthparskip2ex
+par
+pdfminorversion=5
+par
+definecolorlistinggrayrgb1,0.5,0
+definecolorlbcolorRGB250,250,250
+par
+lstloadlanguages[ISO]C++
+lstset
+	backgroundcolor=colorlbcolor,
+	tabsize=2,
+	rulecolor=,
+	language=Python,
+        basicstyle=ttfamilyscriptsize,
+        upquote=true,
+        aboveskip=1.5baselineskip,
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        escapeinside=(*@@*),
+        prebreak = raisebox0ex[0ex][0ex]ensuremathhookleftarrow,
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        inputencoding=utf8x,
+        showstringspaces=false,
+        identifierstyle=ttfamilyscriptsize,
+        keywordstyle=color[rgb]0,0,1,
+        commentstyle=color[rgb]0.133,0.545,0.133,
+        stringstyle=color[rgb]0.627,0.126,0.941,
+
+par
+pagestylefancy
+headheight 0.5in
+setlengthvoffset-0.5in
+headsep 0.25in
+rheadParallel Implementation of DSM
+<BR>
+Andrew Bolster
+cfootthepage
+rfoot
+lheadincludegraphics[height=25pt, keepaspectratio=true]../images/QUB.pdf
+renewedcommandheadrulewidth0pt renewedcommandfootrulewidth0pt
+par
+hypersetup
+    hypertexnames=false,
+    breaklinks=true,
+    unicode=false,          	pdftoolbar=true,        	pdfmenubar=true,        	pdffitwindow=false,      	pdfstartview=Fit,    	pdftitle=High-Speed bit-loading algorithms for Dynamic Spectrum Management in ADSL,	pdfauthor=Andrew Bolster,     pdfsubject=Massively Parallel Processing of Spectrum Management Algorithms,	pdfcreator=Andrew Bolster,   	pdfproducer=Andrew Bolster, 	pdfkeywords=CUDA,Python,DSL,DSM,PyCUDA,Parallel,GPGPU, 	pdfnewwindow=true,      	colorlinks=true,       	linkcolor=black,          	citecolor=black,        	filecolor=black,      	urlcolor=black           	
+par
+titleHigh-Speed bit-loading algorithms for Dynamic Spectrum Management in ADSL
+authorAndrew Bolster
+par
+begindocument
+letcleardoublepageclearpage
+par
+maketitle
+frontmatter
+par
+chapter*centering beginnormalsizeExecutive Summaryendnormalsize
+beginquotation
+  noindent Digital Subscriber Lines (DSLnomenclatureDSLDigital Subscriber Lines) use advanced bit-loading algorithms to maximise spectral efficiency and throughput, often termed 'Dynamic Spectrum Management" (DSMnomenclatureDSMDynamic Spectrum Management). Provider industry practise has been to use Level 1 DSM algorithms, where each line individually adjusts its power spectrum against the noise that it can sense. This is called "Waterfilling" and is not optimally efficient in terms of total bundle capacity.
+<BR>
+Recent research into more advanced, Level 2, DSM algorithms, which consider the total noise characteristics of the bundle, show near-optimal performance, at a cost of significant computational complexity, making them unuseable in a consumer context.
+<BR>
+The evolution of 'classical' fixed function rasterization pipeline Graphic Processing Units (GPUnomenclatureGPUGraphics Processing Units) into fully-programmable devices suitable for General Purpose computing on GPU (GPGPUnomenclatureGPGPUGeneral Purpose computing on GPU) opens up these massively parallel floating point processors for practical computation, and introduces the possibility of re-implementing existing algorithms to leverage this new hardware, potentially allowing for near-optimal algorithms to be used in the field.
+endquotation
+clearpage
+par
+chapter*centering beginnormalsizeAcknowledgementsendnormalsize
+beginquotation
+noindent Thanks and praise must go to my project supervisor, Prof. Alan Marshall, whose occasional kick's-in-the-ass stopped me from going too far down the rabbit hole. 
+Thanks also go to Dr Alister McKinley, whose PhD work this project is based on, for his expert domain knowledge, bar tab, and occasional supply runs.
+Further, I'd like to acknowledge the support and technical guidance of the StackExchange community, and Mr Olan Byrne for his aid in the layout of this document. 
+endquotation
+clearpage
+par
+small
+ 
+<P>
+<DIV ALIGN="CENTER">
+</DIV><TABLE  WIDTH="590">
+<TR><TD>
+
+    <SPAN ID="txt133">Originality Statement</SPAN>
+    
+<P>
+
+    'I hereby declare that this submission is my own work and to the best of my  
+    knowledge it contains no materials previously published or written by 
+    another person, or substantial proportions of material which have been 
+    accepted for the award of any other degree or diploma at Queen's University Belfast or any other 
+    educational institution, except where due acknowledgement is made in the thesis. 
+    Any contribution made to the research by others, with whom I have 
+    worked at QUB or elsewhere, is explicitly acknowledged in the thesis. I 
+    also declare that the intellectual content of this thesis is the product of my 
+    own work, except to the extent that assistance from others in the project's 
+    design and conception or in style, presentation and linguistic expression is 
+    acknowledged.'
+    
+    
+<P>
+<BR>
+<BR>
+<BR>
+<BR>
+Signed:
+  </TD></TR>
+</TABLE>
+<DIV ALIGN="CENTER">
+</DIV>
+
+ 
+<SMALL CLASS="SMALL">
+ </SMALL>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html129"
+  HREF="node1.html">Contents</A>
+<LI><A NAME="tex2html130"
+  HREF="node2.html">Introduction</A>
+<UL>
+<LI><A NAME="tex2html131"
+  HREF="node3.html">Project Specification</A>
+<LI><A NAME="tex2html132"
+  HREF="node4.html">Overview and Objectives</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html133"
+  HREF="node5.html">Research &amp; Background</A>
+<UL>
+<LI><A NAME="tex2html134"
+  HREF="node6.html">DSL</A>
+<UL>
+<LI><A NAME="tex2html135"
+  HREF="node7.html">DSL Modulation and Signal Transmission</A>
+<LI><A NAME="tex2html136"
+  HREF="node8.html">DSL System Architecture</A>
+<UL>
+<LI><A NAME="tex2html137"
+  HREF="node9.html">DSL System Modelling</A>
+<LI><A NAME="tex2html138"
+  HREF="node10.html">Crosstalk Modelling</A>
+</UL>
+<LI><A NAME="tex2html139"
+  HREF="node11.html">Dynamic Spectrum Management Introduction</A>
+<LI><A NAME="tex2html140"
+  HREF="node12.html">DSM Level 0/1</A>
+<UL>
+<LI><A NAME="tex2html141"
+  HREF="node13.html">Iterative Water Filling</A>
+</UL>
+<LI><A NAME="tex2html142"
+  HREF="node14.html">DSM Level 2</A>
+<UL>
+<LI><A NAME="tex2html143"
+  HREF="node15.html">Optimal Spectrum Balancing</A>
+<LI><A NAME="tex2html144"
+  HREF="node16.html">Iterative Spectrum Balancing</A>
+<LI><A NAME="tex2html145"
+  HREF="node17.html">Multi-User Greedy Spectrum Balancing</A>
+<LI><A NAME="tex2html146"
+  HREF="node18.html">Multi-User Incremental Power Balancing</A>
+</UL>
+<LI><A NAME="tex2html147"
+  HREF="node19.html">DSM Level 3</A>
+</UL>
+<LI><A NAME="tex2html148"
+  HREF="node20.html">Parallel Computing</A>
+<UL>
+<LI><A NAME="tex2html149"
+  HREF="node21.html">Forms Of Parallelism, aka, Flynn's Taxonomy</A>
+<UL>
+<LI><A NAME="tex2html150"
+  HREF="node22.html">Pipe-lining</A>
+<LI><A NAME="tex2html151"
+  HREF="node23.html">Single Program Multiple Data</A>
+</UL>
+<LI><A NAME="tex2html152"
+  HREF="node24.html">Principles of Parallel Programming</A>
+<UL>
+<LI><A NAME="tex2html153"
+  HREF="node25.html">Gustafson and Amdahl's laws</A>
+</UL>
+<LI><A NAME="tex2html154"
+  HREF="node26.html">General Purpose computing on Graphics Processing Units</A>
+<LI><A NAME="tex2html155"
+  HREF="node27.html">CUDA Execution architecture</A>
+<LI><A NAME="tex2html156"
+  HREF="node28.html">CUDA Memory architecture</A>
+</UL>
+<LI><A NAME="tex2html157"
+  HREF="node29.html">Opportunities for Parallel Decomposition of DSM Algorithms</A>
+<UL>
+<LI><A NAME="tex2html158"
+  HREF="node30.html">Parallel OSB</A>
+<LI><A NAME="tex2html159"
+  HREF="node31.html">Parallel ISB</A>
+<LI><A NAME="tex2html160"
+  HREF="node32.html">Parallel MIPB</A>
+</UL>
+</UL>
+<BR>
+<LI><A NAME="tex2html161"
+  HREF="node33.html">Development and Solution</A>
+<UL>
+<LI><A NAME="tex2html162"
+  HREF="node34.html">Solution Development Task list</A>
+<LI><A NAME="tex2html163"
+  HREF="node35.html">Simulation Framework Architecture</A>
+<LI><A NAME="tex2html164"
+  HREF="node36.html">CPU-bound Algorithm Development and Verification</A>
+<LI><A NAME="tex2html165"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+<UL>
+<LI><A NAME="tex2html166"
+  HREF="node38.html">Retrospective analysis of CPU bound applications</A>
+<UL>
+<LI><A NAME="tex2html167"
+  HREF="node39.html">Conclusions</A>
+</UL>
+<LI><A NAME="tex2html168"
+  HREF="node40.html">OSB: Avenues of parallelisation and problem decomposition schemes</A>
+<LI><A NAME="tex2html169"
+  HREF="node41.html">Greedy: Avenues of parallelisation and problem decomposition schemes</A>
+<UL>
+<LI><A NAME="tex2html170"
+  HREF="node42.html">ISB: Avenues of parallelisation and problem decomposition schemes</A>
+<LI><A NAME="tex2html171"
+  HREF="node43.html">Development of generalised GPU workload sharing model</A>
+<LI><A NAME="tex2html172"
+  HREF="node44.html">Development of generalised multi-device function queue</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html173"
+  HREF="node45.html">GPU Solutions and Verification</A>
+<UL>
+<LI><A NAME="tex2html174"
+  HREF="node46.html">OSB GPU</A>
+<UL>
+<LI><A NAME="tex2html175"
+  HREF="node47.html">Verification</A>
+</UL>
+<LI><A NAME="tex2html176"
+  HREF="node48.html">ISB GPU</A>
+<UL>
+<LI><A NAME="tex2html177"
+  HREF="node49.html">Verification</A>
+</UL>
+<LI><A NAME="tex2html178"
+  HREF="node50.html">MIPB GPU</A>
+</UL>
+</UL>
+<BR>
+<LI><A NAME="tex2html179"
+  HREF="node51.html">Results and Performance Analysis</A>
+<UL>
+<LI><A NAME="tex2html180"
+  HREF="node52.html">Introduction</A>
+<LI><A NAME="tex2html181"
+  HREF="node53.html">OSB GPU Performance and Scalability</A>
+<UL>
+<LI><A NAME="tex2html182"
+  HREF="node54.html">Runtime vs Bundle Size vs Device Count</A>
+<LI><A NAME="tex2html183"
+  HREF="node55.html">Relative Speed-up</A>
+</UL>
+<LI><A NAME="tex2html184"
+  HREF="node56.html">ISB GPU Performance and Scalability</A>
+<UL>
+<LI><A NAME="tex2html185"
+  HREF="node57.html">Runtime vs Bundle Size vs Device Count</A>
+<LI><A NAME="tex2html186"
+  HREF="node58.html">Relative Speed-up</A>
+</UL>
+</UL>
+<BR>
+<LI><A NAME="tex2html187"
+  HREF="node59.html">Evaluation and Conclusion</A>
+<UL>
+<LI><A NAME="tex2html188"
+  HREF="node60.html">Comments on DSM</A>
+<LI><A NAME="tex2html189"
+  HREF="node61.html">Comments on GPGPU</A>
+<LI><A NAME="tex2html190"
+  HREF="node62.html">Comments on Personal Project</A>
+<LI><A NAME="tex2html191"
+  HREF="node63.html">General Conclusion</A>
+<LI><A NAME="tex2html192"
+  HREF="node64.html">Future Work</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html193"
+  HREF="node65.html">References</A>
+<LI><A NAME="tex2html194"
+  HREF="node66.html">About this document ...</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html127"
+  HREF="node1.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up_g.png"> 
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev_g.png"> 
+<A NAME="tex2html125"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html128"
+  HREF="node1.html">Contents</A>
+ &nbsp; <B>  <A NAME="tex2html126"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

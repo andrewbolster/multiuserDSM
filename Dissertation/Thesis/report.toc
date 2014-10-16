@@ -1,0 +1,65 @@
+\contentsline {section}{List of Acronyms}{vi}{chapter*.3}
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter*.4}
+\contentsline {section}{\numberline {1.1}Project Specification}{3}{figure.caption.5}
+\contentsline {section}{\numberline {1.2}Overview and Objectives}{4}{figure.caption.5}
+\contentsline {chapter}{\numberline {2}Research \& Background}{6}{figure.caption.5}
+\contentsline {section}{\numberline {2.1}DSL}{7}{section*.6}
+\contentsline {subsection}{\numberline {2.1.1}DSL Modulation and Signal Transmission}{7}{section*.6}
+\contentsline {subsection}{\numberline {2.1.2}DSL System Architecture}{9}{figure.caption.8}
+\contentsline {subsubsection}{\numberline {2.1.2.1}DSL System Modelling}{10}{figure.caption.9}
+\contentsline {subsubsection}{\numberline {2.1.2.2}Crosstalk Modelling}{12}{figure.caption.14}
+\contentsline {subsection}{\numberline {2.1.3}Dynamic Spectrum Management Introduction}{16}{figure.caption.17}
+\contentsline {subsection}{\numberline {2.1.4}DSM Level 0/1}{17}{figure.caption.20}
+\contentsline {subsubsection}{\numberline {2.1.4.1}Iterative Water Filling}{18}{figure.caption.40}
+\contentsline {subsection}{\numberline {2.1.5}DSM Level 2}{19}{figure.caption.44}
+\contentsline {subsubsection}{\numberline {2.1.5.1}Optimal Spectrum Balancing}{19}{section*.45}
+\contentsline {subsubsection}{\numberline {2.1.5.2}Iterative Spectrum Balancing}{21}{figure.caption.49}
+\contentsline {subsubsection}{\numberline {2.1.5.3}Multi-User Greedy Spectrum Balancing}{21}{figure.caption.50}
+\contentsline {subsubsection}{\numberline {2.1.5.4}Multi-User Incremental Power Balancing}{22}{figure.caption.50}
+\contentsline {subsection}{\numberline {2.1.6}DSM Level 3}{23}{figure.caption.52}
+\contentsline {section}{\numberline {2.2}Parallel Computing}{23}{figure.caption.52}
+\contentsline {subsection}{\numberline {2.2.1}Forms Of Parallelism, aka, Flynn's Taxonomy}{25}{figure.caption.62}
+\contentsline {subsubsection}{\numberline {2.2.1.1}Pipe-lining}{26}{figure.caption.68}
+\contentsline {subsubsection}{\numberline {2.2.1.2}Single Program Multiple Data}{27}{figure.caption.76}
+\contentsline {subsection}{\numberline {2.2.2}Principles of Parallel Programming}{27}{figure.caption.76}
+\contentsline {subsubsection}{\numberline {2.2.2.1}Gustafson and Amdahl's laws}{28}{section*.79}
+\contentsline {subsection}{\numberline {2.2.3}General Purpose computing on Graphics Processing Units}{29}{figure.caption.81}
+\contentsline {subsection}{\numberline {2.2.4}CUDA Execution architecture}{30}{figure.caption.85}
+\contentsline {subsection}{\numberline {2.2.5}CUDA Memory architecture}{33}{figure.caption.100}
+\contentsline {section}{\numberline {2.3}Opportunities for Parallel Decomposition of DSM Algorithms}{37}{figure.caption.110}
+\contentsline {subsection}{\numberline {2.3.1}Parallel OSB}{38}{section*.111}
+\contentsline {subsection}{\numberline {2.3.2}Parallel ISB}{38}{section*.111}
+\contentsline {subsection}{\numberline {2.3.3}Parallel MIPB}{39}{section*.111}
+\contentsline {chapter}{\numberline {3}Development and Solution}{40}{section*.111}
+\contentsline {section}{\numberline {3.1}Solution Development Task list}{41}{section*.116}
+\contentsline {section}{\numberline {3.2}Simulation Framework Architecture}{42}{section*.116}
+\contentsline {section}{\numberline {3.3}CPU-bound Algorithm Development and Verification}{45}{figure.caption.119}
+\contentsline {section}{\numberline {3.4}GPU-bound Algorithm Development}{48}{figure.caption.129}
+\contentsline {subsection}{\numberline {3.4.1}Retrospective analysis of CPU bound applications}{48}{section*.130}
+\contentsline {subsubsection}{\numberline {3.4.1.1}Conclusions}{48}{figure.caption.131}
+\contentsline {subsection}{\numberline {3.4.2}OSB: Avenues of parallelisation and problem decomposition schemes}{51}{figure.caption.131}
+\contentsline {subsection}{\numberline {3.4.3}Greedy: Avenues of parallelisation and problem decomposition schemes}{51}{figure.caption.131}
+\contentsline {subsubsection}{\numberline {3.4.3.1}ISB: Avenues of parallelisation and problem decomposition schemes}{51}{section*.138}
+\contentsline {subsubsection}{\numberline {3.4.3.2}Development of generalised GPU workload sharing model}{52}{section*.138}
+\contentsline {subsubsection}{\numberline {3.4.3.3}Development of generalised multi-device function queue}{53}{figure.caption.142}
+\contentsline {section}{\numberline {3.5}GPU Solutions and Verification}{54}{figure.caption.142}
+\contentsline {subsection}{\numberline {3.5.1}OSB GPU}{54}{section*.148}
+\contentsline {subsubsection}{\numberline {3.5.1.1}Verification}{55}{section*.148}
+\contentsline {subsection}{\numberline {3.5.2}ISB GPU}{56}{figure.caption.150}
+\contentsline {subsubsection}{\numberline {3.5.2.1}Verification}{57}{section*.153}
+\contentsline {subsection}{\numberline {3.5.3}MIPB GPU}{57}{figure.caption.154}
+\contentsline {chapter}{\numberline {4}Results and Performance Analysis}{59}{figure.caption.154}
+\contentsline {section}{\numberline {4.1}Introduction}{59}{section*.155}
+\contentsline {section}{\numberline {4.2}OSB GPU Performance and Scalability}{59}{section*.155}
+\contentsline {subsection}{\numberline {4.2.1}Runtime vs Bundle Size vs Device Count}{59}{section*.156}
+\contentsline {subsection}{\numberline {4.2.2}Relative Speed-up}{60}{figure.caption.158}
+\contentsline {section}{\numberline {4.3}ISB GPU Performance and Scalability}{61}{figure.caption.159}
+\contentsline {subsection}{\numberline {4.3.1}Runtime vs Bundle Size vs Device Count}{61}{section*.161}
+\contentsline {subsection}{\numberline {4.3.2}Relative Speed-up}{62}{figure.caption.163}
+\contentsline {chapter}{\numberline {5}Evaluation and Conclusion}{64}{figure.caption.164}
+\contentsline {section}{\numberline {5.1}Comments on DSM}{64}{section*.165}
+\contentsline {section}{\numberline {5.2}Comments on GPGPU}{64}{section*.165}
+\contentsline {section}{\numberline {5.3}Comments on Personal Project}{65}{section*.165}
+\contentsline {section}{\numberline {5.4}General Conclusion}{65}{section*.165}
+\contentsline {section}{\numberline {5.5}Future Work}{65}{section*.165}
+\contentsline {chapter}{Appendices}{}{section*.167}

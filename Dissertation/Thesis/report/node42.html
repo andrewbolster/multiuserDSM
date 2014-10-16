@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>ISB: Avenues of parallelisation and problem decomposition schemes</TITLE>
+<META NAME="description" CONTENT="ISB: Avenues of parallelisation and problem decomposition schemes">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node43.html">
+<LINK REL="previous" HREF="node41.html">
+<LINK REL="up" HREF="node41.html">
+<LINK REL="next" HREF="node43.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html810"
+  HREF="node43.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html806"
+  HREF="node41.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html800"
+  HREF="node41.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html808"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html811"
+  HREF="node43.html">Development of generalised GPU</A>
+<B> Up:</B> <A NAME="tex2html807"
+  HREF="node41.html">Greedy: Avenues of parallelisation</A>
+<B> Previous:</B> <A NAME="tex2html801"
+  HREF="node41.html">Greedy: Avenues of parallelisation</A>
+ &nbsp; <B>  <A NAME="tex2html809"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00443100000000000000">
+ISB: Avenues of parallelisation and problem decomposition schemes</A>
+</H3><SMALL CLASS="SMALL">
+ISB, even though its very close in structure to OSB, presents an interesting predicament; while it is still the power optimisation that is the major workload, the incremental operation of this section of the algorithm makes it initially quite difficult to see how to efficiently parallelise it. At first blush, the same patter as OSB could be followed; where independent channels are separately computed independently, allowing for simple multi-device distribution, or as mentioned, to iterate over the incremental bit combinations of the entire bundle, excluding 'simple' multiple device execution.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In the former case, the style of Figure <A HREF="node36.html#fig:isb-standard-loop">35</A> would be adopted, where each kernel invocation could iteratively perform optimisation on each particular channel. The difficulty is that this algorithm could not really be parallelised any further due to the incremental nature of ISB. It is possible that this could be split up by each user attempting their own bit-load permutation individually, with a record of 'best' bit-load shared between threads in a block, but this is a fundamental break in the ISB algorithm, so would not be guaranteed to be either near-optimal, or even converge at all.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The second option appears to be the most viable, if (at first glance) less applicable to multiple devices. Using an iteration construct like Figure <A HREF="node36.html#fig:isb-alternate-loop">36</A>, each thread-block could perform each channel's line-loop optimisation. This would only involve a constantly defined loop within the CUDA kernel, which is significantly more performant than a non-deterministic convergence condition as would be required in the former case. In short, this structure would perform channel and permutation parallelism, with each block containing 16<A NAME="tex2html106"
+  HREF="footnode.html#foot2400"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">17</SPAN></SUP></A> threads. While this is not a huge number of threads, it's enough to sufficiently occupy the device. Additionally, CUDA's shared memory space can be used such that at each loop, a block-shared store of the running-bit-load would be updated on each per-line optimisation, containing the bit-permutation with the highest Lagrangian. With 224 ADSL channels, there is no reasonable condition under which this would require more than one device (<!-- MATH
+ $\text{Number of Threads}=B_{\text{max}}\times K$
+ -->
+<SPAN CLASS="MATH">Number of Threads<IMG
+ WIDTH="91" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img130.png"
+ ALT="$ =B_{\text{max}}\times K$"></SPAN>), but if desired, the channel range could be partitioned across devices.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">While the first option will be explored, but the second will be the focus of most development time.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html810"
+  HREF="node43.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html806"
+  HREF="node41.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html800"
+  HREF="node41.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html808"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html811"
+  HREF="node43.html">Development of generalised GPU</A>
+<B> Up:</B> <A NAME="tex2html807"
+  HREF="node41.html">Greedy: Avenues of parallelisation</A>
+<B> Previous:</B> <A NAME="tex2html801"
+  HREF="node41.html">Greedy: Avenues of parallelisation</A>
+ &nbsp; <B>  <A NAME="tex2html809"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

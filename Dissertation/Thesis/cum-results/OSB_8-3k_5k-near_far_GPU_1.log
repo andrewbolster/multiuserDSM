@@ -1,0 +1,3 @@
+2011-05-17 13:19:52,025:INFO    multiuserdsm 46 Starting Up... logging to OSB_8-3k_5k-near_far_GPU_1.log
+2011-05-17 13:19:52,040:INFO    bundle 67 Reading fresh Network File networks/8-3k_5k-near_far.net
+2011-05-17 13:19:52,041:INFO    bundle 89 Successfully read 8 lines from networks/8-3k_5k-near_far.net

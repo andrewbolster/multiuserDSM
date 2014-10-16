@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>DSL Modulation and Signal Transmission</TITLE>
+<META NAME="description" CONTENT="DSL Modulation and Signal Transmission">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node8.html">
+<LINK REL="previous" HREF="node6.html">
+<LINK REL="up" HREF="node6.html">
+<LINK REL="next" HREF="node8.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html363"
+  HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html359"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html353"
+  HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html361"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html364"
+  HREF="node8.html">DSL System Architecture</A>
+<B> Up:</B> <A NAME="tex2html360"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html354"
+  HREF="node6.html">DSL</A>
+ &nbsp; <B>  <A NAME="tex2html362"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00311000000000000000">
+DSL Modulation and Signal Transmission</A>
+</H2><SMALL CLASS="SMALL">
+Orthogonal Frequency-Division Multiplexing (OFDMOFDMOrthogonal Frequency-Division Multiplexing), or as it is standardised within DSL<A
+ HREF="node65.html#JACB90">J. A. C. Bingham. (1990)</A>, Discrete Multi-Tone (DMTDMTDiscrete Multi-Tone modulation), is the most common modulation scheme in xDSL, where by a large number of orthogonal (non-interfering) sub-channels, tightly packed in the frequency domain, are used to carry data. Across these numerous sub-channels, data is effectively carried in parallel, and stream data is encoded and split up across these sub-channels at a relatively low symbol rate<A
+ HREF="node65.html#JMC91">J. M. Cioffi. (1991)</A>. In the case of xDSL, this is generally in the range of 2-15 bits per sub-channel<A
+ HREF="node65.html#TS03">Thomas&nbsp;Starr (2003)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">OFDM is used in a wide variety of wideband communications systems, including 802.11a/g/n, WiMax, and DVB-T/H as well as xDSL, and provides many advantages to service providers<A
+ HREF="node65.html#VAR">Various (10)</A>;
+</SMALL>
+<P>
+
+<OL>
+<LI>Tolerant of Multi-path effects such as fading, and Inter-Symbol Interference (ISI)
+</LI>
+<LI>Tolerant of narrow-band co-channel interference.
+</LI>
+<LI>Comparatively high spectral efficiency against spread spectrum modulation systems.
+</LI>
+<LI>Efficiently implemented using Fast Fourier Transform (FFT)
+</LI>
+<LI>Run-time adaptable to severe channel conditions without advanced equalisation techniques.
+</LI>
+</OL>
+<P>
+<SMALL CLASS="SMALL">But it is to be noted that OFDM suffers from some disadvantages;
+</SMALL>
+<P>
+
+<OL>
+<LI>Doppler shift sensitivity
+</LI>
+<LI>Highly sensitive to synchronisation issues
+</LI>
+<LI>Poor power efficiency due to a High Peak to average power ratio (PAPR) necessitating linear transmission circuitry
+</LI>
+</OL>
+<P>
+<SMALL CLASS="SMALL">The ITUITUInternational Telecommunications Union G.992 specifications, or G.DMT are the ITU specified sub-schemas of OFDM that are used in Asynchronous DSL deployments (ADSL, ADSL2, and ADSL2+), and ITU G.993 specifies the newer Very-high-bit-rate DSL technologies (VSDL, VSDL2). 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Other xDSL systems such as HDSL, IDSL, RADSL, SDSL, and SHDSL use a combination of Carrier-less Amplitude Phase (CAP) and Two Binary One Quaternary (2B1Q) modulation schemes, which are not the subject of this report, but are interesting to investigate none the less.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Carrier-less Amplitude Phase modulation was the de facto scheme for ADSL up until around 1996<A
+ HREF="node65.html#Sal03">Saltzberg (2003)</A>, and was almost completely abandoned for ADSL after the 1999 ratification of ADSL ITU G.992.1 Interoperability standard, but lives on in Rate Adaptive DSL (RADSL), and some HDSL and SDSL deployments.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Two Binary One Quaternary modulation, as the name indicates, uses four signalling levels to represent a two bit, Gray coded input signal, meaning that if a signal was misread by one-level, only one bit error would occur. In xDSL, 2B1Q is used in ISDN over DSL (IDSL), and some flavours of HDSL and SDSL. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As stated, the DMT system as implemented in most A/VDSL systems, operates across hundreds of sub-channels, or slices of the frequency spectrum. How the streaming input data is multiplexed, quantised, and modulated across these sub-channels is largely variable. This Spectrum Management problem will be dealt with in more detail later in this report, but for now, it is suffice to say that data can be dynamically spread across and away from 'poor', noisy sub-channels, and also can be concentrated on 'good', clean areas of the spectrum. This technique is called bit-loading, and entails the use of bit-variable modulation, usually based around variable constellation Quadrature Amplitude Modulation<A
+ HREF="node65.html#WW95">W.T.&nbsp;Webb (1995)</A>, and is demonstrated in the two diagrams in figure&nbsp;<A HREF="#fig:QAM_examples">2</A>. 
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:QAM_examples"></A><A NAME="314"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 2:</STRONG>
+Some QAM constellations used in the variable level scheme</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="481" HEIGHT="621" ALIGN="BOTTOM" BORDER="0"
+ SRC="./variable_qam.png"
+ ALT="Image variable_qam"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">The capacity of a single DMT line is well established, coming again from Shannon's seminal work<A
+ HREF="node65.html#CS48">C.E. Shannon. (1948)</A>. His 'ideal' solution, 'Water-filling', simply assigns bit-loads based on the SNR inverse of the line; pouring energy into sub-channels with the best SNRSNRSignal to Noise Ratio, i.e. most capable of carrying the signal. As the 'best' sub-channels are filled, the adjoining, less capable channels are filled, and so on until no more energy can be added to the channel. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As stated, this is and ideal approach, and presents the maximum theoretical capacity of the line. Practical implications of this, or any other bit-loading algorithm, must sacrifice 'optimality' for reliability. As such, they must implement what is called a 'Shannon Gap' or 'SNR Gap', a sub-ideal limit on the power loaded on a channel to maintain reliable communications. This subject is revisited in section <A HREF="node10.html#sec:XTmodel">2.1.2.2</A>, but for the time being, any M-QAMQAMQuadrature Amplitude Modulation sub-channel constellation, the number of bits that can be encoded within is given in equation&nbsp;<A HREF="#eq:MQAMb">2.1</A><A
+ HREF="node65.html#CS48">C.E. Shannon. (1948)</A>.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:MQAMb"></A><!-- MATH
+ \begin{equation}
+b=log_2(M)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="87" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img5.png"
+ ALT="$\displaystyle b=log_2(M)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">1</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">But before going too deeply into the 'problem', first an exploration of the landscape within which the problem lies.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html363"
+  HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html359"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html353"
+  HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html361"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html364"
+  HREF="node8.html">DSL System Architecture</A>
+<B> Up:</B> <A NAME="tex2html360"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html354"
+  HREF="node6.html">DSL</A>
+ &nbsp; <B>  <A NAME="tex2html362"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

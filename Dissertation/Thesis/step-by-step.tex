@@ -1,0 +1,94 @@
+
+\section{Steps to Click \& Protocol Buffers on OpenWRT}
+
+OpenWRT is essentially consists of a set of Makefiles that download, configure and compile software with the correct options for use on its system. There is one Makefile per piece of software and it is placed in one of three subdirectories of the OpenWRT directory, dependant on where the software will run. These subdirectories and the difference between their Makefiles can be seen below:\\\\
+
+\begin{tabular}{r p{350px}}
+package: &this directory contains the Makefiles for all user-space tools that Buildroot can compile and add to the target root filesystem. There is one subdirectory per tool.\\
+toolchain: &this directory contains the Makefiles for all software erlated to the cross-compilation toolchain.\\
+target: &this directory contains the Makefiles for software related to the generation of the target root filesystem image and the linux kernel for the different systems used in the wireless routers.\\
+\end{tabular}
+
+\subsection{Makefile for Click and Protocol Buffers}
+Makefiles needed to be made as not packaged. OpenWRT takes care of cross compilation.
+
+\subsection{OpenWRT Buildroot}
+
+Click will run in user-space on the router so our Makefile will be placed in a new subdirectory of the packages dir packages/click. There is an additional file required however. 'Config.in' is required to create a description of the software for use in the configuration tool. [http://downloads.openwrt.org/docs/buildroot-documentation.html].\\
+The process for building OpenWRT with click is detailed step-by-step below:\\
+
+\begin{enumerate}
+\item Download the SVN version of OpenWRT Buildroot
+\item From the root, navigate to the package folder and create a 'click' folder there.
+\item Inside this folder it is necessary to create two files, \texttt{Config.in} and \texttt{Makefile}. A 'files' subdirectory is also created to store click scripts.
+  \begin{figure}[ht]    
+    \lstinputlisting{../files/Config.in}
+    \caption{Click OpenWRT Config.in code}
+    \label{config.in}
+  \end{figure}
+  \begin{figure}[ht]
+    
+    \lstinputlisting[language={[gnu]make}]{../files/Makefile}
+    \caption{Click OpenWRT Makefile}
+    \label{Makefile}
+  \end{figure}
+\item In the OpenWRT root, issue a \texttt{make menuconfig} command. This brings up the curses screen as can be seen in figure. The correct configuration was then selected for the hardware being used. Also the click and madwifi driver package were selected under 'Network'.
+  \begin{figure}[ht]
+  \centering
+  \includegraphics[width=314px, height=306px]{../images/make-menuconfig.png}
+  % make-menuconfig.png: 785x765 pixel, 72dpi, 27.69x26.99 cm, bb=0 0 785 765
+  \caption{\texttt{make menuconfig} curses screen}
+  \end{figure}
+\item Save the configuration. This writes the configuration to \texttt{.config} in the OpenWRT root. The config file used can be seen in Appendix A.
+\item In the OpenWRT root issue a \texttt{make} command. This command downloads, configures and compiles all the selected tools and generates a firmware image.
+\end{enumerate}
+
+Barring any errors in the \texttt{make} process, at this stage the firmware image is complete and ready for installation on our access point. The firmware images can be found in the \texttt{/bin} subdirectory of the OpenWRT root. There is a number of images created as illustrated in figure \ref{fig:openwrt-images}, generated to comply with the different memory and processor specifications available. The image \texttt{openwrt-atheros-ubnt2-pico2-squashfs.bin} is used in conjunction with the hardware used for this project.
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=320px, keepaspectratio=1]{../images/openwrt-images.eps}
+ % openwrt-images.eps: 785x765 pixel, 300dpi, 6.65x6.48 cm, bb=
+ \caption{Variety of OpenWRT firmware images created}
+ \label{fig:openwrt-images}
+\end{figure}
+
+\subsection{Installing the image on the access point}
+
+The next stage of this process is to transfer and install the firmware image generated in the last step onto the access point. This process involves TFTPing the image over an Ethernet connection to the AP, and is detailed below: 
+\begin{enumerate} 
+\item To install the image onto the PicoStation we put the router into recovery mode by holding the reset button for 5 seconds. When the router enters recovery mode it reverts to its default IP of 192.168.1.20. 
+\item We must reconfigure our wired Ethernet port to the 192.168.1.* subnet in order to TFTP the image on. The \texttt{tftp} command is issued from the \texttt{openwrt/bin} directory with the following settings:
+\begin{lstlisting}
+olan@x:~/openwrt/bin$ tftp 192.168.1.20
+tftp> verbose
+Verbose mode on.
+tftp> binary
+mode set to octet
+tftp> trace
+Packet tracing on.
+tftp> rexmt 1
+tftp> put openwrt-atheros-ubnt2-pico2-squashfs.bin
+\end{lstlisting}
+
+\item Once data transfer is complete the access point reboots itself and installs the new firmware.
+\item As the OpenWRT configuration used set the default IP to 192.168.2.1 to alleviate other networking issues, we must reset out IP to the 192.168.2.* subnet. When the AP is pingable again at its default IP the firmware has been installed successfully.
+\end{enumerate}
+
+\subsection{Configuring OpenWRT}
+The next step is to set up OpenWRT for our uses. We need a wireless access point performing as normal with click monitoring in the user-space, thus it would seem we need to have two wireless devices - one in managed mode for the AP and one in monitor mode for click script. This presents a problem as AP's with two wireless chipsets are rare and expensive, and the purpose of designing a distributed IDS is so that it can be implemented in many locations on low power devices. This problem is overcome however by the selection of an AP with an Atheros chipset and use of madwifi drivers. The combination of these drivers on this chipset enables multiple virtual access points to be created on the one chipset, solving our problem.
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=354px, keepaspectratio=1]{../images/beacons-dist-lin.eps}
+ % beacons-dist-lin.eps: 612x792 pixel, 300dpi, 5.18x6.71 cm, bb=0 0 612 792
+ \caption{Distribution of beacon rates}
+ \label{fig:beacons-dist-lin}
+\end{figure}
+
+\subsubsection{OpenWRT commands}
+\begin{tabular}{r p{350px}}
+Get ath0 up:	&	\texttt{wlanconfig ath0 create wlandev wifi0 wlanmode monitor}  	\\
+Click files:	&	located in '/usr/share/click'. \texttt{cd} there to run scripts.	\\
+		&	\texttt{click didsClient.click}						\\
+\end{tabular}

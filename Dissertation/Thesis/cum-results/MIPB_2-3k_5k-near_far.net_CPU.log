@@ -1,0 +1,36 @@
+2011-05-12 02:22:10,902:INFO    multiuserdsm 46 Starting Up... logging to MIPB_2-3k_5k-near_far.net_CPU.log
+2011-05-12 02:22:10,905:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-12 02:22:10,906:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-12 02:22:10,906:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 02:22:10,963:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 02:22:10,968:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-12 02:22:11,010:INFO    algorithm 48 Starting Spectrum Balancing using MIPB
+2011-05-12 02:22:11,011:INFO    mipb 107 No Target Given
+2011-05-12 02:22:14,189:INFO    bundle 305 Cache Hits:0
+2011-05-12 02:22:14,190:INFO    bundle 306 Cache Mises:5882
+2011-05-12 02:22:14,195:INFO    bundle 325 Line:0,Power:0.216mW,Rate:448bpf
+2011-05-12 02:22:14,201:INFO    bundle 325 Line:1,Power:0.216mW,Rate:448bpf
+2011-05-12 02:22:14,201:INFO    bundle 331 Bundle Rate:896bpf
+2011-05-12 02:22:14,202:INFO    algorithm 84 All Done Here, took 3.190724, hit ratio of 0.0000
+2011-05-12 02:40:07,712:INFO    multiuserdsm 46 Starting Up... logging to MIPB_2-3k_5k-near_far.net_CPU.log
+2011-05-12 02:40:07,715:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-12 02:40:07,715:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-12 02:40:07,715:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 02:40:07,773:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 02:40:07,777:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-12 02:40:07,779:INFO    algorithm 48 Starting Spectrum Balancing using MIPB
+2011-05-12 02:40:07,779:INFO    mipb 107 No Target Given
+2011-05-12 02:40:16,177:INFO    multiuserdsm 46 Starting Up... logging to MIPB_2-3k_5k-near_far.net_CPU.log
+2011-05-12 02:40:16,178:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-12 02:40:16,179:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-12 02:40:16,179:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 02:40:16,236:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 02:40:16,241:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-12 02:40:16,283:INFO    algorithm 48 Starting Spectrum Balancing using MIPB
+2011-05-12 02:40:16,283:INFO    mipb 107 No Target Given
+2011-05-12 02:40:19,465:INFO    bundle 305 Cache Hits:0
+2011-05-12 02:40:19,465:INFO    bundle 306 Cache Mises:5882
+2011-05-12 02:40:19,471:INFO    bundle 325 Line:0,Power:0.216mW,Rate:448bpf
+2011-05-12 02:40:19,477:INFO    bundle 325 Line:1,Power:0.216mW,Rate:448bpf
+2011-05-12 02:40:19,477:INFO    bundle 331 Bundle Rate:896bpf
+2011-05-12 02:40:19,478:INFO    algorithm 84 All Done Here, took 3.193898, hit ratio of 0.0000

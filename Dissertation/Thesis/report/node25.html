@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Gustafson and Amdahl's laws</TITLE>
+<META NAME="description" CONTENT="Gustafson and Amdahl's laws">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node24.html">
+<LINK REL="up" HREF="node24.html">
+<LINK REL="next" HREF="node26.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html585"
+  HREF="node26.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html581"
+  HREF="node24.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html577"
+  HREF="node24.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html583"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html586"
+  HREF="node26.html">General Purpose computing on</A>
+<B> Up:</B> <A NAME="tex2html582"
+  HREF="node24.html">Principles of Parallel Programming</A>
+<B> Previous:</B> <A NAME="tex2html578"
+  HREF="node24.html">Principles of Parallel Programming</A>
+ &nbsp; <B>  <A NAME="tex2html584"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00322100000000000000">
+Gustafson and Amdahl's laws</A>
+</H3><SMALL CLASS="SMALL">
+Performance improvements from parallelism are not perfect however, as any problem will still retain some operations that are inherently serial.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">This limitation has been codified by Gene Amdahl in the law that takes his name<A
+ HREF="node65.html#Amd67">Amdahl (1967)</A>, which states that this serial portion of the problem, however small, will limit the overall speed-up provided from parallising the problem. This is stated mathematically in equation&nbsp;(<A HREF="#fig:AmdahlsLaw">2.32</A>), where <SPAN CLASS="MATH"><IMG
+ WIDTH="12" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img102.png"
+ ALT="$ \alpha$"></SPAN><SPAN CLASS="MATH"><IMG
+ WIDTH="12" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img102.png"
+ ALT="$ \alpha$"></SPAN>Fraction of an application that cannot be parallelised represents the fraction of the program that cannot be parallelised, and graphically in Figure&nbsp;<A HREF="#fig:AmdahlFigure">18</A>. It is colloquially phrased as:
+</SMALL>
+<P>
+
+<BLOCKQUOTE><SMALL CLASS="SMALL">When a task cannot be partitioned because of sequential constraints, the application of more effort has no effect on the schedule; The bearing of a child takes nine months, no matter how many woman are assigned
+</SMALL></BLOCKQUOTE>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:AmdahlsLaw"></A><!-- MATH
+ \begin{equation}
+S=\frac{1}{\alpha}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="48" HEIGHT="48" ALIGN="MIDDLE" BORDER="0"
+ SRC="img103.png"
+ ALT="$\displaystyle S=\frac{1}{\alpha}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">32</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:AmdahlFigure"></A><A NAME="971"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 18:</STRONG>
+Graph demonstrating the maximum speed-up attained with a variety of parallelisable program ratios under Amdahl's Law</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="648" HEIGHT="486" ALIGN="BOTTOM" BORDER="0"
+ SRC="./AmdahlsLaw.png"
+ ALT="Image AmdahlsLaw"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">Amdahl's Law assumes that the execution time of the non-parallelisable section of the problem is independent of the number of processors available to the system, and that the problem size is fixed. Gustafson's Law<A
+ HREF="node65.html#JLG88">John L. Gustafson (1988)</A> at least partially contradicts Amdahl's Law, by stating that for problems with large datasets, parallelisation is still a worthwhile pursuit, regardless of the sequential portion; effectively implying that while parallelism can't make such problems 'faster', the size of their tractable problem sets can be increased if the serial section does not 'slow down' with the problem set size increasing. This is stated mathematically in&nbsp;(<A HREF="#fig:GustafsonsLaw">2.33</A>) , where <SPAN CLASS="MATH"><IMG
+ WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img104.png"
+ ALT="$ P$"></SPAN> is the number of processing units available, and graphically in Figure&nbsp;<A HREF="#fig:GustafsonFigure">19</A>.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:GustafsonsLaw"></A><!-- MATH
+ \begin{equation}
+S(P)=P-\alpha(P-1)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="153" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img105.png"
+ ALT="$\displaystyle S(P)=P-\alpha(P-1)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">33</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:GustafsonFigure"></A><A NAME="982"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 19:</STRONG>
+Graph demonstrating the maximum speed-up attained with a variety of parallelisable program ratios under Gustafson's Law</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="800" HEIGHT="561" ALIGN="BOTTOM" BORDER="0"
+ SRC="./GustafsonsLaw.png"
+ ALT="Image GustafsonsLaw"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">The both of these Laws are purely theoretical, and do not include aspects of computation such as communication time between PUs, Memory constraints leading to cache contention<A NAME="tex2html58"
+  HREF="footnode.html#foot985"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">31</SPAN></SUP></A> or simple processing over-heads involved in running multiple PUs. As such, these Laws can only act as an upper limit to the possible performance of Parallel systems.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html585"
+  HREF="node26.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html581"
+  HREF="node24.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html577"
+  HREF="node24.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html583"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html586"
+  HREF="node26.html">General Purpose computing on</A>
+<B> Up:</B> <A NAME="tex2html582"
+  HREF="node24.html">Principles of Parallel Programming</A>
+<B> Previous:</B> <A NAME="tex2html578"
+  HREF="node24.html">Principles of Parallel Programming</A>
+ &nbsp; <B>  <A NAME="tex2html584"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

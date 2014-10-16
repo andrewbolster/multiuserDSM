@@ -1,0 +1,366 @@
+\begin{thebibliography}{60}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{BT PLC.}(2011)]{BP11}
+{BT PLC.}
+\newblock Results for the third quarter and nine months to 31 {D}ecember 2010.
+\newblock
+  http://www.btplc.com/News/Articles/Showarticle.cfm?ArticleID=E9EBBBBE-5744-4%
+DF7-B30C-D279879ADA77, 3 February 2011.
+
+\bibitem[{Office for National Statistics}(2010)]{OfNS10}
+{Office for National Statistics}.
+\newblock Internet {A}ccess.
+\newblock http://www.statistics.gov.uk/cci/nugget.asp?id=8, 27 August 2010.
+
+\bibitem[OfCom(2011)]{OfC}
+OfCom.
+\newblock U{K} fixed broadband speeds, {N}ovember/{D}ecember 2010.
+\newblock
+  http://stakeholders.ofcom.org.uk/market-data-research/telecoms-research/broa%
+dband-speeds/speeds-nov-dec-2010/, 2 March 2011.
+
+\bibitem[{C.E. Shannon.}(1948)]{CS48}
+{C.E. Shannon.}
+\newblock Mathematical theory of communication.
+\newblock \emph{Bell System Technical Journal}, 27\penalty0 (3-4):\penalty0
+  379--423, 1948.
+
+\bibitem[Thomas~Starr(2003)]{TS03}
+Peter J.~Silverman Thomas~Starr, John M.~Cioffi.
+\newblock \emph{D{SL} {A}dvances}.
+\newblock Prentice Hall, 2003.
+
+\bibitem[{J. A. C. Bingham.}(1990)]{JACB90}
+{J. A. C. Bingham.}
+\newblock Multicarrier modulation for data transmission: an idea whose time has
+  come.
+\newblock \emph{IEEE Communications Magazine}, 28\penalty0 (5):\penalty0 5--14,
+  May 1990.
+
+\bibitem[{J. M. Cioffi.}(1991)]{JMC91}
+{J. M. Cioffi.}
+\newblock A multicarrier primer.
+\newblock \emph{ANSI T1E1}, 1991.
+
+\bibitem[Various(10)]{VAR}
+Various.
+\newblock Orthogonal frequency-division multiplexing: {K}ey {F}eatures.
+\newblock
+  http://en.wikipedia.org/wiki/Orthogonal\_frequency-division\_multiplexing\#K%
+ey\_features, November 10.
+
+\bibitem[Saltzberg(2003)]{Sal03}
+Burton~R. Saltzberg.
+\newblock \emph{Wiley {E}ncyclopedia of {T}elecommunications}, chapter
+  Carrierless Amplitude Phase Modulation.
+\newblock John Wiley \& Sons, Inc, 2003.
+
+\bibitem[W.T.~Webb(1995)]{WW95}
+R.Steele W.T.~Webb.
+\newblock Variable {R}ate {QAM} for {M}obile {R}adio.
+\newblock In \emph{I{EEE} {T}ransactions on {C}ommunications}, volume~43, 7
+  July 1995.
+
+\bibitem[R.~Cendrillon(2004)]{RC04}
+J.~Verlinden R.~Cendrillon, M.~Moonen.
+\newblock Optimal multiuser spectrum management for digital subscriber lines.
+\newblock \emph{IEEE International Conference on Communications}, 1:\penalty0
+  1--5, 2004.
+
+\bibitem[Thomas~Starr(1999)]{TS99}
+Peter J.~Silverman Thomas~Starr, John M.~Cioffi.
+\newblock \emph{Understanding {D}igital {S}ubscriber {L}ine {T}echnology}.
+\newblock Prentice Hall, 1999.
+
+\bibitem[{Alastair McKinley}(2009)]{AM09}
+{Alastair McKinley}.
+\newblock \emph{Novel {B}it-{L}oading {A}lgorithms {F}or {S}pectrum {B}alancing
+  {I}n {D}igital {S}ubscriber {L}ines}.
+\newblock PhD thesis, Queen's University Belfast, September 2009.
+
+\bibitem[ANS(2003)]{ETSI03}
+\emph{A{NSI}. {S}pectrum management for loop transmission systems.}
+\newblock ANSI, t1.417-2003 edition, September 2003.
+
+\bibitem[Alcatel-Lucent(2007)]{Alc07}
+Conexant~Systems Alcatel-Lucent, Adtran~Inc.
+\newblock Revised 100 pair channel model with asymmetry.
+\newblock In \emph{A{NSI} {C}ontribution {NIPP}-{NAI}-2007-183}, November 2007.
+
+\bibitem[{Sumanth Jagannathan}(2008)]{SJ08}
+{Sumanth Jagannathan}.
+\newblock \emph{Interference and outage optimization in multi-user
+  multi-carrier communication systems}.
+\newblock PhD thesis, Stanford University, 2008.
+
+\bibitem[{K.J. Kerpez}(1993)]{KK93}
+{K.J. Kerpez}.
+\newblock Near-end crosstalk is almost gaussian.
+\newblock \emph{IEEE Transactions on Communications}, 41\penalty0 (5):\penalty0
+  670--672, May 1993.
+
+\bibitem[{G. Ungerboeck}(1982)]{GU82}
+{G. Ungerboeck}.
+\newblock Channel coding with multilevel/phase signals.
+\newblock \emph{IEEE Transactions on Information Theory}, IT-28:\penalty0
+  55--67, 1982.
+
+\bibitem[{I. S. Reed and G. Solomon}(1959)]{Ree59}
+{I. S. Reed and G. Solomon}.
+\newblock Polynomial {C}odes over {C}ertain {F}inite {F}ields.
+\newblock \emph{Journal of the Society for Industrial and Applied Mathematics},
+  8:\penalty0 300--304, January 1959.
+
+\bibitem[F.~Sjoberg and jesson.(1999)]{FSJ99}
+R.~Nilsson F.~Sjoberg, M.~Isaksson and jesson.
+\newblock Zipper: a duplex method for vdsl based on dmt.
+\newblock \emph{IEEE Transactions on Communications,}, 54\penalty0
+  (8):\penalty0 1245--1252, August 1999.
+
+\bibitem[C.M.~Akujuobi(2006)]{CA06}
+M.N.O. C.M.~Akujuobi, J. Shen~Sadiku.
+\newblock A new parallel greedy bit-loading algorithm with fairness for
+  multiple users in a dmt system.
+\newblock \emph{IEEE Transactions on Communications,}, 54\penalty0
+  (8):\penalty0 1374--1380, August 2006.
+
+\bibitem[{Seong Taek Chung}(2007)]{STC07}
+{Seong Taek Chung}.
+\newblock \emph{Implementation and {A}pplications of {DSL} {T}echnology},
+  chapter Dynamic Spectrum Management.
+\newblock Auerback Publications, 2007.
+
+\bibitem[J.~Cioffi(2006)]{JC06}
+V.~Pourahmad J.~Cioffi, M.~Brady.
+\newblock Vectored {DSL}s with {DSM}: {T}he road to {U}biquitous {G}igabit
+  {DSL}s, 2006.
+
+\bibitem[G.~Ginis(2000)]{GG00}
+J.M.~Cioffi G.~Ginis.
+\newblock Vectored-{DMT}: {A} {FEXT} cancelling {DSL} {S}ystem.
+\newblock \emph{Globecom 2000}, 2000.
+
+\bibitem[Papandriopoulos(2006)]{Pap06}
+J.S. Papandriopoulos, J.;~Evans.
+\newblock Low-{C}omplexity {D}istributed {A}lgorithms for {S}pectrum
+  {B}alancing in {M}ulti-{U}ser {DSL} {N}etworks.
+\newblock \emph{IEEE International Conference on Communications, 2006. ICC
+  '06.}, pages 3270--3275, June 2006.
+
+\bibitem[{Georg Taubock and Werner Henkel}(2000)]{GTaWH00}
+{Georg Taubock and Werner Henkel}.
+\newblock M{IMO} {S}ystems in the {S}ubscriber-{L}ine {N}etwork.
+\newblock In \emph{5th {I}nternational {OFDM}-{W}orkshop 2000}, 2000.
+
+\bibitem[{Wei Yu and J.M. Cioffi}(2000)]{WYaJC00}
+{Wei Yu and J.M. Cioffi}.
+\newblock Competitive equilibrium in the {G}aussian interference channel.
+\newblock \emph{IEEE International Symposium on Information Theory, 2000.
+  Proceedings.}, 2000.
+
+\bibitem[Wei~Yu(2001)]{WY01}
+J.M.~Cioffi Wei~Yu, G.~Ginis.
+\newblock An adaptive multiuser power control algorithm for {VDSL}.
+\newblock \emph{IEEE Global Telecommunications Conference, 2001. GLOBECOM
+  '01.}, 2001.
+
+\bibitem[Seong Taek~Chung(2003)]{STC03}
+Jungwon~Lee Seong Taek~Chung, Seung Jean~Kim.
+\newblock A game-theoretic approach to power allocation in frequency-selective
+  gaussian interference channels.
+\newblock \emph{IEEE International Symposium on Information Theory, 2003.
+  Proceedings.}, June 2003.
+
+\bibitem[H.Levin(2001)]{H.L01}
+H.Levin.
+\newblock A {C}omplete and {O}ptimal {D}ata {A}llocation {M}ethod for
+  {P}ractical {DMT} systems.
+\newblock \emph{IEE JSAC}, April 2001.
+
+\bibitem[{Wei Yu and R. Lui.}(2006)]{WYaRL06}
+{Wei Yu and R. Lui.}
+\newblock Dual methods for nonconvex spectrum optimization of multicarrier
+  systems.
+\newblock \emph{Communications, IEEE Transactions on,}, June 2006.
+
+\bibitem[P.~Tsiaflakis(2006)]{PT06}
+M.~Moonen P.~Tsiaflakis, J.~Vangorp.
+\newblock A low complex- ity branch and bound approach to optimal spectrum
+  balancing for digital subscriber lines.
+\newblock \emph{In GLOBECOM - IEEE Global Telecommunications Conference,},
+  November 2006.
+
+\bibitem[Cendrillon(2005)]{Cen05}
+M.~Cendrillon, R.~Moonen.
+\newblock Iterative spectrum balancing for digital subscriber lines.
+\newblock \emph{IEEE International Conference on Communications, 2005. ICC
+  2005.}, 3:\penalty0 1937--1941, May 2005.
+
+\bibitem[J.~Lee(2005)]{JL05}
+J.M.~Cioffi. J.~Lee, R.V.~Sonalkar.
+\newblock A multi-user power control algorithm for digital subscriber lines.
+\newblock \emph{IEEE Communications Letters,}, 9\penalty0 (3):\penalty0
+  193--195, April 2005.
+
+\bibitem[Cioffi(1997)]{Cio97}
+G~D Cioffi, J M;~Forney.
+\newblock \emph{Generalized decision-feedback equalization for packet
+  transmission with {ISI} and {G}aussian noise}, chapter~4, pages 67--79.
+\newblock Kluwer Academic Publishers, 1997.
+
+\bibitem[Turing(1936)]{Tur36}
+A.M. Turing.
+\newblock On {C}omputable {N}umbers, with an {A}pplication to the
+  {E}ntscheidungsproblem.
+\newblock \emph{Proceedings of the London Mathematical Society}, 1936.
+
+\bibitem[Von~Neumann(1945)]{VN45}
+J~Von~Neumann.
+\newblock First {D}raft of a {R}eport on the {EDVAC}.
+\newblock Reporting to United States Army Ordnance Department, June 1945.
+
+\bibitem[Robert M.~Lougheed(1980)]{RML80}
+David L.~McCubbrey Robert M.~Lougheed.
+\newblock The cytocomputer: {A} practical pipelined image processor.
+\newblock In \emph{I{SCA} '80 {P}roceedings of the 7th annual symposium on
+  {C}omputer {A}rchitecture}, 1980.
+
+\bibitem[Kai~Hwant(1984)]{KH84}
+Faye A.~Briggs Kai~Hwant.
+\newblock \emph{Computer {A}rchitecture and {P}arallel {P}rocessing}.
+\newblock McGraw-Hill Book Company, 1984.
+
+\bibitem[Moore(1965)]{Moo65}
+Gordon~E. Moore.
+\newblock Cramming more components onto integrated circuit.
+\newblock \emph{Electronics Magazine}, 1965.
+
+\bibitem[Zhirnov(2003)]{Zhi03}
+R.K. Zhirnov, V.V.;~Cavin.
+\newblock Limits to {B}inary {L}ogic {S}witch {S}caling--{A} {G}edanken
+  {M}odel.
+\newblock \emph{Proceedings of the IEEE}, November 2003.
+
+\bibitem[Rabaey(2007)]{Rab07}
+JM~Rabaey.
+\newblock Scaling the {P}ower {W}all: {R}evisiting the {L}ow-{P}ower {D}esign
+  {R}ules.
+\newblock
+  http://www.utdallas.edu/~vojin/classes/EE-7V82/Lectures/Rabey-PowerWall.pdf,
+  November 2007.
+
+\bibitem[Various(2011)]{Var11}
+Various.
+\newblock Intel {C}ore i7: {S}andy {B}ridge overview.
+\newblock http://en.wikipedia.org/wiki/Sandy\_Bridge, April 2011.
+
+\bibitem[Flynn(1972)]{Fly72}
+M~Flynn.
+\newblock Some {C}omputer {O}rganizations and {T}heir {E}ffectiveness.
+\newblock \emph{IEEE Transactions on Computers}, September 1972.
+
+\bibitem[Yeh(1991)]{Yeh91}
+Y.~N. Yeh, T.-Y.;~Patt.
+\newblock Two-{L}evel {A}daptive {T}raining {B}ranch {P}rediction.
+\newblock In \emph{Proceedings of the 24th annual international symposium on
+  {M}icroarchitecture}, 1991.
+
+\bibitem[Amdahl(1967)]{Amd67}
+G~Amdahl.
+\newblock The validity of the single processor approach to achieving
+  large-scale computing capabilities.
+\newblock In \emph{Proceedings of {AFIPS} {S}pring {J}oint {C}omputer
+  {C}onference}, April 1967.
+
+\bibitem[{John L. Gustafson}(1988)]{JLG88}
+{John L. Gustafson}.
+\newblock Reevaluating {A}mdahl's {L}aw.
+\newblock \emph{Communications of the ACM}, 31\penalty0 (5):\penalty0 532--533,
+  1988.
+
+\bibitem[{Nvidia Corporation}(2010)]{NC10}
+{Nvidia Corporation}.
+\newblock Tesla {C}2050/2070 {P}roduct {B}rief.
+\newblock
+  http://www.nvidia.com/docs/IO/43395/NV\_DS\_Tesla\_C2050\_C2070\_jul10\_lore%
+s.pdf, 2010.
+
+\bibitem[{NVidia Corporation}(2007)]{NC07}
+{NVidia Corporation}.
+\newblock Compute {U}nified {D}evice {A}rchitecture {P}rogramming {G}uide.
+\newblock
+  http://developer.download.nvidia.com/compute/cuda/1\_0/NVIDIA\_CUDA\_Program%
+ming\_Guide\_1.0.pdf, 2007.
+
+\bibitem[David B.~Kirk(2010)]{DBK10}
+Wen-mei W.~Hwu David B.~Kirk.
+\newblock \emph{Programming {M}assively {P}arallel {P}rocessors: {A} {H}ands-on
+  {A}pproach}.
+\newblock Morgan Kaufmann Publishers, 2010.
+
+\bibitem[Humber(2008)]{Hum08}
+A~Humber.
+\newblock Tokyo {T}ech {B}uilds {F}irst {T}esla {GPU} {B}ased {H}eterogeneous
+  {C}luster {T}o {R}each {T}op 500.
+\newblock http://www.nvidia.com/object/io\_1226945999108.html, November 2008.
+
+\bibitem[iVEC(2010)]{iVE10}
+iVEC.
+\newblock High {P}erformance {GPU} {C}omputing with {NVIDIA}, {CUDA}, and
+  {F}ermi.
+\newblock
+  http://www.ivec.org/events/2011-01/high-performance-gpu-computing-nvidia-cud%
+a-and-fermi, August 2010.
+
+\bibitem[{Kayvon Fatahalian}(2008)]{KF08}
+{Kayvon Fatahalian}.
+\newblock From {S}hader {C}ode to a {T}eraflop: {H}ow {S}hader {C}ores {W}ork.
+\newblock http://s08.idav.ucdavis.edu/fatahalian-gpu-architecture.pdf, 2008.
+
+\bibitem[M~Fatica(2008)]{MF08}
+I~Buck M~Fatica, P~LeGresley.
+\newblock High {P}erformance {C}omputing with {CUDA}.
+\newblock http://www.cs.bris.ac.uk/~simonm/conferences/isc09/Fatica.pdf, 2008.
+
+\bibitem[{NVidia Corporation}(2011)]{NC11}
+{NVidia Corporation}.
+\newblock C{UDA} {C} {P}rogramming {G}uide.
+\newblock
+  http://developer.download.nvidia.com/compute/cuda/4\_0\_rc2/toolkit/docs/CUD%
+A\_C\_Programming\_Guide.pdf, April 2011.
+
+\bibitem[{J.E. Dennis Jr; Zhijun Wu}(2003)]{JDJZW03}
+{J.E. Dennis Jr; Zhijun Wu}.
+\newblock \emph{Sourcebook of {P}arallel {C}omputing}, chapter Parallel
+  Continuous Optimisation.
+\newblock Morgan Kaufmann, 2003.
+
+\bibitem[Robert~Baldemair(2003)]{RB03}
+Tomas~Nordstr\"om Robert~Baldemair, Michael~Horvat.
+\newblock Proposed {M}ethod on {C}rosstalk {C}alculations in a {D}istributed
+  {E}nvironment.
+\newblock
+  http://www.nordstrom.nu/tomas/publications/BalEtAl\_2003\_ETSITM6\_033w07.pd%
+f, 2003.
+
+\bibitem[William H.~Press(1992)]{WHP92}
+William T.~Vetterling William H.~Press, Saul A.~Teukolsky.
+\newblock \emph{Numerical {R}ecipies in {F}ortran 90}.
+\newblock Cambridge University Press, 1992.
+
+\bibitem[{Gerard Richter}(2010)]{GR10}
+{Gerard Richter}.
+\newblock Rutgers {CS}510, {N}umerical {A}nalysis module notes.
+\newblock http://www.cs.rutgers.edu/~richter/cs510/, September 2010.
+
+\bibitem[Goulub(1996)]{GOU96}
+Charles~F. Goulub, Gene H. Van~Loan.
+\newblock \emph{Matrix {C}omputations, {T}hird {E}dition}.
+\newblock The Johns Hopkins University Press, 1996.
+
+\end{thebibliography}

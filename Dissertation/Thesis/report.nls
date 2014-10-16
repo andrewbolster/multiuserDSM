@@ -1,0 +1,124 @@
+\begin{thenomenclature} 
+
+ \nomgroup{A}
+
+  \item [{ \(\Gamma\)}]\begingroup The Shannon Gap derived from equation \eqref{eq:GAMMAsum}\nomeqref {2.19}
+		\nompageref{14}
+  \item [{\(\alpha\)}]\begingroup Fraction of an application that cannot be parallelised\nomeqref {2.31}
+		\nompageref{28}
+  \item [{\(\Delta p(k)\)}]\begingroup Single-bit addition power\nomeqref {2.28}
+		\nompageref{18}
+  \item [{\(\sigma^2_n(k)\)}]\begingroup Background noise power experiences by user \(n\) on channel \(k\)\nomeqref {2.19}
+		\nompageref{14}
+  \item [{\(h_{ij}(k)\)}]\begingroup XTG from user \(i\) to user \(j\) on channel \(k\) \nomeqref {2.19}
+		\nompageref{14}
+  \item [{\(L_k\)}]\begingroup The Lagrangian sum of a bitloaded channel\nomeqref {2.30}
+		\nompageref{20}
+  \item [{\(p_n(k)\)}]\begingroup Power provisioned on channel \(k\) for user \(n\)\nomeqref {2.19}
+		\nompageref{14}
+  \item [{ACS}]\begingroup Auto-Configuration Server\nomeqref {2.26}
+		\nompageref{17}
+  \item [{ADSL}]\begingroup Asymmetric Digital Subscriber Lines\nomeqref {1.0}
+		\nompageref{1}
+  \item [{API}]\begingroup Application Programming Interface\nomeqref {2.33}
+		\nompageref{29}
+  \item [{CO}]\begingroup Central Office\nomeqref {2.1}\nompageref{9}
+  \item [{CP}]\begingroup Customer Premises\nomeqref {2.1}
+		\nompageref{9}
+  \item [{CPE}]\begingroup Customer Premises Equipment\nomeqref {2.26}
+		\nompageref{17}
+  \item [{CPU}]\begingroup Central Processing Unit\nomeqref {1.0}
+		\nompageref{4}
+  \item [{CUDA}]\begingroup Compute Unified Device Architecture\nomeqref {1.0}
+		\nompageref{2}
+  \item [{DMT}]\begingroup Discrete Multi-Tone modulation\nomeqref {2.0}
+		\nompageref{7}
+  \item [{DSL}]\begingroup Digital Subscriber Lines\nomeqref {0}
+		\nompageref{i}
+  \item [{DSLAM}]\begingroup DSL Access Multiplexer\nomeqref {2.26}
+		\nompageref{17}
+  \item [{DSM}]\begingroup Dynamic Spectrum Management\nomeqref {0}
+		\nompageref{i}
+  \item [{EMS}]\begingroup Element Management System\nomeqref {2.26}
+		\nompageref{17}
+  \item [{FDD}]\begingroup Frequency Division Duplexing\nomeqref {2.1}
+		\nompageref{10}
+  \item [{FEXT}]\begingroup Far End Cross-Talk\nomeqref {2.1}
+		\nompageref{10}
+  \item [{FM}]\begingroup Fixed-Margin water filling\nomeqref {2.26}
+		\nompageref{18}
+  \item [{FTTx}]\begingroup Fibre-to-the Home/Building/Cabinet\nomeqref {1.0}
+		\nompageref{1}
+  \item [{GPGPU}]\begingroup General Purpose computing on GPU\nomeqref {0}
+		\nompageref{i}
+  \item [{GPU}]\begingroup Graphics Processing Units\nomeqref {0}
+		\nompageref{i}
+  \item [{ISB}]\begingroup Iterative Spectrum Balancing\nomeqref {1.0}
+		\nompageref{4}
+  \item [{ISP}]\begingroup Internet Service Provider\nomeqref {1.0}
+		\nompageref{1}
+  \item [{ITU}]\begingroup International Telecommunications Union\nomeqref {2.0}
+		\nompageref{7}
+  \item [{IWF}]\begingroup Iterative Water-Filling\nomeqref {2.26}
+		\nompageref{17}
+  \item [{LC}]\begingroup Levin-Campello Algorithm\nomeqref {2.28}
+		\nompageref{18}
+  \item [{LT}]\begingroup Line Termination, at CO side\nomeqref {2.1}
+		\nompageref{9}
+  \item [{MIMD}]\begingroup Multiple Instruction, Multiple Data Stream\nomeqref {2.31}
+		\nompageref{26}
+  \item [{MIPB}]\begingroup Multi-user Incremental Power Balancing, aka Greedy\nomeqref {1.0}
+		\nompageref{4}
+  \item [{MISD}]\begingroup Multiple Instruction, Single Data Stream\nomeqref {2.31}
+		\nompageref{26}
+  \item [{MPI}]\begingroup Message Passing Interface\nomeqref {2.31}
+		\nompageref{27}
+  \item [{NEXT}]\begingroup Near End Cross-Talk\nomeqref {2.1}
+		\nompageref{10}
+  \item [{NT}]\begingroup Network Termination, at CP side\nomeqref {2.1}
+		\nompageref{9}
+  \item [{OFDM}]\begingroup Orthogonal Frequency-Division Multiplexing\nomeqref {2.0}
+		\nompageref{7}
+  \item [{OSB}]\begingroup Optimal Spectrum Balancing\nomeqref {1.0}
+		\nompageref{4}
+  \item [{POTS}]\begingroup Plain Old Telephone Service\nomeqref {1.0}
+		\nompageref{1}
+  \item [{PSD}]\begingroup Power Spectral Density\nomeqref {2.26}
+		\nompageref{16}
+  \item [{PU}]\begingroup Processing Unit\nomeqref {2.31}
+		\nompageref{24}
+  \item [{PyCUDA}]\begingroup CUDA wrapper for the Python programming language\nomeqref {3.0}
+		\nompageref{41}
+  \item [{QAM}]\begingroup Quadrature Amplitude Modulation\nomeqref {2.0}
+		\nompageref{9}
+  \item [{RA}]\begingroup Rate Adaptive water filling\nomeqref {2.26}
+		\nompageref{17}
+  \item [{RF}]\begingroup Radio Frequency\nomeqref {2.1}\nompageref{9}
+  \item [{SIMD}]\begingroup Single Instruction, Multiple Data Stream\nomeqref {2.31}
+		\nompageref{26}
+  \item [{SIMT}]\begingroup Single Instruction Multiple Thread Stream\nomeqref {2.31}
+		\nompageref{27}
+  \item [{SISD}]\begingroup Single Instruction, Single Data Stream\nomeqref {2.31}
+		\nompageref{26}
+  \item [{SM}]\begingroup Streaming Multiprocessor\nomeqref {1.0}
+		\nompageref{2}
+  \item [{SMC}]\begingroup Spectrum Maintenance Centre\nomeqref {2.26}
+		\nompageref{17}
+  \item [{SNR}]\begingroup Signal to Noise Ratio\nomeqref {2.0}
+		\nompageref{8}
+  \item [{SP}]\begingroup Streaming Processor\nomeqref {2.31}
+		\nompageref{24}
+  \item [{SPMD}]\begingroup Single Program Multiple Data Stream\nomeqref {2.31}
+		\nompageref{26}
+  \item [{SSM}]\begingroup Static Spectrum Management\nomeqref {2.28}
+		\nompageref{18}
+  \item [{VDMT}]\begingroup Vectored DMT\nomeqref {2.31}\nompageref{23}
+  \item [{VDSL}]\begingroup Very high bit-rate Digital Subscriber Lines\nomeqref {1.0}
+		\nompageref{1}
+  \item [{xDSL}]\begingroup Catch-all term for variety of DSL systems\nomeqref {2.0}
+		\nompageref{6}
+  \item [{XT}]\begingroup Cross-Talk\nomeqref {2.1}\nompageref{10}
+  \item [{XTG}]\begingroup Cross Talk Gain\nomeqref {2.1}
+		\nompageref{10}
+
+\end{thenomenclature}

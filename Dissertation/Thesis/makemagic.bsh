@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pdflatex report.tex
+pdflatex report.tex
+bibtex report
+makeindex report.nlo -s nomencl.ist -o report.nls
+pdflatex report.tex

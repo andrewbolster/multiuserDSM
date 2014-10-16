@@ -1,0 +1,166 @@
+\chapter{Tools and Software}
+
+There are a number of tools and software elements required in the creation of this project, as outlined in section \ref{sec:arch} and the project specification (section \ref{sec:proj-spec}). To engineer the best solution, it is important to fully understand the operation of each of these elements and explore their implementations and limitations. Thus to aid the engineering process, each of the elements to be used are explained in this chapter, as well as an evaluation of the choices for the server.
+
+  \section{Click Modular Router}
+    \label{sec:click}
+    Click is a software architecture for building extensible and configurable routers\cite{EKRM+00}, designed as the Ph.D. project of M.I.T. graduate Eddie Kohler. The design of the Click software structure is modular in which each individual module is called an element. Each of these elements performs simple packet processing tasks on a per packet basis. Connecting these modules in a 'flow', it is possible to develop complex and powerful tasks from a simple configuration file.
+
+    \begin{figure}[H]
+      \centering
+      \lstinputlisting{../files/test-device.click}
+      \caption{Example Click configuration file}
+      \label{fig:click-file}
+    \end{figure}
+    \begin{figure}
+      \centering
+      \includegraphics[width=10cm,height=5cm,keepaspectratio=true]{../images/test-device.pdf}
+      \caption{Visual representation of click flow in figure \ref{fig:click-file}}
+      \label{fig:click-ex}
+    \end{figure}
+
+    The source code and corresponding diagram in figures \ref{fig:click-file} and \ref{fig:click-ex} show three click elements combined to perform a very simple task. The \texttt{FromDevice()} element interfaces with the hardware's \texttt{ath0} device, the \texttt{Print()} element prints an 'OK' message every time it processes a packet, and the \texttt{Discard()} element cleanly deletes the packet. These elements are C++ objects and are designed to be fine-grained with simple specifications. It is the Click ethos that many fine-grained, simple elements are preferable to few coarse-grained, complex elements. New elements can be created to perform tasks that are not fulfilled by the packaged elements with the click install. The three most important properties of each element are described below and illustrated in figure \ref{fig:click-tee}.\cite{EKRM+00}
+
+    \begin{enumerate*}
+    \item\textbf{Element Class}\hfill\\Each element belongs to one element class. This specifies the code that should be executed when the element processes a packet, as well as the element’s initialisation procedure and data layout.
+    \item\textbf{Ports}\hfill\\An element can have any number of input and output ports. Every connection goes from an output port on one element to an input port on another. Different ports can have different semantics; for example, second output ports are often used to emit erroneous packets.
+    \item\textbf{Configuration Strings}\hfill\\The optional configuration string contains additional arguments that are passed to the element at router initialization time. Many element classes use these arguments to set per-element state and fine-tune their behaviour.
+    %\item\textbf{Method Interfaces}\hfill\\Each element supports one or more method interfaces. Every element supports the simple packet-transfer interface, but elements can create and export arbitrary additional interfaces; for example, a queue might export an interface that reports its length. Elements communicate at run time through these interfaces, which can contain both methods and data.
+    \end{enumerate*}
+
+    \begin{figure}[ht!]
+    \centering
+    \includegraphics[width=6cm,height=8cm,keepaspectratio=true]{../images/click-tee.pdf}
+    % click-tee.pdf: 183x58 pixel, 72dpi, 6.46x2.05 cm, bb=0 0 183 58
+    \caption{Tee Element; note this has one push input and two push outputs.\cite{EKRM+00}}
+    \label{fig:click-tee}
+    \end{figure}
+    \label{sec:click-ports}
+    The ports mentioned above are a huge part of the click system. Each port can be either set as push, pull or agnostic; the terms used to define the method by which packets are transferred using that port. Push ports transfer packets from source to destination as soon as they have been processed by the source element, while pull ports wait for a signal from the destination element to initiate the transfer. Push outputs must be connected to push inputs, and pull outputs must be connected to other pull inputs. In addition, push outputs and pull inputs can only be connected once. The reasoning behind these rules is quite clear; in the first case, if a pull input is connected to a push output the destination element will receive packets before it is ready to process them. Similarly in the second case, if a pull input is connected to two pull outputs, when the destination element requests the next packet two will be sent. If interfacing push and pull inputs and outputs is necessary, a queue element is required. As previously mentioned there is a third type of port, the agnostic port. This can be either push or pull depending on which it is connected too, but cannot be both.
+
+    In the click flow charts, inputs are illustrated as triangles and outputs are squares, push ports are solid black and pull ports are solid white. Agnostic ports follow this rule depending on which functionality they've inherited, but have a double line around their shape to indicate that they are agnostic. Figure \ref{fig:click-inputs} illustrates the variety of port types.\\
+
+
+    \begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.8\textwidth,keepaspectratio=true]{../images/click-inputs.pdf}
+    % click-tee.pdf: 183x58 pixel, 72dpi, 6.46x2.05 cm, bb=0 0 183 58
+    \caption{Graphical representation of Click port options}
+    \label{fig:click-inputs}
+    \end{figure}
+
+  \section{MadWiFi Drivers}
+    \label{sec:madwifi}
+    As decided in section \ref{sec:solution}, the AP must have the functionality to act as a regular wireless AP, performing all the standard routing procedures, and also as a wireless monitor collecting relevant information to identify attack occurrences. However, a wireless device has to be configured in a particular operational mode, i.e.\ either Master (acting as an access point), Managed (client, also known as station), Ad-hoc, Mesh, Repeater, or Monitor mode; and it is not possible to perform monitoring and act as an access point through any single mode. It would appear that an AP with dual wireless cards is required, however these are uncommon and using one for the development of this project would not truly determine the viability of a distributed IDS. A suitable solution for this comes with the implementation of MadWiFi drivers.
+
+    MadWiFi, short for Multiband Atheros Driver for Wireless Fidelity, is a set of open-source, advanced WLAN drivers for Atheros chipsets. MadWifi enables the easy configuration of wireless devices into different modes, but the main reason it is preferable to any other driver is due to its support for virtual access points or VAPs\nomenclature{VAP}{Virtual Access Point}, meaning more than one wireless interface can be run per chipset. As mentioned above, this ability is fundamental in the design of this project as it will be necessary to capture packets from the wireless medium for analysis while an additional VAP performs normal AP routing operations. MadWiFi also supports the radiotap header format which is essential for gaining information on the wireless link, as discussed in section \ref{sec:radiotap}.
+
+  \section{OpenWRT}
+    \label{sec:openwrt}
+    OpenWRT is an open-source, minimalistic Busybox/Linux distribution for embedded devices. The OpenWRT project was born as a result of Linksys releasing the WRT54G WLAN router in 2003. Soon after the release of this router it was noticed that the WRT54G was actually running a version of Linux, and pressure from the open-source community led to Linksys releasing the previously proprietary code to the public under the terms of the GPL. After this, and months of 'hacking' by contributors, OpenWRT was first publicly released around December 2003.\cite{entry-0b} OpenWRT overwrites the stock firmware on a number of supported devices with its own distribution and brings many benefits over most vendors basic and locked-down OS implementations. A number of the benefits that are particularly relevant to this project are detailed below.
+
+    \begin{itemize*}
+    \item\textbf{Writeable file system}\hfill\\This is a big benefit of OpenWRT compared to other router operating systems. The implementation of a JFFS2 (writeable) filesystem on top of a SquashFS (read-only) filesystem ensures a small memory footprint while maintaining good performance.
+    \item\textbf{Command Line Interface (CLI\nomenclature{CLI}{Command Line Interface})}\hfill\\This functionality enables easy development and configuration on the AP. It enables scripts to be set up to automate settings, but most importantly for this project, will allow Click to be executed exactly the same way as it would on the linux computer testbed.
+    \item\textbf{Extensive Configuration}\hfill\\OpenWRT provides more advanced settings than most 'stock' firmwares. This enables developers and advanced users to get exactly what they need out of their AP.
+    \item\textbf{Secure Shell (SSH\nomenclature{SSH}{Secure Shell})}\hfill\\The ability to login to the CLI securely is an obvious requirement of a system that is to be used in potentially hostile hacking environments. The use of SSH in OpenWRT disables the less secure TELNET network protocol.
+    \item\textbf{Quality of Service (QoS\nomenclature{QoS}{Quality of Service})}\hfill\\As the AP is to function as a router, OpenWRT is beneficial as it implements a highly customisable QoS which enables the prioritising of certain traffic types, optimising the network usage.
+    \end{itemize*}
+
+    OpenWRT however cannot simply be installed on any access point. Like with most software it has certain requirements, most notably $<$2 MB flash and $<$8 MB RAM as a minimum. Additionally, in order to create a minimal firmware image to fit to these devices memory constraints, only the drivers for the specific wireless chipset are included in the build. So, as wireless chipsets and vendor differ so must the OpenWRT build. It is therefore very important to either compile or download the correct firmware image for the device to be flashed.
+
+  \section{Server Framework}
+
+    The development of a server to receive, parse and analyse the data being 'distributed' from the APs wireless monitor is required for the completion of the DIDS system. A fundamental requirement of this server will be to be able to simultaneously process the packets received from a number of connected APs. There are a number of languages and methods of creating a server that will achieve this functionality available, however the real issue to decide upon is one of semantics rather than syntax; that is, whether the server should be event-based or thread-based. First, it should be noted that while a single-threaded server could have been developed for this project and the issue of concurrency safely ignored, the scalability of the server would be severely hindered. In addition, implementing a efficiently concurrent system at this stage will ensure the analysis server has an ideal base on which to be developed at any point in the future.
+
+  \subsection{Events or threads?}
+
+    There are two fundamentally different approaches to managing concurrency (i.e.\ the simultaneous execution of computations), event-based and thread-based systems. Threads are sequential processes which share memory. They achieve input/output (I/O\nomenclature{I/O}{Input/Output}) concurrency by suspending a thread blocked on I/O and resuming execution in a different thread. Under this model, the programmer must carefully protect shared data structures with locks and use condition variables to coordinate the execution of threads\cite{dabek2002event}. While thread-based systems can work well on multiprocessor architectures (which are essentially hardware realisations of the threading abstraction) they are notoriously difficult to build effective programs around and can be hard to achieve good performance under\cite{JO}. Thread based systems also tend to introduce difficult to identify bugs resulting in unnecessary CPU usage\cite{mos02}. Despite these drawbacks, threads are firmly established in the computing world and are still common among servers, theorised in \textit{The problem with threads}\cite{lee2006problem} as being down to the fact that ``the very notion of programming, and the core abstractions of computation, are deeply rooted in the sequential paradigm to which most widely used programming languages adhere.''
+
+    Event based programs work off an entirely different concept. While threaded systems run processes sequentially, the flow of event-driven systems is defined by event occurrences. When a program cannot complete an operation immediately because it has to wait for an event (e.g., the arrival of a packet or the completion of a disk transfer), it registers a callback - a function that will be invoked when the event occurs. Event-based programs are typically driven by a loop that polls for events and executes the appropriate callback when the event occurs. A callback executes indivisibly until it hits a blocking operation, at which point it registers a new callback and then returns.\cite{dabek2002event} This asynchronous approach greatly improves the processes concurrency. Event-based programs have also tend to have better stability under heavy load than threaded ones\cite{dabek2002event}.
+
+    To exemplify the comparison further, the well known shopping-line queuing theory analogy can be applied: if the shopping-line queues are long, threading processes adds more checkout lanes to the shop, where as event-driven processes help the cashier to serve more than one person at once (for example by serving the second person in the line while the firsts price check is being computed).
+
+    \bigskip
+    For the task of developing the analysis server for this project, the event-driven process was identified as being preferable due to the limitations and comparative complexity of thread-based systems highlighted above. While a number of languages, such as C\#, VB, .NET, and Delphi have built-in support for events, the Twisted networking framework was identified as being ideally suited to this project due to its advanced and high-level networking capabilities.
+
+    \subsection{Twisted}
+    \label{sec:twisted}
+    `Twisted' is a high-level networking framework which is built around event-driven asynchronous input and outputs\cite{lefkowitz-network}. A number of the key reasons Twisted was chosen are\cite{fettig2005twisted}:
+
+    \begin{description}
+     \item[Python based] Python is a powerful, high-level, object-oriented programming language. It has become popular due to its 'simplistic' approach to creating code, with it's developers adopting the ethos that \textit{Simple is better than complex. Complex is better than complicated}\cite{TP}. Python is also cross-platform, so the Twisted server developed will work exactly the same whether deployed on a UNIX, MAC or Windows machine. This is a distinct advantage over a language like C++ where varying standard template library (STL\nomenclature{STL}{Standard Template Library}) implementations over different machines and OSes could require changes in the source code.
+     \item[Asynchronous and event based] As mentioned in introduction to this section, an asynchronous and event-based server implementation is preferable due to its better management of concurrency and stability under heavy load.
+     \item[Rapid Development] Keeping close to the Python programming ideals, developing Twisted application can be done very quickly and relatively easily. This is due to its high abstraction level, removing any need to engage in low-level socket programming.
+    \end{description}
+
+    From the points above it can be clearly seen that the Twisted framework will handle a lot of the more complex low-level requirements of the server, ensuring that more time can be applied to implementing analytics for identifying attacks.
+
+  \section{Data Transfer Protocol}
+    \label{sec:datatx}
+    With the monitoring tool client and server decided upon, it is necessary to determine the optimal method of transferring data between them both. An efficient method of reporting the monitor findings is critical to the success of this project and is one of the biggest deciding factors of the projects viability.
+
+    At the most basic level a string could be sent from client to server showing much the same information that would be normally output to the console. This, however, is a bad idea for a number of reasons. For one, the data sent would be far more than required. Each ASCII character is one byte in length and so if there was much information collected, the amount of data would quickly become very large impacting on the networks throughput. Another reason why this is a bad idea is that there is no support for easy parsing of the data at the server side. For example, if the string:
+    \begin{center}
+     \texttt{00-12-3d-ba-8c-00\#34-35-45-56-67\#5}
+    \end{center}
+    was sent, indicating the MAC address, RSSI values, and beacon count separated by the \texttt{\#} symbol, the server would have to perform a regular expression on each string received to isolate each data element, and then arrange the data into a usable form for analysis, such as a list for the RSSI values. While the output of data in this way requires little additional CPU power at the AP side, it increases the amount of work the server has to perform and thus only serves to limit the amount of information the server can handle per second making it less scalable.
+
+    From the above example it can be seen that there are a number of constraints and requirements necessitated by both the hardware used and the capabilities of the network that the data is being 'distributed' over that could have an adverse effect on how the system operates. The three main areas in which our data transfer model can be optimised to alleviate these effects are highlighted below.
+
+    \begin{description}
+      \item[Introduce minimal CPU overhead] As the data is to be 'distributed' from the AP, whichever method of data transfer is chosen has to perform well under the constraints of an embedded device with limited processor speed. If CPU usage is high the AP itself may fail.
+      \item[Keep network load low] It is necessary to keep the load on the network to a minimum as it will affect the scalability of the server (i.e. how many APs can be connected to the server at one time), as well as the throughput on the APs WLAN.
+      \item[Keep message latency minimum] This is important to ensure that the analysis of the data transferred to the server can work at as close to 'real time' as possible. After all, there is little to gain from identifying an attack after it has taken place. The latency is calculated as the time take to encode, transmit and decode the message.
+    \end{description}
+
+    In order to actually transfer the data collected in our Click element to the server, the data must be 'serialised', i.e. it must be 'wrapped up' into a sequence of bits so it can be easily and efficiently transmitted. There are many different methods for doing this, and they are divided under two main headings: human-readable and machine-readable serialisation.
+
+    \begin{description}
+      \item[Human Readable Serialisation] Under this method the actual data transmitted is in a form that can be understood by humans upon inspection. Popular examples of this method are XML and JSON.
+      \item[Machine Readable Serialisation] This method involves transmitting data in its natural binary form. This is unintelligible by human inspection, but provides for faster serialisation and a smaller message size.
+    \end{description}
+
+    It is evident from the above description that a human readable serialisation method is surplus to the requirements for this project. Adding tags such as seen in the XML and JSON mark-up languages requires extra data usage and thus increases the length of message sent. Additionally, XML serialised data is still stored as a text file, so while it would enable easier parsing of the data it is not much better that the string example above. As would be expected from what is essentially a big text file, human readable serialisation methods are found to require more time to parse than binary methods, thus increasing the systems latency.\cite{MC}
+
+    Unlike human readable methods, machine readable serialisation is ideal for this project. As the information is already in binary form on the AP, the CPU usage required to 'collect' all of this information and concatenate it together is much lower than is required to generate and populate an XML file with data arranged into human-readable format; by the same reasoning it can be seen that the time taken to build the actual serialised binary string will be much shorter. The biggest advantage in using a binary system for this project however, is the reduction in size of the serialised data. With no superfluous 'tags' for the data the message size is minimised while retaining any structure it has.
+
+    There are a number of different approaches to serialising data in binary form. The most basic involves something like the string method explained above, i.e.\ 'writing' the data to the output. Alternatively there are various libraries available to aid the serialisation process. Libraries such as Boost\cite{ramey-boost}, s11n\cite{beal-s11n} and Sweet Persist\cite{entry-4} are all C++ specific serialisation methods, and based on the C++ standard libraries they would integrate especially well to the WLAN monitor source code. However they would not integrate so well with the Python-based server chosen for this project. As two different programming languages at the client and server side have been identified as optimal for their tasks, it makes sense to use a serialisation library with cross-language support. Through further research Google's Protocol Buffers\cite{Goo} were identified as an ideal serialisation library for this task.
+
+    As described on the project's home page, Google's protocol buffers are a \textit{language-neutral, platform-neutral, extensible mechanism for serializing structured data}\cite{Goo}. After creating a data structure for  serialisation (in its own \texttt{.proto} file), protocol buffers allow you to `compile' this into a small library which can be included in C++, Python or Java programs, effectively hiding the serialisation code from the programs source. An example of this \texttt{.proto} file can be seen in figure \ref{fig:protofile} with one message and three fields. This method means the data structure can be changed with minimal disturbance to the original program, for example adding additional fields wouldn't even require the program to be re-compiled. Protocol buffers are also held in high regard for their speed of serialisation and compact message format, having been developed and widely used within Google\cite{1629198}. It is for these reasons that protocol buffers appear to be the ideal choice for this project.
+    \begin{figure}[H]
+      \centering
+      \begin{lstlisting}
+message Person {
+    required int32 id = 1;
+    required string name = 2;
+    optional string email = 3;
+}
+      \end{lstlisting}
+      \caption{Example \texttt{.proto} file}
+      \label{fig:protofile}
+    \end{figure}
+  \section{Hardware selection}
+
+    Acquiring a wireless AP is necessary for the development of this for this project. However, looking at the research carried out we know that it must meet certain requirement stipulated by both OpenWRT and the project brief. The brief for hardware selection was thus:
+
+    \begin{enumerate*}
+    \item Hardware must be commercially available at a price point that is roughly average.
+    \item Hardware must contain an Atheros chipset to facilitate VAPs.
+    \item Hardware must be supported by OpenWRT.
+    \item In addition to being able to run OpenWRT, the  hardware must have sufficient memory overhead to support the installation of the Click Modular Router and Protocol Buffers.
+    \end{enumerate*}
+
+    After looking into various different options, the Ubiquiti PicoStation2 was decided upon. It has an Atheros chipset, a spacious 32MB of SDRAM and 8MB of flash memory, has a price point of \euro51.31 (excluding VAT)\cite{wipipe} and fully supports OpenWRT. In fact, Ubiquiti's complete support for OpenWRT was one of the deciding factors in its choice. It is also a neat solution providing Power over Ethernet (PoE) and is fully waterproof for outdoor deployment.
+    \begin{figure}[h]
+    \centering
+    \includegraphics[width=7.62cm,height=7.62cm,keepaspectratio=true]{../images/picostation.jpg}
+    % picostation.jpg: 450x450 pixel, 300dpi, 3.81x3.81 cm, bb=0 0 108 108
+    \caption{Ubiquiti Picostation2}
+    \label{fig:picostation}
+    \end{figure}
+
+
+
+
+

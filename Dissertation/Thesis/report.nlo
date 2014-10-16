@@ -1,0 +1,61 @@
+\nomenclatureentry{aDSL@[{DSL}]\begingroup Digital Subscriber Lines\nomeqref {0}|nompageref}{i}
+\nomenclatureentry{aDSM@[{DSM}]\begingroup Dynamic Spectrum Management\nomeqref {0}|nompageref}{i}
+\nomenclatureentry{aGPU@[{GPU}]\begingroup Graphics Processing Units\nomeqref {0}|nompageref}{i}
+\nomenclatureentry{aGPGPU@[{GPGPU}]\begingroup General Purpose computing on GPU\nomeqref {0}|nompageref}{i}
+\nomenclatureentry{aISP@[{ISP}]\begingroup Internet Service Provider\nomeqref {1.0}|nompageref}{1}
+\nomenclatureentry{aFTTx@[{FTTx}]\begingroup Fibre-to-the Home/Building/Cabinet\nomeqref {1.0}|nompageref}{1}
+\nomenclatureentry{aPOTS@[{POTS}]\begingroup Plain Old Telephone Service\nomeqref {1.0}|nompageref}{1}
+\nomenclatureentry{aADSL@[{ADSL}]\begingroup Asymmetric Digital Subscriber Lines\nomeqref {1.0}|nompageref}{1}
+\nomenclatureentry{aVDSL@[{VDSL}]\begingroup Very high bit-rate Digital Subscriber Lines\nomeqref {1.0}|nompageref}{1}
+\nomenclatureentry{aCUDA@[{CUDA}]\begingroup Compute Unified Device Architecture\nomeqref {1.0}|nompageref}{2}
+\nomenclatureentry{aSM@[{SM}]\begingroup Streaming Multiprocessor\nomeqref {1.0}|nompageref}{2}
+\nomenclatureentry{aOSB@[{OSB}]\begingroup Optimal Spectrum Balancing\nomeqref {1.0}|nompageref}{4}
+\nomenclatureentry{aMIPB@[{MIPB}]\begingroup Multi-user Incremental Power Balancing, aka Greedy\nomeqref {1.0}|nompageref}{4}
+\nomenclatureentry{aISB@[{ISB}]\begingroup Iterative Spectrum Balancing\nomeqref {1.0}|nompageref}{4}
+\nomenclatureentry{aCPU@[{CPU}]\begingroup Central Processing Unit\nomeqref {1.0}|nompageref}{4}
+\nomenclatureentry{axDSL@[{xDSL}]\begingroup Catch-all term for variety of DSL systems\nomeqref {2.0}|nompageref}{6}
+\nomenclatureentry{aOFDM@[{OFDM}]\begingroup Orthogonal Frequency-Division Multiplexing\nomeqref {2.0}|nompageref}{7}
+\nomenclatureentry{aDMT@[{DMT}]\begingroup Discrete Multi-Tone modulation\nomeqref {2.0}|nompageref}{7}
+\nomenclatureentry{aITU@[{ITU}]\begingroup International Telecommunications Union\nomeqref {2.0}|nompageref}{7}
+\nomenclatureentry{aSNR@[{SNR}]\begingroup Signal to Noise Ratio\nomeqref {2.0}|nompageref}{8}
+\nomenclatureentry{aQAM@[{QAM}]\begingroup Quadrature Amplitude Modulation\nomeqref {2.0}|nompageref}{9}
+\nomenclatureentry{aCO@[{CO}]\begingroup Central Office\nomeqref {2.1}|nompageref}{9}
+\nomenclatureentry{aLT@[{LT}]\begingroup Line Termination, at CO side\nomeqref {2.1}|nompageref}{9}
+\nomenclatureentry{aNT@[{NT}]\begingroup Network Termination, at CP side\nomeqref {2.1}|nompageref}{9}
+\nomenclatureentry{aCP@[{CP}]\begingroup Customer Premises\nomeqref {2.1}|nompageref}{9}
+\nomenclatureentry{aRF@[{RF}]\begingroup Radio Frequency\nomeqref {2.1}|nompageref}{9}
+\nomenclatureentry{aNEXT@[{NEXT}]\begingroup Near End Cross-Talk\nomeqref {2.1}|nompageref}{10}
+\nomenclatureentry{aFEXT@[{FEXT}]\begingroup Far End Cross-Talk\nomeqref {2.1}|nompageref}{10}
+\nomenclatureentry{aFDD@[{FDD}]\begingroup Frequency Division Duplexing\nomeqref {2.1}|nompageref}{10}
+\nomenclatureentry{aXT@[{XT}]\begingroup Cross-Talk\nomeqref {2.1}|nompageref}{10}
+\nomenclatureentry{aXTG@[{XTG}]\begingroup Cross Talk Gain\nomeqref {2.1}|nompageref}{10}
+\nomenclatureentry{a\(h_{ij}(k)\)@[{\(h_{ij}(k)\)}]\begingroup XTG from user \(i\) to user \(j\) on channel \(k\) \nomeqref {2.19}|nompageref}{14}
+\nomenclatureentry{a\(p_n(k)\)@[{\(p_n(k)\)}]\begingroup Power provisioned on channel \(k\) for user \(n\)\nomeqref {2.19}|nompageref}{14}
+\nomenclatureentry{a\(\sigma^2_n(k)\)@[{\(\sigma^2_n(k)\)}]\begingroup Background noise power experiences by user \(n\) on channel \(k\)\nomeqref {2.19}|nompageref}{14}
+\nomenclatureentry{a \(\Gamma\)@[{ \(\Gamma\)}]\begingroup The Shannon Gap derived from equation \eqref{eq:GAMMAsum}\nomeqref {2.19}|nompageref}{14}
+\nomenclatureentry{aPSD@[{PSD}]\begingroup Power Spectral Density\nomeqref {2.26}|nompageref}{16}
+\nomenclatureentry{aSMC@[{SMC}]\begingroup Spectrum Maintenance Centre\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aCPE@[{CPE}]\begingroup Customer Premises Equipment\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aACS@[{ACS}]\begingroup Auto-Configuration Server\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aDSLAM@[{DSLAM}]\begingroup DSL Access Multiplexer\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aEMS@[{EMS}]\begingroup Element Management System\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aIWF@[{IWF}]\begingroup Iterative Water-Filling\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aRA@[{RA}]\begingroup Rate Adaptive water filling\nomeqref {2.26}|nompageref}{17}
+\nomenclatureentry{aFM@[{FM}]\begingroup Fixed-Margin water filling\nomeqref {2.26}|nompageref}{18}
+\nomenclatureentry{aLC@[{LC}]\begingroup Levin-Campello Algorithm\nomeqref {2.28}|nompageref}{18}
+\nomenclatureentry{aSSM@[{SSM}]\begingroup Static Spectrum Management\nomeqref {2.28}|nompageref}{18}
+\nomenclatureentry{a\(\Delta p(k)\)@[{\(\Delta p(k)\)}]\begingroup Single-bit addition power\nomeqref {2.28}|nompageref}{18}
+\nomenclatureentry{a\(L_k\)@[{\(L_k\)}]\begingroup The Lagrangian sum of a bitloaded channel\nomeqref {2.30}|nompageref}{20}
+\nomenclatureentry{aVDMT@[{VDMT}]\begingroup Vectored DMT\nomeqref {2.31}|nompageref}{23}
+\nomenclatureentry{aPU@[{PU}]\begingroup Processing Unit\nomeqref {2.31}|nompageref}{24}
+\nomenclatureentry{aSP@[{SP}]\begingroup Streaming Processor\nomeqref {2.31}|nompageref}{24}
+\nomenclatureentry{aSISD@[{SISD}]\begingroup Single Instruction, Single Data Stream\nomeqref {2.31}|nompageref}{26}
+\nomenclatureentry{aSIMD@[{SIMD}]\begingroup Single Instruction, Multiple Data Stream\nomeqref {2.31}|nompageref}{26}
+\nomenclatureentry{aMISD@[{MISD}]\begingroup Multiple Instruction, Single Data Stream\nomeqref {2.31}|nompageref}{26}
+\nomenclatureentry{aMIMD@[{MIMD}]\begingroup Multiple Instruction, Multiple Data Stream\nomeqref {2.31}|nompageref}{26}
+\nomenclatureentry{aSPMD@[{SPMD}]\begingroup Single Program Multiple Data Stream\nomeqref {2.31}|nompageref}{26}
+\nomenclatureentry{aMPI@[{MPI}]\begingroup Message Passing Interface\nomeqref {2.31}|nompageref}{27}
+\nomenclatureentry{aSIMT@[{SIMT}]\begingroup Single Instruction Multiple Thread Stream\nomeqref {2.31}|nompageref}{27}
+\nomenclatureentry{a\(\alpha\)@[{\(\alpha\)}]\begingroup Fraction of an application that cannot be parallelised\nomeqref {2.31}|nompageref}{28}
+\nomenclatureentry{aAPI@[{API}]\begingroup Application Programming Interface\nomeqref {2.33}|nompageref}{29}
+\nomenclatureentry{aPyCUDA@[{PyCUDA}]\begingroup CUDA wrapper for the Python programming language\nomeqref {3.0}|nompageref}{41}

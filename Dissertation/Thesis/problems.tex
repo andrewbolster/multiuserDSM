@@ -1,0 +1,12 @@
+\chapter{Problems encountered}
+
+Throughout this project a number of problems have been encountered and ultimately overcome. The biggest challenges are highlighted below. 
+
+\section{Click OpenWRT Makefile}
+
+As mentioned in section \ref{sec:openwrt}, OpenWRT is compiled from a set of makefiles for different packages. There was however no Click makefile for OpenWRT. The OpenWRT website provides good documentation and there have been some attempts make on various forums, but nothing that worked when attempted. Dr. Alastair McKinley provided much assistance with this problem and a working Makefile was eventually produced. This is the file can be seen as listing \ref{app:makefile} in the appendix. 
+
+
+\section{Endian Click Issues}
+
+When the click script finally installed and run on the AP, the output to the screen, where it should have output the mac/rssi/etc values, was not outputting correctly and the program would fail after a number of seconds. The output to the screen when running on the AP was not what was intended, i.e. seemingly random strings, however when the exact same script was run on the click install on the laptop it worked as expected. Eventually with the help of Dr. Alastair McKinley, this problem was traced back to an endian issue in the 'RadiotapDecap' element. The Ubiquiti Picostation runs on a MIPS architecture which, while bi-endian in nature, is big-endian in the Picostation. This is the opposite of the Intel Pentium M processor in the laptop on which the script was developed. The issue was resolved reasonably easily and was submitted as a bug fix to the click tree\cite{AM}.

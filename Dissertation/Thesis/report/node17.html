@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Multi-User Greedy Spectrum Balancing</TITLE>
+<META NAME="description" CONTENT="Multi-User Greedy Spectrum Balancing">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node18.html">
+<LINK REL="previous" HREF="node16.html">
+<LINK REL="up" HREF="node14.html">
+<LINK REL="next" HREF="node18.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html486"
+  HREF="node18.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html482"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html476"
+  HREF="node16.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html484"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html487"
+  HREF="node18.html">Multi-User Incremental Power Balancing</A>
+<B> Up:</B> <A NAME="tex2html483"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html477"
+  HREF="node16.html">Iterative Spectrum Balancing</A>
+ &nbsp; <B>  <A NAME="tex2html485"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00315300000000000000">
+Multi-User Greedy Spectrum Balancing</A>
+</H3><SMALL CLASS="SMALL">
+It has been shown that while the LC algorithm is optimal in the case of a single line, the straightforward multi-user expansion of this (IWF) is decidedly sub-optimal. Cioffi, Sonalkar, and Lee, in <A
+ HREF="node65.html#JL05">J.&nbsp;Lee (2005)</A> presented a heuristic extension to the Levin-Campello Algorithm, termed Multi-User Greedy Spectrum Balancing. 
+The heuristic applied was, instead of in IWF where each line is individually optimised, the bundle is viewed as a whole, and bits are iteratively assigned to both the line and channel with the minimum cost of addition.
+This cost of bit-incrementing, which for IWF was simply <!-- MATH
+ $\Delta p_m(k)$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="56" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img96.png"
+ ALT="$ \Delta p_m(k)$"></SPAN> where <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img97.png"
+ ALT="$ m$"></SPAN> was the line being balanced, and <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img61.png"
+ ALT="$ k$"></SPAN> was the channel on the line with the lowest additional power requirement; additionally includes the sum of <!-- MATH
+ $\Delta p_n(k)$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="53" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
+ SRC="img98.png"
+ ALT="$ \Delta p_n(k)$"></SPAN> on all other lines required to accommodate the additional cross-talk generated on the incremented line&nbsp;(<A HREF="#eq:GreedyCost">2.31</A>).
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:GreedyCost"></A><!-- MATH
+ \begin{equation}
+C(m,k)=\sum\limits_{n=1}^N\left(\underset{p_n(k)}{b(k)+1} - \underset{p_n(k)}{b(k)}\right)
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="295" HEIGHT="62" ALIGN="MIDDLE" BORDER="0"
+ SRC="img99.png"
+ ALT="$\displaystyle C(m,k)=\sum\limits_{n=1}^N\left(\underset{p_n(k)}{b(k)+1} - \underset{p_n(k)}{b(k)}\right)$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">31</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html486"
+  HREF="node18.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html482"
+  HREF="node14.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html476"
+  HREF="node16.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html484"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html487"
+  HREF="node18.html">Multi-User Incremental Power Balancing</A>
+<B> Up:</B> <A NAME="tex2html483"
+  HREF="node14.html">DSM Level 2</A>
+<B> Previous:</B> <A NAME="tex2html477"
+  HREF="node16.html">Iterative Spectrum Balancing</A>
+ &nbsp; <B>  <A NAME="tex2html485"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

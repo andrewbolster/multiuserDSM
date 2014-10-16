@@ -1,0 +1,64 @@
+\BOOKMARK [1][-]{chapter*.3}{List of Acronyms}{}
+\BOOKMARK [0][-]{chapter*.4}{Introduction}{}
+\BOOKMARK [1][-]{figure.caption.5}{Project Specification}{chapter*.4}
+\BOOKMARK [1][-]{figure.caption.5}{Overview and Objectives}{chapter*.4}
+\BOOKMARK [0][-]{figure.caption.5}{Research \046 Background}{}
+\BOOKMARK [1][-]{section*.6}{DSL}{figure.caption.5}
+\BOOKMARK [2][-]{section*.6}{DSL Modulation and Signal Transmission}{figure.caption.5}
+\BOOKMARK [2][-]{figure.caption.8}{DSL System Architecture}{figure.caption.5}
+\BOOKMARK [3][-]{figure.caption.9}{DSL System Modelling}{figure.caption.8}
+\BOOKMARK [3][-]{figure.caption.14}{Crosstalk Modelling}{figure.caption.8}
+\BOOKMARK [2][-]{figure.caption.17}{Dynamic Spectrum Management Introduction}{figure.caption.5}
+\BOOKMARK [2][-]{figure.caption.20}{DSM Level 0/1}{figure.caption.5}
+\BOOKMARK [3][-]{figure.caption.40}{Iterative Water Filling}{figure.caption.20}
+\BOOKMARK [2][-]{figure.caption.44}{DSM Level 2}{figure.caption.5}
+\BOOKMARK [3][-]{section*.45}{Optimal Spectrum Balancing}{figure.caption.44}
+\BOOKMARK [3][-]{figure.caption.49}{Iterative Spectrum Balancing}{figure.caption.44}
+\BOOKMARK [3][-]{figure.caption.50}{Multi-User Greedy Spectrum Balancing}{figure.caption.44}
+\BOOKMARK [3][-]{figure.caption.50}{Multi-User Incremental Power Balancing}{figure.caption.44}
+\BOOKMARK [2][-]{figure.caption.52}{DSM Level 3}{figure.caption.5}
+\BOOKMARK [1][-]{figure.caption.52}{Parallel Computing}{figure.caption.5}
+\BOOKMARK [2][-]{figure.caption.62}{Forms Of Parallelism, aka, Flynn's Taxonomy}{figure.caption.52}
+\BOOKMARK [3][-]{figure.caption.68}{Pipe-lining}{figure.caption.62}
+\BOOKMARK [3][-]{figure.caption.76}{Single Program Multiple Data}{figure.caption.62}
+\BOOKMARK [2][-]{figure.caption.76}{Principles of Parallel Programming}{figure.caption.52}
+\BOOKMARK [3][-]{section*.79}{Gustafson and Amdahl's laws}{figure.caption.76}
+\BOOKMARK [2][-]{figure.caption.81}{General Purpose computing on Graphics Processing Units}{figure.caption.52}
+\BOOKMARK [2][-]{figure.caption.85}{CUDA Execution architecture}{figure.caption.52}
+\BOOKMARK [2][-]{figure.caption.100}{CUDA Memory architecture}{figure.caption.52}
+\BOOKMARK [1][-]{figure.caption.110}{Opportunities for Parallel Decomposition of DSM Algorithms}{figure.caption.5}
+\BOOKMARK [2][-]{section*.111}{Parallel OSB}{figure.caption.110}
+\BOOKMARK [2][-]{section*.111}{Parallel ISB}{figure.caption.110}
+\BOOKMARK [2][-]{section*.111}{Parallel MIPB}{figure.caption.110}
+\BOOKMARK [0][-]{section*.111}{Development and Solution}{}
+\BOOKMARK [1][-]{section*.116}{Solution Development Task list}{section*.111}
+\BOOKMARK [1][-]{section*.116}{Simulation Framework Architecture}{section*.111}
+\BOOKMARK [1][-]{figure.caption.119}{CPU-bound Algorithm Development and Verification}{section*.111}
+\BOOKMARK [1][-]{figure.caption.129}{GPU-bound Algorithm Development}{section*.111}
+\BOOKMARK [2][-]{section*.130}{Retrospective analysis of CPU bound applications}{figure.caption.129}
+\BOOKMARK [3][-]{figure.caption.131}{Conclusions}{figure.caption.129}
+\BOOKMARK [2][-]{figure.caption.131}{OSB: Avenues of parallelisation and problem decomposition schemes}{figure.caption.129}
+\BOOKMARK [2][-]{figure.caption.131}{Greedy: Avenues of parallelisation and problem decomposition schemes}{figure.caption.129}
+\BOOKMARK [3][-]{section*.138}{ISB: Avenues of parallelisation and problem decomposition schemes}{figure.caption.131}
+\BOOKMARK [3][-]{section*.138}{Development of generalised GPU workload sharing model}{figure.caption.131}
+\BOOKMARK [3][-]{figure.caption.142}{Development of generalised multi-device function queue}{figure.caption.131}
+\BOOKMARK [1][-]{figure.caption.142}{GPU Solutions and Verification}{section*.111}
+\BOOKMARK [2][-]{section*.148}{OSB GPU}{figure.caption.142}
+\BOOKMARK [3][-]{section*.148}{Verification}{figure.caption.142}
+\BOOKMARK [2][-]{figure.caption.150}{ISB GPU}{figure.caption.142}
+\BOOKMARK [3][-]{section*.153}{Verification}{figure.caption.150}
+\BOOKMARK [2][-]{figure.caption.154}{MIPB GPU}{figure.caption.142}
+\BOOKMARK [0][-]{figure.caption.154}{Results and Performance Analysis}{}
+\BOOKMARK [1][-]{section*.155}{Introduction}{figure.caption.154}
+\BOOKMARK [1][-]{section*.155}{OSB GPU Performance and Scalability}{figure.caption.154}
+\BOOKMARK [2][-]{section*.156}{Runtime vs Bundle Size vs Device Count}{section*.155}
+\BOOKMARK [2][-]{figure.caption.158}{Relative Speed-up}{section*.155}
+\BOOKMARK [1][-]{figure.caption.159}{ISB GPU Performance and Scalability}{figure.caption.154}
+\BOOKMARK [2][-]{section*.161}{Runtime vs Bundle Size vs Device Count}{figure.caption.159}
+\BOOKMARK [2][-]{figure.caption.163}{Relative Speed-up}{figure.caption.159}
+\BOOKMARK [0][-]{figure.caption.164}{Evaluation and Conclusion}{}
+\BOOKMARK [1][-]{section*.165}{Comments on DSM}{figure.caption.164}
+\BOOKMARK [1][-]{section*.165}{Comments on GPGPU}{figure.caption.164}
+\BOOKMARK [1][-]{section*.165}{Comments on Personal Project}{figure.caption.164}
+\BOOKMARK [1][-]{section*.165}{General Conclusion}{figure.caption.164}
+\BOOKMARK [1][-]{section*.165}{Future Work}{figure.caption.164}

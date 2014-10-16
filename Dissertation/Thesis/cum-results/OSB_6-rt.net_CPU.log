@@ -1,0 +1,10 @@
+2011-05-12 12:15:37,416:INFO    multiuserdsm 46 Starting Up... logging to OSB_6-rt.net_CPU.log
+2011-05-12 12:15:37,418:INFO    bundle 67 Reading fresh Network File networks/6-rt.net
+2011-05-12 12:15:37,419:INFO    bundle 89 Successfully read 6 lines from networks/6-rt.net
+2011-05-12 12:15:37,419:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 12:15:38,031:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 12:15:38,036:INFO    bundle 176 Total:1344,%Yes:1.000000%
+2011-05-12 12:15:38,220:INFO    algorithm 48 Starting Spectrum Balancing using OSB
+2011-05-12 12:15:38,220:INFO    osb 70 Bisection
+2011-05-12 12:15:38,220:INFO    osb 82 Beginning Bisection
+2011-05-12 12:15:38,221:INFO    osb 98 Beginning l-range hunt;line:0

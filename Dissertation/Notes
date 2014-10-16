@@ -1,0 +1,13 @@
+**********************************
+**Notes on DSL Spectum Balancing**
+**********************************
+
+11/6/2010
+?)Comparison of Dual Decompisition to Exhaustive search; I do not understand the advantage or the difference
+?UPDATE?)Makes more sense now, the DD search searches 1-dimensionally in weight segments, where as the exhaustive search must search 2D
+*)The algorithm used in IVc does not lend itself to more than one dimension or paralellism (along w). Additionally, The looping constructs within the Optimise_lambda functions do not appear to be easily unrollable. This will make implementation comparison difficult. 
+$IDEA$)Investigate widths of searches and if they are GPU tractable using (near) original exhaustive algorithm. I.e do something like this; 
+	myresult=optimalityof(threadID.x,threadID.y);
+	if (shared highest < my result)
+		shared highest := myresult;
+?)What is PBO? (power back off)

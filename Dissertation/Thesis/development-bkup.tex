@@ -1,0 +1,267 @@
+\chapter{Developing the solution}
+
+With the solution guideline mapped out from section \ref{sec:solution} we have a clear vision of what needs to be developed in order to meet the specification of this project. Among the required tasks will be:
+
+\begin{itemize}
+\item Develop access point monitoring script
+    \begin{itemize*}
+    \item Install and configure MadWiFi drivers
+    \item Develop a packet monitor tool using the Click Modular Router, which parses relevant data from the surrounding 802.11 wireless area and reports it to a server.
+    \item Implement an efficient messaging system to relay information to a server.
+    \end{itemize*}
+\item Build and configure an OpenWRT based router which will run the developed monitoring script.
+\item Create a server to analyse the data received and determine if an attack is in progress.
+\end{itemize}
+
+Some of these tasks are dependant on others; for example it would not be wise to develop the server before we know what data is to arrive to it, how often it does so and in what format it arrives - questions which can only be assuredly answered after the AP monitor tool has been developed. For this reason development will take place in the manner that conflicts the least with each tasks dependencies - starting with the development of the packet monitor tool, porting that to OpenWRT and then developing the server.
+
+The development of the AP monitoring script will take place on a Intel\textsuperscript{\textregistered} Pentium\textsuperscript{\textregistered} M 2GHz laptop running the Ubuntu 9.10 operating system. A Linux based operating system was required by the Click Modular Router and the MadWiFi drivers, but is also an ideal environment for developing software, having a huge repository of free tools easily available.
+
+\section{Developing the AP monitoring script}
+
+    \subsection{Configuring MadWiFi drivers}
+
+        As mentioned in \ref{sec:madwifi}, MadWiFi drivers have been chosen due to their ability to create virtual access points or VAPs. The latest MadWifi builds are located in a subversion repository\cite{MadSVN}, which is a revision control system developers can use to maintain current and historical versions of files like source code. Once the latest version (revision 4100) is pulled down via the \texttt{svn} command, it is configured and installed on the laptop. Next, the driver module has to be loaded into the Linux kernel in order for the OS\nomenclature{OS}{Operating System} to be able to 'talk' to the hardware through MadWiFi. This is achieved by the \texttt{modprobe ath\_pci} command. Finally we must create a VAP and, as a packet monitor tool is being developed, it needs to be in monitor mode. To do this we issue the following command:
+	\label{sec:madwifi-conf}
+        \begin{center}
+        \texttt{wlanconfig ath0 create wlandev wifi0 wlanmode monitor}
+        \end{center}
+        At this stage the VAP with interface \texttt{ath0} has been created in monitor mode using the MadWiFi drivers, and the environment is set to begin the development of the Click packet capture tool.
+
+        %\paragraph{Additional notes on the MadWiFi drivers}
+        %To enable MadWiFi's monitor mode to capture Radiotap headers \texttt{echo '803' > /proc/sys/net/ath0/dev\_type}
+        %Ensure \texttt{ifconfig ath0 up} after creating the VAP
+
+    \subsection{Developing the packet capture tool in Click}
+
+        As outlined in section \ref{sec:click}, the Click Modular Router is a software based modular router, where individual routing 'elements' such as the ARPQuerier and CheckTCPHeader are connected together in a 'flow', as illustrated in \ref{fig:click-file}. To develop a packet capture tool it will be necessary to develop a new one of these 'elements'.
+
+        The first thing to be done was to get an up-to-date version of the click source code. This was pulled from the click 'git' repository, a similar revision control system to subversion. It was then required to configure the click installation. Click has a number of configure options for different development scenarios, and we need to add additional flags to the configure process; namely \texttt{--enable-local} to enable locally created elements to be included in the click installation, and \texttt{--enable-wifi} to enable control of wireless devices. Once configured Click was made and installed using the \texttt{make} command.
+
+        \subsubsection{Requirements of the element} \label{sec:click-requirements}
+            The click element is ultimately required to collect all the necessary information to determine if an attack is taking place, as identified in \ref{sec:attack-indicators}. Thus it must:
+
+            \begin{itemize*}
+             \item Analyze each packet and parse the following information:
+              \begin{itemize*}
+               \item RSSI (Received Strength Signal Index)
+               \item MAC address
+               \item Beacon Rate
+              \end{itemize*}
+             \item Create a log of average per station statistics
+             \item Encapsulate the log information in a clearly defined structure for parsing on the server
+            \end{itemize*}
+
+            \begin{figure}[!ht]
+             \centering
+             \includegraphics[width=10cm,keepaspectratio=true]{../images/click-script.pdf}
+             % click-script.pdf: 555x495 pixel, 72dpi, 19.58x17.46 cm, bb=0 0 555 495
+             \caption{Flowchart detailing requirements of click element}
+             \label{fig:click-flow-chart}
+            \end{figure}
+
+            Figure \ref{fig:click-flow-chart} shows the basic logic behind what is required from the AP. As mentioned before, the idea of a distributed system is to move the heavy processing away from the remote clients into a centralised server. For this reason the AP is only collecting data and packaging it for easy parsing at the server end.
+            \label{sec:discuss-minimal-tx}
+
+	\subsubsection{The Click file}
+	    Click works by executing a 'flow' of elements arranged in a \texttt{<filename>.click} configuration file, an example of which was seen in figure \ref{fig:click-file}. In order to create a wireless IDS tool in Click we must create our own \texttt{.click} file. This is a relatively simple file into which the Click element we need to create will fit. The click file use is shown in figure \ref{fig:monitor-click-file}. 
+
+	    \begin{figure}[!ht]
+	      \centering
+	      \lstinputlisting{../files/monitor-click-file.click}
+	      \caption{Click configuration file}
+	      \label{fig:monitor-click-file}
+	    \end{figure}
+
+	    \begin{figure}[!ht]
+	    \centering
+	    \includegraphics[width=6cm,keepaspectratio=true]{../images/monitor-clicky-file.pdf}
+	    % monitor-clicky-file.: 174x242 pixel, 72dpi, 6.14x8.54 cm, bb=0 0 174 242
+	    \caption{Visual representation of click flow}
+	    \label{fig:monitor-clicky-file}
+	    \end{figure}
+
+	    This file incorporates a total of four elements: FromDevice, RadiotapDecap, Socket and our created element. 
+	    \begin{description}
+	     \item[FromDevice] The FromDevice element, as discussed in section \ref{sec:click}, simply interfaces with the hardware device passed to it (ath0 in this case) and pushes any packet it receives on this device to RadiotapDecap.
+	     \item[RadiotapDecap] This \texttt{RadiotapDecap()} element extracts the radiotap header information (\ref{app:radiotap}) from the packet to a global variable 'WIFI\_EXTRA\_ANNO'. This provides an easy method of accessing data like the RSSI value at a later stage, information that is essential for the operation of our wireless monitor. It then pushes the packet to the next element. 
+	     \item[Our Element] This is the position that our element will assume in the click file. As can be seen in figure \ref{fig:monitor-clicky-file}, the previous element RadiotapDecap has an 'agnostic' output port. Note that the \texttt{Socket()} element, located directly after our element also has an agnostic input port. As described in section \ref{sec:click-ports} agnostic ports mean they can be connected to either a push or a pull input, and thus we are free to use push, pull or agnostic ports in the construction of our element.
+	     \item[Socket] The socket element handles the transport of packets over various different types of sockets. It takes a number of arguments including the type of socket to be created (i.e. TCP, UDP), the I.P. address to connect to, and the port number to bind. This element simplifies the difficult task of socket programming in C++ into an easy to use element. It should be noted that, like every other element within click, the \texttt{Socket()} element excepts to recieve a packet, and thus we must create one within our element which contains the information we wish the server to recieve.   
+ 	    \end{description}
+
+	    Now that the click configuration file has been created, it is possible to see what data our element will be receiving, how data should be exported from it and in what manner the element ports should operate. With this information we can go about creating a Click wireless monitoring element.
+
+        \subsubsection{Structure of a Click element}
+            A Click element is essentially a C++ source (.cc) and header (.hh) file, with a few alterations to make it identifiable as an element. These alterations are shown in figures \ref{fig:click-structure-header} and \ref{fig:click-structure-source}.
+
+	     \begin{figure}[!ht]
+              \centering
+              \begin{lstlisting}[numbers=left, numberstyle=\scriptsize, numbersep=8pt]
+#ifndef CLICK_SAMPLEELEMENT_HH
+#define CLICK_SAMPLEELEMENT_HH
+#include <click/element.hh>
+CLICK_DECLS
+class SampleElement : public Element { public: (*@\label{line:class}@*)
+SampleElement() { }
+(*@$\sim$@*)SampleElement() { }
+    const char *class_name() const { return "SampleElement"; }
+};
+CLICK_ENDDECLS
+#endif
+	      \end{lstlisting}
+              \caption{Click element header file structure}
+              \label{fig:click-structure-header}
+            \end{figure}
+
+            \begin{figure}[!ht]
+              \centering
+              \begin{lstlisting}[numbers=left, numberstyle=\scriptsize, numbersep=8pt]
+#include <click/config.h> (*@\label{line:config}@*)
+#include "sampleElement.hh"
+CLICK_DECLS (*@\label{line:decls}@*)
+// Standard C++ code would go in here 
+CLICK_ENDDECLS (*@\label{line:enddecls}@*)
+EXPORT_ELEMENT(SampleElement)(*@\label{line:export}@*)
+	    \end{lstlisting}
+              \caption{Click element source file structure}
+              \label{fig:click-structure-source}
+            \end{figure}
+
+            Among the most obvious differences from standard C++ source/header file is the requirement for the C++ class to be defined in the header file (figure \ref{fig:click-structure-header}, line \ref{line:class}), and the fact that all Click declarations need to be enclosed within CLICK\_DECLS and CLICK\_ENDDECLS (figure \ref{fig:click-structure-source}, line \ref{line:decls} and \ref{line:enddecls}). These CLICK\_DECLS and CLICK\_ENDDECLS macros will expand into \texttt{namespace Click \begin{small}\{ and \}\end{small}}, thus isolating all Click code under a unique name and eliminating possible conflicts with other applications. Also note that the first thing the source file must do is to include the \texttt{<click/config.h>} file (figure \ref{fig:click-structure-source}, line \ref{line:config}). Finally, \texttt{EXPORT\_ELEMENT(SampleElement)} exports the element with the name SampleElement for inclusion in Click files (figure \ref{fig:click-structure-source}, line \ref{line:export}). Without this line the file is ignored by Click's compilation process.
+
+        \subsubsection{A simple Click element}
+
+            While the eventual solution will require a rather complex click element, initially a simple element will be developed upon which additional functionality can be later built. Figure \ref{fig:click-simple-source} shows this 'simple' element. Its task is to print the MAC address and RSSI from every packet that it processes. A step by step breakdown of the elements operation is shown below.
+
+            \begin{enumerate}
+            \item The element is configured to have one input and one output port (by \texttt{port\_count()}), act as a push element (by \texttt{processing()}) and have class name Simple (by \texttt{class\_name()})
+            \item The packet enters the source code at the \texttt{Simple::push()} function.
+            \item The \texttt{click\_wifi} data in the packets data, as illustrated in figure \ref{fig:click_wifi}, is identified locally as variable \texttt{w}. Here we can see that we have access to the information within the MAC header, as previously illustrated in \ref{fig:802.11-frames}.\begin{figure}[H]
+              \centering
+              \lstinputlisting{../files/click_wifi.h}
+              \caption{\texttt{click\_wifi} struct}
+              \label{fig:click_wifi}
+            \end{figure}
+            \item The \texttt{click\_wifi\_extra} data within WIFI\_EXTRA\_ANNO, as extracted by the RadiotapDecap element is identified in the script as \texttt{ceh}. From figure \ref{fig:click_wifi_extra} it can be seen that we now have access to a number of new data fields within this struct, including the RSSI.
+            \begin{figure}[H]
+              \centering
+              \lstinputlisting{../files/click_wifi_extra.h}
+              \caption{\texttt{click\_wifi\_extra} struct}
+              \label{fig:click_wifi_extra}
+            \end{figure}
+            \item An ethernet address is then constructed from \texttt{w->i\_addr3} (the MAC) and called \texttt{mac}.
+            \item The mac and rssi are printed to screen for every packet that arrives.
+            \end{enumerate}
+
+            Now that we know how to access the data we need inside the packet, we can move on to adapting the element to suit our requirements better.
+
+            \begin{figure}[H]
+              \centering
+              \lstinputlisting{../files/simple.hh}
+              \caption{Simple Click packet capture header file}
+              \label{fig:click-simple-header}
+              \lstinputlisting{../files/simple.cc}
+              \caption{Simple Click packet capture source file}
+              \label{fig:click-simple-source}
+            \end{figure}
+
+        \subsubsection{The 'dIDS' element}
+	\texttt{Information about the click element goes here. ~5 pages? Maybe less}
+        %todo: eval
+    
+    \subsection{Data Transfer Method}
+      As 
+
+% 	The method of transferring data from the AP to the server for analysis is critical to the success of this project. There are a number of constraints and requirements necessitated by both the hardware used and the capabilities of the network that the data is being 'distributed' over that could have an adverse effect on how the system operates. It is thus important to chose an optimal data transfer method for use with this project. The requirements of the data transfer method are listed below.
+% 
+% 	\begin{description}
+% 	\item[Introduce minimal CPU overhead] As per the Click element requirements (section \ref{sec:click-requirements}), the CPU usage incurred by the data transfer method must be kept to a minimum due to the constraints of working on an embedded device with limited processor speed.
+% 	\item[Keep network load low] It is necessary to keep the load on the network to a minimum as it will affect the scalability of the server (i.e. how many APs can be connected to the server at one time), as well as the throughput on the APs WLAN.
+% 	\item[Keep message latency minimum] This is required so that the analysis of the data transferred on the server can work at as close to 'real time' as possible. The latency is caluclated as the time take to encode, transmit and decode the message. After all, there is little to gain from identifying an attack after it has taken place.
+% 	\end{description}
+% 
+%         In order to actually transfer the data collected in our Click element to the server, the data must be 'serialised', i.e. it must be 'wrapped up' into a sequence of bits so it can be easily and efficiently transmitted. There are many different methods for doing this, and they are divided under two main headings: human-readable and machine-readable serialisation.
+% 
+%         \begin{description}
+%           \item[Human Readable Serialisation] Under this method the actual data transmitted is in a form that can be understood by humans upon inspection. Popular examples of this method are XML and JSON.
+%           \item[Machine Readable Serialisation] This method involves transmitting data in its natural binary form. This is unintelligible by human inspection, but provides for faster serialisation and a smaller message size.
+%         \end{description}
+% 
+% 	For the purpose of this project there is no necessity for a human readable method, and on further investigation it was discovered that binary serialisation is ideal for this project. It is quicker and less CPU intensive to serialise as the data is naturally in binary format already and it ensures a small file size as it does not need to add any additional 'tags' to identify the data. With this realisation it was time to set about creating a serialised message.
+%  
+%         \subsubsection{Custom messaging system}
+% 
+% 	\subsubsection{Google Protocol Buffers}
+% 
+% 	% add protobufs vs. json: http://code.google.com/p/thrift-protobuf-compare/wiki/Benchmarking
+% 	While the 
+
+
+\section{Building the OpenWRT image}
+    In order to meet the specifications for this project it is necessary that the wireless monitor tool created above is implemented on a linux-based 802.11 access point. As seen in section \ref{sec:openwrt}, OpenWRT is the ideal choice for a linux based OS for our access point. Installing OpenWRT however is not a straightforward task; it requires the compilation and building of the entire OpenWRT distribution, including any of our extra packages, specifically for the target machines processor architecture and hardware type. Additionally the entire OS must fit within the 8MB flash memory size of the Picostation AP. The standard or 'vanilla' versions are available for download\cite{wrt-dl} as pre-built images directly from the website, however Click and google protocol buffers are not included in the standard release. For these, the OpenWRT buildroot must be implemented.
+
+    \subsection{The OpenWRT Buildroot}
+	OpenWRT buildroot is essentially a collection of Makefiles that, when given information about the target devices architecture, chipsets, etc; download, configure and compile a minimal linux/busybox distribution specifically for that device. The OpenWRT buildroot source comes preloaded with all the Makefiles necessary for the creation of a fully functional and highly customisable AP. It does not however, come with the Makefiles for building Click or Protocol Buffers on the device. Neither in fact are these Makefiles available in a tried and tested form online. Therefore, if the wireless monitor script is to be integrated into an OpenWRT system, OpenWRT specific Makefiles for these packages will need to be created. 
+
+	To create a custom userlevel package, we must create two files \texttt{Makefile} and \texttt{Config.in}, and place them in the a subdirectory of the \texttt{openwrt\textbackslash packages} directory, named the same as the package. The Makefile, as discussed above, contains the information requried to download, configure and compile the package source. The \texttt{Config.in} file is required to give the package a name and a description to easily identify it when selecting packages to build. The \texttt{Config.in} file used for the Click package can been seen in figure \ref{fig:config.in}.
+
+	\begin{figure}[ht]    
+	  \lstinputlisting{../files/Config.in}
+	  \caption{Click OpenWRT Config.in code}
+	  \label{fig:config.in}
+	\end{figure}
+
+	The Makefile for Click was a slightly more complicated piece of code. The process is illustrated in figure \ref{fig:makefile-process}. Essentially, what we needed to do was to set a number of variables, such as PKG\_SOURCE\_URL (the URL to the package source), and tell it what commands to execute.
+	
+	\begin{figure}[ht]
+	  \centering
+	  \includegraphics[width=10cm, keepaspectratio=true]{../images/makefile-process.eps}
+	  % makefile-process.eps: 437x150 pixel, 300dpi, 3.70x1.27 cm, bb=0 0 437 150
+	  \caption{Makefile process}
+	  \label{fig:makefile-process}
+	\end{figure}
+
+	However the process of building Click and protocol buffers was not a simple case of compilation as would be done on a computer. The compiled source code for the click package alone is approximately 500\% greater than the capacity of the APs flash memory. In order to reduce the memory footprint of the these two additional packages, a number of steps have been taken. In the Click package we are utilising the \texttt{click-mkmindriver}, a tool which when passed a click configuration file, only compiles and builds the elements required within that file. This creates a driver of approximately 2.3MB which, while still large for an embedded installation, can be safely copied to the OpenWRT image for installation on the Picostations 8MB of flash memory. In addition to this driver, the click configuration file is copied for execution on the AP.
+	
+	The protocol buffers \texttt{Config.in} and OpenWRT \texttt{Makefile} were created in much the same way as for Click, and can be seen in appendicies \ref{app:protomake} and \ref{app:protoconf}. Modifications had to be made to the protocol buffers own Makefile file before it was compiled as it was attemping to 'test' the success of the build in an invalid manner. It was performing a unit test on the code compiled for MIPS and little-endian architectures by executing it on a big-endian Intel laptop. A patch which removed the unit testing, seen in appendix \ref{app:openwrt-proto.patch}, was applied and the code was manually verified later on the access point. Problems also arose in linking the Click package with the protocol buffers libraries that it requires in the buildroot. Click was unable to dynamically link to the protocol buffers libraries for use on the OpenWRT AP, so they were statically linked at compile time (i.e. the contents of the profocol buffers library \texttt{libprotobuf.a} were copied into the click driver\ref{fig:sharedlibs}). While the overall memory usage of this method was roughly similar to sharing the libraries dynamically, the use of static linking limits the use of the protocol buffer library exclusively to the click driver. 
+
+	\begin{figure}[ht]
+	  \centering
+	  \includegraphics[width=6cm,keepaspectratio=true]{../images/shared-libraries.png}
+	  % shared-libraries.gif: 341x265 pixel, 72dpi, 12.03x9.35 cm, bb=0 0 341 265
+	  \caption{Static and dynamically shared libraries\cite{MTJ}}
+	  \label{fig:sharedlibs}
+	 \end{figure}
+
+	In a final attempt to save memory, a number of non-essential packages such as the web based admin console on OpenWRT were removed from the list of packages to include in the build. With these issues resolved, the OpenWRT buildroot was compiled and built successfully, with the \texttt{openwrt\textbackslash bin} directory becoming populated with various firmware images for different hardware types\ref{fig:openwrt-images}. The image most appropriate (\texttt{openwrt-atheros-ubnt2-pico2-squashfs.bin} in this case) is then transferred via TFTP \nomenclature{TFTP}{Trivial File Transfer Protocol} to the Picostation's SDRAM and, upon succesful transfer completetion, is automatically installed to the flash memory.
+	
+	\begin{figure}[ht]
+	\centering
+	\includegraphics[width=320px, keepaspectratio=1]{../images/openwrt-images.eps}
+	% openwrt-images.eps: 785x765 pixel, 300dpi, 6.65x6.48 cm, bb=
+	\caption{Variety of OpenWRT firmware images created}
+	\label{fig:openwrt-images}
+	\end{figure}
+
+    \subsection{Configuring the AP}
+	After the few minutes it takes for the Picostation to 'flash' the new image, it is possible to connect to the AP via the TELNET or SSH network protocols. Upon successful connection, verification that the AP is now running the linux based OpenWRT firmware is achieved with the display of the welcome screen, as shown in figure \ref{fig:openwrt-welcome}.
+
+	\begin{figure}[ht]
+	  \centering
+	  \includegraphics[width=10cm, keepaspectratio=true]{../images/openwrt-welcome.pdf}
+	  % makefile-process.eps: 437x150 pixel, 300dpi, 3.70x1.27 cm, bb=0 0 437 150
+	  \caption{OpenWRT welcome screen}
+	  \label{fig:openwrt-welcome}
+	\end{figure}
+
+	As mentioned in the introduction to this section, OpenWRT is a highly configurable AP firmware. It comes with a standard configuration for the LAN and WAN however, which needs to be adapted to the needs of the project. This involves editing the \texttt{/etc/config/network} and \texttt{/etc/config/wireless} configuration files ... . The modified files can be seen in appendicies \ref{app:openwrt-network} and \ref{app:openwrt-wireless}. A route also needed to be added  In addition a VAP needs to be created to act as the monitoring interface, and this is achieved as it was in section \ref{sec:madwifi-conf}.
+    
+	At this stage it is important to verify that our monitoring tool works on this embedded environment. While it is not possible to test the true distributed operation of the tool without a server set up to recieve the information, the Click elements debug commands have been retained to print the relevant data to the console, in order to prove the tool works. When the element was executed, the Click configuration file appeared to work, i.e. it was capturing packets and passing them to the monitonring element, which was printing information to the console, and then passing the packet on; however the information that was being printed to screen was not what was expected, and the program would recieve a segmentation error after a number of seconds and quit. Where the Click element had printed MAC addresses, RSSI values and beacons correctly while in the laptop development environment, it was now printing seemingly random strings. To add to the peculiarity of the situation, the header information strings from the element were being output correctly. Eventually, with the help of Dr. Alastair McKinley, this problem was traced back to an endian issue in the 'RadiotapDecap' element. As mentioned before, the Ubiquiti Picostation runs on a MIPS architecture which, while bi-endian in nature, is big-endian in the Picostation. This is the opposite of the Intel Pentium M processor in the laptop on which the script was developed. Once discovered, the issue was resolved reasonably easily and was submitted as a bug fix to the Click project\cite{AM}.
+
+	\bigskip
+	\noindent With the monitoring tool now working as expected it is time to move on to developing the server to complete our distributed system.
+
+  \section{Creating the Analysis Server}
+
+
+ 

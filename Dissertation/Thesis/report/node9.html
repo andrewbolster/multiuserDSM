@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>DSL System Modelling</TITLE>
+<META NAME="description" CONTENT="DSL System Modelling">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node10.html">
+<LINK REL="previous" HREF="node8.html">
+<LINK REL="up" HREF="node8.html">
+<LINK REL="next" HREF="node10.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html389"
+  HREF="node10.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html385"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html379"
+  HREF="node8.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html387"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html390"
+  HREF="node10.html">Crosstalk Modelling</A>
+<B> Up:</B> <A NAME="tex2html386"
+  HREF="node8.html">DSL System Architecture</A>
+<B> Previous:</B> <A NAME="tex2html380"
+  HREF="node8.html">DSL System Architecture</A>
+ &nbsp; <B>  <A NAME="tex2html388"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00312100000000000000">
+DSL System Modelling</A>
+</H3><SMALL CLASS="SMALL">
+Modelling a DSL system, instead of opting for 'real-world' values, allows experimentation and observation of channel behaviours that may not be immediately clear from end-point experimentation <A NAME="tex2html4"
+  HREF="footnode.html#foot359"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">2</SPAN></SUP></A></SMALL>
+<P>
+<SMALL CLASS="SMALL">Simulation in this case involves the generation of a cross-talk gain (XTGXTGCross Talk Gain) matrix for an <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN>-line network for each of its <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img7.png"
+ ALT="$ K$"></SPAN> operating channels. This XTG matrix will then be used by the management algorithms to assess the 'cost' or indeed viability of a particular bit-load on a particular line on a particular channel.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As such it is important to understand the electromagnetic transmission characteristics of twisted pair phone lines. This area is largely concerned with the generation of per-line-per-channel transfer functions for interacting sections within a bundle. It is shown in <A
+ HREF="node65.html#TS99">Thomas&nbsp;Starr (1999)</A> that for standard (Category 3) lines, the following RLCG characterisation is stable up to the 30MHz area, at which point this 'simplified' characterisation veers away from real-world performance due to high-frequency envelope shearing. Category 5 lines are stable with this kind of characterisation up to around 150MHz. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">RLCG Characterisation is derived from the per-unit-length two-port model shown in figure&nbsp;<A HREF="#fig:rclg">3</A>, which can be viewed as a infinitesimally small section of a segment of transmission line. The RCLG parameters represent Resistance, Inductance, Capacitance and Conductance per unit length of line. The direct gain channel models used in this report are based on the long line approximations taken from <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>, which in turn were taken from <A
+ HREF="node65.html#TS99">Thomas&nbsp;Starr (1999)</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:rclg"></A><A NAME="368"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 3:</STRONG>
+RCLG Characterisation of a two port linear network</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="293" HEIGHT="165" ALIGN="BOTTOM" BORDER="0"
+ SRC="./rclg.png"
+ ALT="Image rclg"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">This assumption is that (for a long DSL line) the input line impedance <SPAN CLASS="MATH"><IMG
+ WIDTH="18" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img8.png"
+ ALT="$ V_1$"></SPAN> matches the characteristic impedance <SPAN CLASS="MATH"><IMG
+ WIDTH="18" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img9.png"
+ ALT="$ V_2$"></SPAN>. Given that assumption as well as;
+</SMALL>
+<UL>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img10.png"
+ ALT="$ d$"></SPAN> :line length
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="$ Z$"></SPAN> :Impedance per unit length:<SPAN CLASS="MATH"><IMG
+ WIDTH="36" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img12.png"
+ ALT="$ R \cdot L$"></SPAN>
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="14" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img13.png"
+ ALT="$ Y$"></SPAN> :Admittance per unit length: <SPAN CLASS="MATH"><IMG
+ WIDTH="38" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img14.png"
+ ALT="$ G \cdot C$"></SPAN>
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="17" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img15.png"
+ ALT="$ Z_l$"></SPAN> :load impedance
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="19" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.png"
+ ALT="$ Z_s$"></SPAN> :source impedance
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="20" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img17.png"
+ ALT="$ Z_0$"></SPAN> :characteristic impedance:<!-- MATH
+ $\sqrt{\frac{Z}{Y}}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="32" HEIGHT="44" ALIGN="MIDDLE" BORDER="0"
+ SRC="img18.png"
+ ALT="$ \sqrt{\frac{Z}{Y}}$"></SPAN>
+</LI>
+<LI><SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="18" ALIGN="MIDDLE" BORDER="0"
+ SRC="img19.png"
+ ALT="$ \gamma$"></SPAN> :propagation constant:<!-- MATH
+ $\sqrt{Z \cdot Y}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="51" HEIGHT="34" ALIGN="MIDDLE" BORDER="0"
+ SRC="img20.png"
+ ALT="$ \sqrt{Z \cdot Y}$"></SPAN>
+</LI>
+</UL>
+<P>
+<SMALL CLASS="SMALL">The transfer function for a given DSL line is;
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:DSLTransferFunc"></A><!-- MATH
+ \begin{equation}
+H=\frac{Z_0 \cdot \text{sech}(\gamma d)}{Z_s \cdot [\frac{Z_0}{Z_1} +\text{tanh}(\gamma d)]+Z_0 \cdot[1+\frac{Z_0}{Z_1} \cdot \text{tanh}(\gamma d)]}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="358" HEIGHT="50" ALIGN="MIDDLE" BORDER="0"
+ SRC="img21.png"
+ ALT="$\displaystyle H=\frac{Z_0 \cdot \text{sech}(\gamma d)}{Z_s \cdot [\frac{Z_0}{Z_...
+...text{tanh}(\gamma d)]+Z_0 \cdot[1+\frac{Z_0}{Z_1} \cdot \text{tanh}(\gamma d)]}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">2</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">To ensure that this modelled transfer function is smooth with respect to frequency <A NAME="tex2html6"
+  HREF="footnode.html#foot386"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">3</SPAN></SUP></A>, the RLCG values are parametrised thus;
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:R"></A><!-- MATH
+ \begin{equation}
+R(f) = \frac{1}{\frac{1}{\sqrt[4]{r^4_{0c}+a_c\cdot f^2}} + \frac{1}{\sqrt[4]{r^4_{0s}+a_s\cdot f^2}}}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="233" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
+ SRC="img22.png"
+ ALT="$\displaystyle R(f) = \frac{1}{\frac{1}{\sqrt[4]{r^4_{0c}+a_c\cdot f^2}} + \frac{1}{\sqrt[4]{r^4_{0s}+a_s\cdot f^2}}}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">3</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="18" ALIGN="MIDDLE" BORDER="0"
+ SRC="img23.png"
+ ALT="$ r_{0x}$"></SPAN> is the DC resistance of copper (c) and steel (s) and <SPAN CLASS="MATH"><IMG
+ WIDTH="18" HEIGHT="18" ALIGN="MIDDLE" BORDER="0"
+ SRC="img24.png"
+ ALT="$ a_x$"></SPAN> are skin effect related constants
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:L"></A><!-- MATH
+ \begin{equation}
+L(f) = \frac{l_0+l_{\infty}(\frac{f}{f_m})^b}{1+(\frac{f}{f_b})^b}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="148" HEIGHT="62" ALIGN="MIDDLE" BORDER="0"
+ SRC="img25.png"
+ ALT="$\displaystyle L(f) = \frac{l_0+l_{\infty}(\frac{f}{f_m})^b}{1+(\frac{f}{f_b})^b}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">4</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where <SPAN CLASS="MATH"><IMG
+ WIDTH="14" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img26.png"
+ ALT="$ l_x$"></SPAN> are low (0) and high (<SPAN CLASS="MATH"><IMG
+ WIDTH="17" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img27.png"
+ ALT="$ \infty$"></SPAN>) frequency inductance and<SPAN CLASS="MATH"><IMG
+ WIDTH="8" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img28.png"
+ ALT="$ b$"></SPAN> and <SPAN CLASS="MATH"><IMG
+ WIDTH="21" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
+ SRC="img29.png"
+ ALT="$ f_m$"></SPAN> define the transition from low to high frequencies.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:C"></A><!-- MATH
+ \begin{equation}
+C(f)= c_{\infty} + c_0 \cdot f^{-c_e}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="155" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
+ SRC="img30.png"
+ ALT="$\displaystyle C(f)= c_{\infty} + c_0 \cdot f^{-c_e}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">5</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where <SPAN CLASS="MATH"><IMG
+ WIDTH="21" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img31.png"
+ ALT="$ C_x$"></SPAN> represent contact (<SPAN CLASS="MATH"><IMG
+ WIDTH="17" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img27.png"
+ ALT="$ \infty$"></SPAN>) and other (<SPAN CLASS="MATH"><IMG
+ WIDTH="24" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img32.png"
+ ALT="$ 0,e$"></SPAN>) capacitances, chosen from measurements.
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="fig:G"></A><!-- MATH
+ \begin{equation}
+G(f)=g_0\cdot f^{+g_e}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="116" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+ SRC="img33.png"
+ ALT="$\displaystyle G(f)=g_0\cdot f^{+g_e}$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">6</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">Where <SPAN CLASS="MATH"><IMG
+ WIDTH="22" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img34.png"
+ ALT="$ G_x$"></SPAN> represent (<SPAN CLASS="MATH"><IMG
+ WIDTH="24" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img32.png"
+ ALT="$ 0,e$"></SPAN>) conductances, chosen from measurements.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Within this project, as in <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>, AWG 24 line parameters were used, shown in table&nbsp;<A HREF="#tab:AWG24Tbl">4</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="tab:AWG24Tbl"></A><A NAME="424"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 4:</STRONG>
+ETSI Parameters used for AWG24 coaxial lines</CAPTION>
+<TR><TD><IMG
+ WIDTH="381" HEIGHT="57" BORDER="0"
+ SRC="img35.png"
+ ALT="\begin{figure}\centering
+\begin{tabular}{\vert c\vert c\vert c\vert c\vert}\hli...
+...ne
+\(g_0 = 234.874 fS\)/km&amp;\(g_e=1.38\)&amp;&amp;\\ \hline
+\end{tabular}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">Using these parameters, figure&nbsp;<A HREF="#fig:XTG_Example">5</A> shows the gain-curve for a variety of lengths of AWG24 cabling produced from equation&nbsp;(<A HREF="#eq:DSLTransferFunc">2.2</A>)
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:XTG_Example"></A><A NAME="431"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 5:</STRONG>
+Gain versus channel model for a range of transmission lengths</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="542" HEIGHT="322" ALIGN="BOTTOM" BORDER="0"
+ SRC="./awg24lengths.png"
+ ALT="Image awg24lengths"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html389"
+  HREF="node10.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html385"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html379"
+  HREF="node8.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html387"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html390"
+  HREF="node10.html">Crosstalk Modelling</A>
+<B> Up:</B> <A NAME="tex2html386"
+  HREF="node8.html">DSL System Architecture</A>
+<B> Previous:</B> <A NAME="tex2html380"
+  HREF="node8.html">DSL System Architecture</A>
+ &nbsp; <B>  <A NAME="tex2html388"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

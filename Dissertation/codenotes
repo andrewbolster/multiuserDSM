@@ -1,0 +1,49 @@
+
+load_network(algo,network) < Scenarios.c
+	read_network(network)
+	calc_channel_matrix(bundle)
+	check_normalised_xtalk_gains()
+	set_background_noise(noise)
+	set_alien_xtalk_model(NONE?)
+	for(line in bundle)
+		single_qos(9.95)
+		if(down) power_budget=0.111
+		else 0.02818
+		no_fext_b_total=no_fext_ra(id,power_budget,waterfill_level,active_channels)
+	algo(bundle)
+
+calculate_snr() < snr.c
+	for(line in bundle)
+		check_line_sanity(line)<snr.c
+		line.(p_total=b_total=rate[8])=0
+		for(k in channels)
+			noise
+				= calc_fext_noise(line,k,channel_matrix) 
+				+ alien_xtalk(line,k)
+				+ dmbhz_to_watts(line.noise)
+			line.cnr[k] 
+				= line.gain[k]/noise
+			line.snr[k]
+				= dbmhz_to_watts(line.psd[k])
+				* line.cnr[k]
+			gamma_m[k]
+				= 10log10(line.snr[k]/(2^line.b[k]-1)
+				- gamma[line.service[k]]
+			if(line.b[k] != 0)
+				line.symerr[k]
+					= symerr(line.snr[k],line.b[k]) < symerr.c
+			else
+				line.symerr[k] = 0
+
+			line.p_total += dbmhz_to_watts(line.psd[k])
+			line.b_total += line.b[k]
+			line.rate[line.service[k]] += line.b[k]
+			if (line.is_frac()
+				line._rate[line.service[k]] += line._b[k]
+			
+line.am_load_ra(p_budget)
+	line.am_load(p_budget, mode="RA")
+
+line.am_load(p_budget, mode)
+	
+	

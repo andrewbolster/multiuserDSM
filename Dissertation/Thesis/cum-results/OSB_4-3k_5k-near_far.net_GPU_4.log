@@ -1,0 +1,42 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_4.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+INFO    gpu 435 Spawning 4 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:896,%Yes:1.610491%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+ERROR   gpu 806 Failed on Solve,Tone 13: XTG:[  5.91495109e-06   2.70906067e-16   2.51977787e-12   3.52118409e-16
+   1.57918486e-09   4.20280487e-04   1.55551059e-08   1.36072880e-11
+   2.81554361e-12   1.97782896e-15   5.91495109e-06   8.53706781e-16
+   2.38540965e-09   1.10532903e-11   3.49713962e-09   4.20280487e-04]
+GridDim:(198, 1),BlockDim:(256, 1, 1)
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_4.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+INFO    gpu 395 Asked:4,Have:4,Got:4
+INFO    gpu 436 Spawning 4 GPU Threads
+INFO    gpu 617 Initialising CUDA device
+INFO    gpu 617 Initialising CUDA device
+INFO    gpu 617 Initialising CUDA device
+INFO    gpu 617 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:896,%Yes:1.610491%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+ERROR   gpu 807 Failed on Solve,Tone 12: XTG:[  6.47196210e-06   2.94031694e-16   2.63720745e-12   3.82176648e-16
+   1.53841466e-09   4.43621405e-04   1.51535159e-08   1.37385871e-11
+   2.94675680e-12   2.14666436e-15   6.47196210e-06   9.26582613e-16
+   2.32382494e-09   1.11599455e-11   3.40685311e-09   4.43621405e-04]
+GridDim:(198, 1),BlockDim:(256, 1, 1), retrying once
+ERROR   gpu 812 Failed again on Solve,Tone 12: XTG:[  6.47196210e-06   2.94031694e-16   2.63720745e-12   3.82176648e-16
+   1.53841466e-09   4.43621405e-04   1.51535159e-08   1.37385871e-11
+   2.94675680e-12   2.14666436e-15   6.47196210e-06   9.26582613e-16
+   2.32382494e-09   1.11599455e-11   3.40685311e-09   4.43621405e-04]
+GridDim:(198, 1),BlockDim:(256, 1, 1)

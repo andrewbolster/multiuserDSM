@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage[english]{babel}
+
+\renewcommand{\topfraction}{1}
+\begin{document}
+
+\section{Using Footnotes in Figure Captions - Demo}
+
+In general, foonotes should not be used in TeX Boxes, especially
+figures or even figure captions. For figures themselves, the
+{\tt minipage} environment provides an option. If you insist on
+having a footnote in the caption of a figure, this hack might help.
+But beware! You must find the right location for the \verb?\footnotetext?
+command in your document, and there is a certain chance that such a place
+will not exist. This document is a perfect example. The figure and its footnote
+are on different pages. I consider myself a very tenacious \LaTeX hacker,
+and I gave up.
+
+\hfill -- Ulrich Germann
+\begin{itemize}
+\item use \verb?\addtocounter{footnote}{1}\footnotetext{? {\itshape [the footnote]}\verb?}?
+      in the regular, running text to create a footnote.
+\item put a label in that footnote
+\item references that label in superscript wherever you want
+\end{itemize}
+
+\begin{figure}[b]
+\small
+\begin{minipage}{5.5in}
+The footnote for this sentence will show up within the 
+figure\footnote{See? Right here!}.
+
+\begin{verbatim}
+\begin{document} 
+[Main text was here.] 
+\begin{figure} 
+\small 
+\begin{minipage}{5.5in] 
+The footnote for this sentence will show up within the 
+figure\\footnote{See? Right here!}. 
+{\tt ... [this is where the code was]} 
+\end{minipage} 
+\caption{How to put a footnote in a figure caption$^{\ref{FootNoteForFigureCaption}}$.} 
+\label{sample code}
+\end{figure}
+
+\addtocounter{footnote}{1}\footnotetext{This is the footnote for the
+figure caption\label{FootNoteForFigureCaption}}
+
+\noindent
+Sample code is given in figure \ref{sample code}.
+
+\noindent
+Here is a nother footnote \footnote{My second footnote.}.
+\end{document}
+\end{verbatim} 
+
+\end{minipage}
+\caption{How to put a footnote in a figure caption$^{\ref{FootNoteForFigureCaption}}$.}
+\label{sample code}
+\end{figure}
+
+\addtocounter{footnote}{1}\footnotetext{This is the footnote for the
+figure caption\label{FootNoteForFigureCaption}}
+
+\noindent
+Sample code is given in figure \ref{sample code}.
+
+\noindent
+Here is a nother footnote \footnote{My second footnote.}.
+
+\end{document}
+

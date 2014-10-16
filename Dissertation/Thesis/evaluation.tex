@@ -1,0 +1,27 @@
+\chapter{Evaluation and Conclusion}
+\section{Comments on DSM}
+ DSL is here to stay, and efficient DSM algorithms must be a part of the evolution of The Internet. Even with the growth of FTTx networks, DSL still plays a major role in last-mile local-loops, especially is sub-urban and rural areas. Considering the complete lack of past-experience in this area, the development of this project was both entertaining, and frustrating; many of the stated DSM algorithms and existing scholarly works do not discuss or even hint at the implementation pitfalls they include, and as such I relied heavily on the consult of Dr McKinley, whose experience in this area is beyond reproach.
+
+ In terms of project development, I feel that I got too involved in the generation of the bundle-simulation framework and CPU-bound algorithms, and this put the over all project significantly out of stated schedule, and as such had less time to focus on the problem of GPU optimisation and testing.
+
+\section{Comments on GPGPU}
+The results of development and implementation of GPU-bound algorithms show that CPU behaviour can be closely modelled GPU, with impressive performance improvements, but that those improvements come at a price of accuracy, and are far from linear in terms of performance efficiency; as demonstrated in the precipitous falls in efficiency in ISB and OSB when using higher numbers of devices.
+
+The decision to develop a paired PyCUDA-CUDA implementation was a double-edged sword; architectural development was very fast and stayed close to the original structure of the algorithms, but the combination of PyCUDA's own deficiencies in terms of CUDA debugging, poor internal support for Python as a language in general, my own lack of significant experience in either Python or CUDA, and CUDA's inherent abstract complexity, made the entire project harder than it truly needed to be.
+
+What is clear from going through this process is that GPU development, and CUDA especially, is technically challenging. The process of development was hampered at many points; QUB is not currently suitably equipped for advanced development in this area, with several service outages delaying development by weeks, but even over the course of this project, this state of affairs is improving; new systems are coming online for HPC use; more students are taking advantage of modules such as CSC4005/CSC7007, which includes a CUDA programming component; more and more research clusters are turning to GPU for performance to get over the 'hump' in Moore's Law.
+
+The plummeting price of GPGPUs, and the increasing competition between different manufacturers means that as computation units, GPU's represent a great opportunity for serious investigation into how to leverage their inherent power in a way that is accessible to more than just a select group of CUDA gurus.
+
+In short, I believe that GPGPU has the potential to become a major component of the software engineering domain, but in order for widespread growth, additional programming tools and education are badly required, and as such remains a technical and academic curiosity outside of advanced computation centres. This project has demonstrated that amazing performance gains can be obtained, but at a severe cost of development complexity. 
+
+\section{Comments on Personal Project}
+My own timekeeping has been terrible, and I have run consistently behind schedule for most of the year. This is due to a combination of biting off more than I could chew (both project, curricular, and extra-curricular), my own technical optimism, and several hardware and software issues throughout the year that seriously slowed down progress, but I believe that the project satisfies the specification laid out for it.
+
+\section{General Conclusion}
+The aims of this project were to assess the viability of applying GPGPU programming principals to the field of DSM. It is my belief that GPGPU, and its associated massively parallel programming methodologies, present a technically phenomenal shift in the way such algorithms can be developed and implemented. The performance gains found in even these 'naive' implementations of OSB and ISB show that the use of GPU processing systems in this complex field has a great deal of potential, but there are many many 'kinks' to work out.
+
+\section{Future Work}
+With the implementations as they stand, there is much potential for improvements leveraging some of the recently released functionality of CUDA, such as concurrent kernel execution, discrete multi-device operation, and many memory management improvements. To fully leverage these improvements, it would be advisable to re-implement the simulation framework into C++, now that the technical problems are fleshed out, to allow for more finely tuned control of CUDA. Another potential avenue for investigation would be a similar project in OpenCL, which would allow the use of configurable computing devices such as FPGA's and the Tilera architecture, both of which could significantly improve the speed of PSD vector solutions.
+
+The most disappointing aspect of this project was the failure to parallelise MIPB. Dr McKinley agrees that, after investigation, there is no rational parallelisation of MIPB as it stands, but future work in this area could include a collaboration with Dr McKinley to investigate algorithmic modifications that could be made, generating a brand new algorithm, based on MIPB, that could be suitable parallelised.

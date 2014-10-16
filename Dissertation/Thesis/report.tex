@@ -1,0 +1,241 @@
+\documentclass[a4paper,10pt]{book}
+%\documentclass[a5paper,12pt]{book}
+\renewcommand{\baselinestretch}{1.25}
+
+%% Packages
+\usepackage{afterpage}
+\usepackage{algorithmic}
+\usepackage{amssymb,amsmath}
+\usepackage{appendix}
+\usepackage{booktabs}
+\usepackage[margin=20pt,justification=centerlast]{caption}
+\usepackage{chngcntr}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{fixltx2e}
+\usepackage{flafter}
+\usepackage{float}
+\usepackage{fullpage}
+\usepackage{layout}
+\usepackage{listings, textcomp}%code listings package
+\usepackage{mdwlist}%squeeze lists
+\usepackage{multirow}
+\usepackage{nag}
+\usepackage{natbib}
+\usepackage{nomencl}%nomenclature package
+\usepackage{numprint}
+\usepackage[official]{eurosym}%eurosymbol
+%\usepackage{palatino}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{hyperref}
+\usepackage[scaled]{helvet}
+\usepackage{subfig}% enable subfigures.
+\usepackage{tabularx}
+\usepackage{ucs}
+\usepackage{ulem}
+\usepackage[utf8x]{inputenc}
+\usepackage{varioref}
+\usepackage{comment}
+%set font to helvetica, them default font to sans serif
+%\usepackage[T1]{fontenc}
+\renewcommand{\rmdefault}{cmss}
+\renewcommand{\ttdefault}{pcr}
+
+
+
+
+\makenomenclature
+%\usepackage{makeidx}
+\makeindex
+
+
+
+%number subsubheadings
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+% Bibliography Style
+\bibliographystyle{unsrtnat}
+\bibpunct{[}{]}{;}{s}{,}{,}
+
+% change to count by figures, not by chapter
+\counterwithout{figure}{chapter}
+
+% set line break after \paragraph
+\makeatletter
+\renewcommand\paragraph{%
+   \@startsection{paragraph}{4}{0mm}%
+      {-\baselineskip}%
+      {.5\baselineskip}%
+      {\normalfont\normalsize\bfseries}}
+\makeatother
+
+% space after \par's
+\setlength{\parindent}{0pt}
+%\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\setlength{\parskip}{2ex}
+
+%to stop that pdf error on compilation
+\pdfminorversion=5
+
+%indent environment
+%\newenvironment{secindent}[1]%
+%{\setlength{\leftmargin}{#1}}
+%{\setlength{\leftmargin}{0cm}}
+
+
+
+
+
+\definecolor{listinggray}{rgb}{1,0.5,0}
+\definecolor{lbcolor}{RGB}{250,250,250}
+
+
+\lstloadlanguages{[ISO]C++}
+\lstset{
+	backgroundcolor=\color{lbcolor},
+	tabsize=2,
+	rulecolor=,
+	language=Python,
+        basicstyle=\ttfamily\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        escapeinside={(*@}{@*)},
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        inputencoding=utf8x,
+        showstringspaces=false,
+        identifierstyle=\ttfamily\scriptsize,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+}
+
+%fancy headers
+\pagestyle{fancy}
+\headheight 0.5in
+\setlength\voffset{-0.5in}
+\headsep 0.25in
+\rhead{Parallel Implementation of DSM\\Andrew Bolster}
+%\chead{Middle top}
+%\lhead{Andrew Bolster}
+%\rfoot{Right bottom}
+\cfoot{\thepage}
+\rfoot{}
+\lhead{\includegraphics[height=25pt, keepaspectratio=true]{../images/QUB.pdf}}
+\renewcommand{\headrulewidth}{0pt} % remove lines as well
+\renewcommand{\footrulewidth}{0pt}
+
+
+%hyper-ref packages
+\hypersetup{
+    hypertexnames=false,
+    breaklinks=true,
+    unicode=false,          	% non-Latin characters in Acrobat’s bookmarks
+    pdftoolbar=true,        	% show Acrobat’s toolbar?
+    pdfmenubar=true,        	% show Acrobat’s menu?
+    pdffitwindow=false,      	% window fit to page when opened
+    pdfstartview={Fit},    	% fits the width of the page to the window
+    pdftitle={High-Speed bit-loading algorithms for Dynamic Spectrum Management in ADSL},	% title
+    pdfauthor={Andrew Bolster},     % author
+    pdfsubject={Massively Parallel Processing of Spectrum Management Algorithms},	% subject of the document
+    pdfcreator={Andrew Bolster},   	% creator of the document
+    pdfproducer={Andrew Bolster}, 	% producer of the document
+    pdfkeywords={CUDA,Python,DSL,DSM,PyCUDA,Parallel,GPGPU}, 	% list of keywords
+    pdfnewwindow=true,      	% links in new window
+    colorlinks=true,       	% false: boxed links; true: colored links
+    linkcolor=black,          	% color of internal links
+    citecolor=black,        	% color of links to bibliography
+    filecolor=black,      	% color of file links
+    urlcolor=black           	% color of external links
+}
+
+
+
+%% Title Page
+\title{High-Speed bit-loading algorithms for Dynamic Spectrum Management in ADSL}
+\author{Andrew Bolster}
+
+%\usepackage{savetrees}
+
+\begin{document}
+\let\cleardoublepage\clearpage
+
+% start of document pages
+\maketitle
+%\includepdf{../files/reportcover.pdf}
+\frontmatter
+
+% ABSTRACT
+\chapter*{\centering \begin{normalsize}Executive Summary\end{normalsize}}
+\begin{quotation}
+  \noindent Digital Subscriber Lines (DSL\nomenclature{DSL}{Digital Subscriber Lines}) use advanced bit-loading algorithms to maximise spectral efficiency and throughput, often termed 'Dynamic Spectrum Management" (DSM\nomenclature{DSM}{Dynamic Spectrum Management}). Provider industry practise has been to use Level 1 DSM algorithms, where each line individually adjusts its power spectrum against the noise that it can sense. This is called "Waterfilling" and is not optimally efficient in terms of total bundle capacity.\\
+Recent research into more advanced, Level 2, DSM algorithms, which consider the total noise characteristics of the bundle, show near-optimal performance, at a cost of significant computational complexity, making them unuseable in a consumer context.\\
+The evolution of 'classical' fixed function rasterization pipeline Graphic Processing Units (GPU\nomenclature{GPU}{Graphics Processing Units}) into fully-programmable devices suitable for General Purpose computing on GPU (GPGPU\nomenclature{GPGPU}{General Purpose computing on GPU}) opens up these massively parallel floating point processors for practical computation, and introduces the possibility of re-implementing existing algorithms to leverage this new hardware, potentially allowing for near-optimal algorithms to be used in the field.
+\end{quotation}
+\clearpage
+
+\chapter*{\centering \begin{normalsize}Acknowledgements\end{normalsize}}
+\begin{quotation}
+\noindent Thanks and praise must go to my project supervisor, Prof. Alan Marshall, whose occasional kick's-in-the-ass stopped me from going too far down the rabbit hole. 
+Thanks also go to Dr Alister McKinley, whose PhD work this project is based on, for his expert domain knowledge, bar tab, and occasional supply runs.
+Further, I'd like to acknowledge the support and technical guidance of the StackExchange community, and Mr Olan Byrne for his aid in the layout of this document. 
+\end{quotation}
+\clearpage
+
+{\small{
+ \include{originality}
+ \clearpage}}
+{\small{
+ \tableofcontents
+}}
+
+\addcontentsline{toc}{section}{List of Acronyms}
+\renewcommand\nomname{Acronyms}
+\printnomenclature
+% \layout
+% \listoffigures
+
+% main section
+\mainmatter
+\include{introduction}
+\include{research}
+\include{solution}
+%\include{tools}
+\include{results}
+\include{evaluation}
+%\include{futureplans}
+
+%\clearpage
+%\addcontentsline{toc}{section}{Project Time line}
+%\begin{figure}
+% \caption{Project Time line}
+% \clearpage\includegraphics[angle=90, height=0.95\textheight, width=0.95\textwidth, keepaspectratio=true]{./images/Gantt.pdf}
+% \label{fig:gantt}
+%\end{figure}
+
+%\include{problems}
+
+% end of document
+\backmatter
+\renewcommand{\bibname}{References}
+\clearpage
+\bibliography{report}
+%appendix setup
+\renewcommand{\thelstlisting}{\Alph{lstlisting}}
+\appendix
+\noappendicestocpagenum
+\addappheadtotoc
+\pagestyle{fancy}
+\fancyhead[C]{APPENDIX}
+\include{appendices}
+
+\end{document}

@@ -1,0 +1,15 @@
+2011-05-17 12:21:48,186:INFO    multiuserdsm 46 Starting Up... logging to ISB_2-3k_5k-near_far_GPU_3.log
+2011-05-17 12:21:48,188:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-17 12:21:48,188:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-17 12:21:50,321:INFO    gpu 418 Asked:3,Have:4,Got:3
+2011-05-17 12:21:50,452:INFO    gpu 462 Spawning 3 GPU Threads
+2011-05-17 12:21:50,520:INFO    gpu 655 Initialising CUDA device 0:(98.69% Free)
+2011-05-17 12:21:50,599:INFO    gpu 655 Initialising CUDA device 1:(98.69% Free)
+2011-05-17 12:21:50,677:INFO    gpu 655 Initialising CUDA device 2:(98.69% Free)
+2011-05-17 12:21:50,600:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-17 12:21:50,737:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-17 12:21:50,742:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-17 12:21:50,786:INFO    algorithm 65 Starting Spectrum Balancing using ISB
+2011-05-17 12:21:50,787:INFO    isb 70 Bisection
+2011-05-17 12:21:50,787:INFO    isb 82 Beginning Bisection
+2011-05-17 12:21:50,787:INFO    isb 97 Beginning l-range hunt;line:0

@@ -1,0 +1,30 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+INFO    gpu 435 Spawning 1 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:896,%Yes:1.610491%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:1018.254mW,Rate:1251bpf
+INFO    bundle 325 Line:1,Power:966.123mW,Rate:2496bpf
+INFO    bundle 325 Line:2,Power:966.114mW,Rate:388bpf
+INFO    bundle 325 Line:3,Power:966.118mW,Rate:2489bpf
+INFO    bundle 331 Bundle Rate:6624bpf
+INFO    algorithm 84 All Done Here, took 247.463493, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_4-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/4-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 4 lines from networks/4-3k_5k-near_far.net
+INFO    gpu 395 Asked:1,Have:4,Got:1
+INFO    gpu 439 Spawning 1 GPU Threads
+INFO    gpu 620 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:896,%Yes:1.610491%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+ERROR   gpu 553 Suicide Error: Results tainted, quitting incase

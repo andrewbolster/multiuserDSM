@@ -1,0 +1,152 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+INFO    gpu 435 Spawning 1 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 100 Running self check:
+INFO    bundle 164 set([(0, 5000), (4000, 7000)])
+INFO    bundle 168 Lines are different, xtalk should not be symmetric
+INFO    bundle 178 Total:448,%Yes:1.375000%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    osb 82 Beginning Bisection
+INFO    osb 98 Beginning l-range hunt;line:0
+INFO    osb 104 Missed power budget:linepower:100.756,lastdrop:100%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:48.753,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:23.895,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:11.627,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:5.610,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:2.712,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.312,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.641,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.302,lastdrop:53%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.136,lastdrop:55%,budget:0.11
+INFO    osb 111 Satisfied power budget:linepower:0.06123,budget:0.11
+INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+INFO    osb 122 Beginning optimisation run;line:0
+INFO    osb 134 Completed optimisation run;line:0, l:640.000000
+INFO    osb 98 Beginning l-range hunt;line:1
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:100%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:0%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:0%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:0%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.270,lastdrop:10%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:3.034,lastdrop:29%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.945,lastdrop:36%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.177,lastdrop:40%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.686,lastdrop:42%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.390,lastdrop:43%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.217,lastdrop:44%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.117,lastdrop:46%,budget:0.11
+INFO    osb 111 Satisfied power budget:linepower:0.06088,budget:0.11
+INFO    osb 117 Completed l-range hunt; max:4096.000000,min:2048.000000
+INFO    osb 122 Beginning optimisation run;line:1
+INFO    osb 134 Completed optimisation run;line:1, l:2560.000000
+INFO    bundle 307 Cache Hits:0
+INFO    bundle 308 Cache Mises:0
+INFO    bundle 328 Line:0,Power:966.113mW,Rate:367bpf
+INFO    bundle 328 Line:1,Power:966.095mW,Rate:2419bpf
+INFO    bundle 334 Bundle Rate:2786bpf
+INFO    algorithm 84 All Done Here, took 9.160350, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+INFO    gpu 435 Spawning 1 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 100 Running self check:
+INFO    bundle 164 set([(0, 5000), (4000, 7000)])
+INFO    bundle 168 Lines are different, xtalk should not be symmetric
+INFO    bundle 178 Total:448,%Yes:1.375000%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    osb 82 Beginning Bisection
+INFO    osb 98 Beginning l-range hunt;line:0
+INFO    osb 104 Missed power budget:linepower:100.756,lastdrop:100%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:48.753,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:23.895,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:11.627,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:5.610,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:2.712,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.312,lastdrop:52%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.641,lastdrop:51%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.302,lastdrop:53%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.136,lastdrop:55%,budget:0.11
+INFO    osb 111 Satisfied power budget:linepower:0.06123,budget:0.11
+INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+INFO    osb 122 Beginning optimisation run;line:0
+INFO    osb 134 Completed optimisation run;line:0, l:640.000000
+INFO    osb 98 Beginning l-range hunt;line:1
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:100%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:0%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:0%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.758,lastdrop:0%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:4.270,lastdrop:10%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:3.034,lastdrop:29%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.945,lastdrop:36%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:1.177,lastdrop:40%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.686,lastdrop:42%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.390,lastdrop:43%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.217,lastdrop:44%,budget:0.11
+INFO    osb 104 Missed power budget:linepower:0.117,lastdrop:46%,budget:0.11
+INFO    osb 111 Satisfied power budget:linepower:0.06088,budget:0.11
+INFO    osb 117 Completed l-range hunt; max:4096.000000,min:2048.000000
+INFO    osb 122 Beginning optimisation run;line:1
+INFO    osb 134 Completed optimisation run;line:1, l:2560.000000
+INFO    bundle 307 Cache Hits:0
+INFO    bundle 308 Cache Mises:0
+INFO    bundle 328 Line:0,Power:966.113mW,Rate:367bpf
+INFO    bundle 328 Line:1,Power:966.095mW,Rate:2419bpf
+INFO    bundle 334 Bundle Rate:2786bpf
+INFO    algorithm 84 All Done Here, took 9.590774, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+INFO    gpu 435 Spawning 1 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:448,%Yes:1.375000%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:966.113mW,Rate:367bpf
+INFO    bundle 325 Line:1,Power:966.095mW,Rate:2419bpf
+INFO    bundle 331 Bundle Rate:2786bpf
+INFO    algorithm 84 All Done Here, took 9.094479, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+INFO    gpu 395 Asked:1,Have:4,Got:1
+INFO    gpu 436 Spawning 1 GPU Threads
+INFO    gpu 617 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:448,%Yes:1.375000%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:966.113mW,Rate:367bpf
+INFO    bundle 325 Line:1,Power:966.095mW,Rate:2419bpf
+INFO    bundle 331 Bundle Rate:2786bpf
+INFO    algorithm 84 All Done Here, took 9.154292, hit ratio of 0.0000
+INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far.net_GPU_1.log
+INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+INFO    gpu 395 Asked:1,Have:4,Got:1
+INFO    gpu 439 Spawning 1 GPU Threads
+INFO    gpu 620 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:448,%Yes:1.375000%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:966.113mW,Rate:367bpf
+INFO    bundle 325 Line:1,Power:966.095mW,Rate:2419bpf
+INFO    bundle 331 Bundle Rate:2786bpf
+INFO    algorithm 84 All Done Here, took 9.105769, hit ratio of 0.0000

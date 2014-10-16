@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Conclusions</TITLE>
+<META NAME="description" CONTENT="Conclusions">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node38.html">
+<LINK REL="up" HREF="node38.html">
+<LINK REL="next" HREF="node40.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html773"
+  HREF="node40.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html769"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html765"
+  HREF="node38.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html771"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html774"
+  HREF="node40.html">OSB: Avenues of parallelisation</A>
+<B> Up:</B> <A NAME="tex2html770"
+  HREF="node38.html">Retrospective analysis of CPU</A>
+<B> Previous:</B> <A NAME="tex2html766"
+  HREF="node38.html">Retrospective analysis of CPU</A>
+ &nbsp; <B>  <A NAME="tex2html772"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00441100000000000000">
+Conclusions</A>
+</H3><SMALL CLASS="SMALL">
+From these profiling investigations, it is clear that the largest computational bottleneck is the calculation of power spectral densities for different bit-load combinations. This is exemplified particularly in OSB and ISB; the Lagrangian calculations ('L_k') clearly take up the vast majority of computation time, and in the case of MIPB, the culprit is the recalculation of the <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img127.png"
+ ALT="$ \Delta p$"></SPAN> values per tone; again, the primary operation is calculation of PSD's. As previously discussed, OSB and ISB, from an algorithmic perspective, lend themselves to parallelisation, but the lack of on-board linear algebra library to calculate individual <SPAN CLASS="MATH"><IMG
+ WIDTH="50" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img124.png"
+ ALT="$ N\times N$"></SPAN>-system solutions is a serious problem; under-test, using the cuBLAS library to calculate <SPAN CLASS="MATH"><IMG
+ WIDTH="10" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
+ SRC="img128.png"
+ ALT="$ 4$"></SPAN>-system solutions was actually 4% slower than using the built-in Numpy linear-algebra system on the CPU side<A NAME="tex2html100"
+  HREF="footnode.html#foot2383"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">11</SPAN></SUP></A>. It is clear that for such small matrices, there is no advantage to using standard GPU libraries. And unfortunately, no alternative libraries could be found, and since the CUDA device cannot access any host data, C implementations such as GSL, LAPACK, LINPACK, or EIGEN could not be used.
+This leads to the need to create a custom, stripped down, linear system solver<A NAME="tex2html101"
+  HREF="footnode.html#foot2384"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">12</SPAN></SUP></A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Source code is availiable from https://bitbucket.org/bolster/multiuserdsm for all of the applications (and more) used within this project.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Due to the numerical instability of the systems involved, the linear solver must be able to handle arbitrary matrices, as well as being able to gracefully handle failure without bringing the whole GPU down. This led to the selection of a customised maximally pivoted LU Decomposition algorithm<A NAME="tex2html102"
+  HREF="footnode.html#foot2385"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">13</SPAN></SUP></A>, pieced together from <A
+ HREF="node65.html#WHP92">William H.&nbsp;Press (1992)</A>,<A
+ HREF="node65.html#GR10">Gerard Richter (2010)</A>, <A
+ HREF="node65.html#JDJZW03">J.E. Dennis Jr; Zhijun Wu (2003)</A> and <A
+ HREF="node65.html#GOU96">Goulub (1996)</A>, and the final solution arrived at is shown in Appendix <A HREF="#apx:cuda-linalg-solver">D</A>. This algorithm does not leverage CUDA parallelism. The reason for this is two fold; a natural parallelisation scheme for this algorithm would be for a collection of threads to collaboratively work on a single matrix, but this arrangement would not efficiently occupy the GPU's processing units until the number of lines being tested was greater than at least 8. A Secondary reason is that from the perspective of OSB, having each block calculate a single bit-permutation would greatly limit the number of permutations able to be tested simultaneously, and as such the same kernel that could optimally handle up to <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="18" ALIGN="BOTTOM" BORDER="0"
+ SRC="img129.png"
+ ALT="$ 2^{16}$"></SPAN> permutations (for example, four lines) in one execution would have to be executed eight times to compute the same result. Further, due to the conditional nature of LU Decomposition, utilising per-thread solving on locally related datasets reduces the total amount of warp divergence, increasing overall speed. Experimentally, using block-shared matrix solving was approximately 23% faster than thread-solving for single executions, but when put into a realistic cradle of input values and ranges, was 15% slower. This was largely due to the need for repeated executions, as well as the previously stated warp-divergence issues.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The profile results also show that the calculation of optimise_p is the section of the OSB and ISB algorithms most heavily in need of optimisation. To note in this section is the difference in how the ``asarray.numeric'' numpy functions within optimise_p are executed between OSB and ISB; these functions are involved in the PSD caching operation; every time a PSD value is requested, the function arguments are hashed, and a dictionary of past values is searched for that hash. This operation greatly reduces the number of linear algebra operations performed in OSB especially (attaining a cache hit ratio of over 98%, meaning that the algorithm only needs to execute 2% of the time that it is actually called)<A NAME="tex2html103"
+  HREF="footnode.html#foot2392"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">14</SPAN></SUP></A>, but does so at the expense of system memory (for a six line network, this cache easily exceeds 8GB). If the calculation of the PSD's can be sufficiently accelerated, this cache could be done away with completely, greatly reducing the total memory footprint of the system, and therefore the cost of execution.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html773"
+  HREF="node40.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html769"
+  HREF="node38.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html765"
+  HREF="node38.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html771"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html774"
+  HREF="node40.html">OSB: Avenues of parallelisation</A>
+<B> Up:</B> <A NAME="tex2html770"
+  HREF="node38.html">Retrospective analysis of CPU</A>
+<B> Previous:</B> <A NAME="tex2html766"
+  HREF="node38.html">Retrospective analysis of CPU</A>
+ &nbsp; <B>  <A NAME="tex2html772"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

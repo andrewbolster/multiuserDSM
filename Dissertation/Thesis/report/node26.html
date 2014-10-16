@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>General Purpose computing on Graphics Processing Units</TITLE>
+<META NAME="description" CONTENT="General Purpose computing on Graphics Processing Units">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node27.html">
+<LINK REL="previous" HREF="node24.html">
+<LINK REL="up" HREF="node20.html">
+<LINK REL="next" HREF="node27.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html597"
+  HREF="node27.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html593"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html587"
+  HREF="node25.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html595"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html598"
+  HREF="node27.html">CUDA Execution architecture</A>
+<B> Up:</B> <A NAME="tex2html594"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html588"
+  HREF="node25.html">Gustafson and Amdahl's laws</A>
+ &nbsp; <B>  <A NAME="tex2html596"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00323000000000000000"></A>
+<A NAME="sec:GPGPU"></A>
+<BR>
+General Purpose computing on Graphics Processing Units
+</H2><SMALL CLASS="SMALL">
+Graphics Processing Units were specialised co-processors designed for real-time image processing and generation, with a focus on the fast growing video game industry. The general architecture of GPU's was designed to perform massive numbers of floating point calculations on each video frame, simulating lighting, texturing, and collision detection events for display devices. This led to quite unique design practices in terms of memory management and execution structures. To put this in perspective, main memory access bandwidth from a High End CPU currently stands at approximately 50GB/s<A
+ HREF="node65.html#Var11">Various (2011)</A>, a third of the bandwidth of a similar-generation GPU<A
+ HREF="node65.html#NC10">Nvidia Corporation (2010)</A>. The idea being that graphics textures are being read many many times over by the collection of PUs, and so needs to be fast.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Around the late 1990's, as this type of hardware became very common on even private desktop machines, the scientific computing community began to use these devices for accelerating highly complex simulations and problems. Up until 2007, in order to accomplish this, the scientific computing problem would have to be 'rephrased' into a graphical problem, utilising a graphics API<A NAME="tex2html59"
+  HREF="footnode.html#foot1194"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">32</SPAN></SUP></A> such as DirectX or OpenGL. This meant that problems such as matrix multiplication had to be rephrased as overlays of transparent textures, as a contrived example. Taking larger more abstract computational problems and decomposing them into graphical operations was far from simple, and was a major block for many institutions with a desire to use these highly parallel devices.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In 2007, NVIDIA released a new reference architecture for its high-end graphics cards, specifically aimed at the scientific and application-acceleration communities; the Compute Unified Device Architecture (CUDA)<A
+ HREF="node65.html#NC07">NVidia Corporation (2007)</A>. CUDA was not just a new C/C++/FORTRAN API, exposing low-level execution and memory control to scientific computing, but was a complete re-write of all intermediate software layers, and included the addition of specific interface hardware, along side the standard graphics interface, dedicated for CUDA computing<A
+ HREF="node65.html#DBK10">David B.&nbsp;Kirk (2010)</A>, see Figure&nbsp;<A HREF="#fig:CUDAArch">20</A>. In 2007, one GPU chip-set supported CUDA; the G80. In 2008, The Tokyo Institute of Technology's TSUBAME supercomputer became the first GPU accelerated machine in the Top500 World Supercomputer rankings<A NAME="tex2html60"
+  HREF="footnode.html#foot1195"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">33</SPAN></SUP></A>. By 2011, over 20 different chipsets encompassing over 40 individual manufacturer cards and hundreds of after-market cards, constituting over 100 million CUDA-enabled cards<A
+ HREF="node65.html#iVE10">iVEC (2010)</A> sold across the globe.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In 2008, Apple Inc, in collaboration with NVidia, Intel, IBM and AMD released a C/C++ based framework for mixed CPU/GPU/Manycore/FPGA heterogeneous computing called OpenCL (Open Computing Language). OpenCL contains much more programming abstraction away from the hardware compared to pure-CUDA, and as such cannot be as highly optimised. Even still, NVidia rolled out agnostic device interfaces to OpenCL. The current CUDA architecture is shown in Figure&nbsp;<A HREF="#fig:CUDAArch">20</A>
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:CUDAArch"></A><A NAME="1000"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 20:</STRONG>
+Diagram showing levels of abstraction between Hardware and various APIs</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="669" HEIGHT="406" ALIGN="BOTTOM" BORDER="0"
+ SRC="./cuda_architecture.png"
+ ALT="Image cuda_architecture"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html597"
+  HREF="node27.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html593"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html587"
+  HREF="node25.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html595"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html598"
+  HREF="node27.html">CUDA Execution architecture</A>
+<B> Up:</B> <A NAME="tex2html594"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html588"
+  HREF="node25.html">Gustafson and Amdahl's laws</A>
+ &nbsp; <B>  <A NAME="tex2html596"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

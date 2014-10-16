@@ -1,0 +1,207 @@
+2011-05-12 21:17:41,802:INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far_GPU_1.log
+2011-05-12 21:17:41,821:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-12 21:17:41,822:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-12 21:17:44,020:INFO    gpu 355 Asked:1,Have:4,Got:1
+2011-05-12 21:17:44,156:INFO    gpu 399 Spawning 1 GPU Threads
+2011-05-12 21:17:44,226:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 21:17:44,289:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 21:17:44,290:INFO    gpu 584 Initialising CUDA device 0:(98.69% Free)
+2011-05-12 21:17:44,296:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-12 21:17:44,341:INFO    algorithm 48 Starting Spectrum Balancing using OSB
+2011-05-12 21:17:44,342:INFO    osb 70 Bisection
+2011-05-12 21:17:44,342:INFO    osb 82 Beginning Bisection
+2011-05-12 21:17:44,342:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-12 21:17:45,600:INFO    gpu 732 Working on 0-256 combinations of 255 for K:0, L:[ 1.  1.], Mem 98% Free
+2011-05-12 21:17:45,602:INFO    gpu 763 GPU LKmax 0,28.9835837935:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:45,932:INFO    osb 104 Missed power budget:linepower:103.573,lastdrop:100%,budget:0.11
+2011-05-12 21:17:45,934:INFO    gpu 763 GPU LKmax 0,28.9672005285:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:46,222:INFO    osb 104 Missed power budget:linepower:50.772,lastdrop:51%,budget:0.11
+2011-05-12 21:17:46,223:INFO    gpu 763 GPU LKmax 0,28.9344339983:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:46,488:INFO    osb 104 Missed power budget:linepower:24.441,lastdrop:52%,budget:0.11
+2011-05-12 21:17:46,490:INFO    gpu 763 GPU LKmax 0,28.868900938:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:46,755:INFO    osb 104 Missed power budget:linepower:11.897,lastdrop:51%,budget:0.11
+2011-05-12 21:17:46,757:INFO    gpu 763 GPU LKmax 0,28.7378348173:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:47,087:INFO    osb 104 Missed power budget:linepower:5.727,lastdrop:52%,budget:0.11
+2011-05-12 21:17:47,089:INFO    gpu 763 GPU LKmax 0,28.4757025761:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:47,354:INFO    osb 104 Missed power budget:linepower:2.777,lastdrop:52%,budget:0.11
+2011-05-12 21:17:47,356:INFO    gpu 763 GPU LKmax 0,27.9514380935:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:17:47,621:INFO    osb 104 Missed power budget:linepower:1.316,lastdrop:53%,budget:0.11
+2011-05-12 21:17:47,623:INFO    gpu 763 GPU LKmax 0,26.9553879876:[ 13.  15.]:[  8.16077499e-03   3.28136385e-05]
+2011-05-12 21:17:47,920:INFO    osb 104 Missed power budget:linepower:0.598,lastdrop:55%,budget:0.11
+2011-05-12 21:17:47,922:INFO    gpu 763 GPU LKmax 0,25.9574474447:[ 12.  15.]:[  4.07234299e-03   3.27501175e-05]
+2011-05-12 21:17:48,210:INFO    osb 104 Missed power budget:linepower:0.269,lastdrop:55%,budget:0.11
+2011-05-12 21:17:48,212:INFO    gpu 763 GPU LKmax 0,24.9586650802:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:48,477:INFO    osb 104 Missed power budget:linepower:0.121,lastdrop:55%,budget:0.11
+2011-05-12 21:17:48,480:INFO    gpu 763 GPU LKmax 0,23.9596544009:[ 10.  15.]:[  1.01593056e-03   3.27026308e-05]
+2011-05-12 21:17:48,744:INFO    osb 111 Satisfied power budget:linepower:0.05397,budget:0.11
+2011-05-12 21:17:48,744:INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+2011-05-12 21:17:48,744:INFO    osb 122 Beginning optimisation run;line:0
+2011-05-12 21:17:48,746:INFO    gpu 763 GPU LKmax 0,24.4380139794:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:49,072:INFO    gpu 763 GPU LKmax 0,24.6983395298:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:49,337:INFO    osb 134 Completed optimisation run;line:0, l:640.000000
+2011-05-12 21:17:49,337:INFO    osb 98 Beginning l-range hunt;line:1
+2011-05-12 21:17:49,339:INFO    gpu 763 GPU LKmax 0,24.6983395298:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:49,604:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:100%,budget:0.11
+2011-05-12 21:17:49,606:INFO    gpu 763 GPU LKmax 0,24.6983068114:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:49,887:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:0%,budget:0.11
+2011-05-12 21:17:49,889:INFO    gpu 763 GPU LKmax 0,24.6982413745:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:50,199:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:0%,budget:0.11
+2011-05-12 21:17:50,201:INFO    gpu 763 GPU LKmax 0,24.6981105007:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:50,466:INFO    osb 104 Missed power budget:linepower:8.539,lastdrop:10%,budget:0.11
+2011-05-12 21:17:50,468:INFO    gpu 763 GPU LKmax 0,24.6978487531:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:50,733:INFO    osb 104 Missed power budget:linepower:6.069,lastdrop:29%,budget:0.11
+2011-05-12 21:17:50,734:INFO    gpu 763 GPU LKmax 0,24.697325258:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:51,064:INFO    osb 104 Missed power budget:linepower:3.891,lastdrop:36%,budget:0.11
+2011-05-12 21:17:51,066:INFO    gpu 763 GPU LKmax 0,24.6962782678:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:51,331:INFO    osb 104 Missed power budget:linepower:2.354,lastdrop:40%,budget:0.11
+2011-05-12 21:17:51,333:INFO    gpu 763 GPU LKmax 0,24.6941842873:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:51,633:INFO    osb 104 Missed power budget:linepower:1.372,lastdrop:42%,budget:0.11
+2011-05-12 21:17:51,635:INFO    gpu 763 GPU LKmax 0,24.6899963263:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:51,933:INFO    osb 104 Missed power budget:linepower:0.779,lastdrop:43%,budget:0.11
+2011-05-12 21:17:51,935:INFO    gpu 763 GPU LKmax 0,24.6816204044:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:52,223:INFO    osb 104 Missed power budget:linepower:0.434,lastdrop:44%,budget:0.11
+2011-05-12 21:17:52,225:INFO    gpu 763 GPU LKmax 0,24.6648685605:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:52,510:INFO    osb 104 Missed power budget:linepower:0.236,lastdrop:46%,budget:0.11
+2011-05-12 21:17:52,512:INFO    gpu 763 GPU LKmax 0,24.6313648727:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:52,777:INFO    osb 104 Missed power budget:linepower:0.124,lastdrop:47%,budget:0.11
+2011-05-12 21:17:52,778:INFO    gpu 763 GPU LKmax 0,24.5729193474:[ 12.  14.]:[  2.12511315e-03   1.63594327e-05]
+2011-05-12 21:17:53,108:INFO    osb 111 Satisfied power budget:linepower:0.06135,budget:0.11
+2011-05-12 21:17:53,109:INFO    osb 117 Completed l-range hunt; max:4096.000000,min:2048.000000
+2011-05-12 21:17:53,109:INFO    osb 122 Beginning optimisation run;line:1
+2011-05-12 21:17:53,111:INFO    gpu 763 GPU LKmax 0,24.5978611849:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:53,378:INFO    gpu 763 GPU LKmax 0,24.6146130288:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:17:53,642:INFO    osb 134 Completed optimisation run;line:1, l:2560.000000
+2011-05-12 21:17:53,841:ERROR   gpu 476 Suicide Error: Results tainted, quitting incase
+2011-05-12 21:18:46,666:INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far_GPU_1.log
+2011-05-12 21:18:46,669:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-12 21:18:46,669:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-12 21:18:48,943:INFO    gpu 355 Asked:1,Have:4,Got:1
+2011-05-12 21:18:49,080:INFO    gpu 399 Spawning 1 GPU Threads
+2011-05-12 21:18:49,151:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 21:18:49,158:INFO    gpu 587 Initialising CUDA device 0:(98.69% Free)
+2011-05-12 21:18:49,213:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 21:18:49,220:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-12 21:18:49,264:INFO    algorithm 48 Starting Spectrum Balancing using OSB
+2011-05-12 21:18:49,265:INFO    osb 70 Bisection
+2011-05-12 21:18:49,265:INFO    osb 82 Beginning Bisection
+2011-05-12 21:18:49,265:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-12 21:18:49,271:INFO    gpu 766 GPU LKmax 0,28.9835837935:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:49,574:INFO    osb 104 Missed power budget:linepower:103.573,lastdrop:100%,budget:0.11
+2011-05-12 21:18:49,576:INFO    gpu 766 GPU LKmax 0,28.9672005285:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:49,879:INFO    osb 104 Missed power budget:linepower:50.772,lastdrop:51%,budget:0.11
+2011-05-12 21:18:49,880:INFO    gpu 766 GPU LKmax 0,28.9344339983:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:50,201:INFO    osb 104 Missed power budget:linepower:24.441,lastdrop:52%,budget:0.11
+2011-05-12 21:18:50,203:INFO    gpu 766 GPU LKmax 0,28.868900938:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:50,467:INFO    osb 104 Missed power budget:linepower:11.897,lastdrop:51%,budget:0.11
+2011-05-12 21:18:50,469:INFO    gpu 766 GPU LKmax 0,28.7378348173:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:50,734:INFO    osb 104 Missed power budget:linepower:5.727,lastdrop:52%,budget:0.11
+2011-05-12 21:18:50,736:INFO    gpu 766 GPU LKmax 0,28.4757025761:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:51,085:INFO    osb 104 Missed power budget:linepower:2.777,lastdrop:52%,budget:0.11
+2011-05-12 21:18:51,087:INFO    gpu 766 GPU LKmax 0,27.9514380935:[ 14.  15.]:[  1.63832651e-02   3.29413892e-05]
+2011-05-12 21:18:51,352:INFO    osb 104 Missed power budget:linepower:1.316,lastdrop:53%,budget:0.11
+2011-05-12 21:18:51,353:INFO    gpu 766 GPU LKmax 0,26.9553879876:[ 13.  15.]:[  8.16077499e-03   3.28136385e-05]
+2011-05-12 21:18:51,619:INFO    osb 104 Missed power budget:linepower:0.598,lastdrop:55%,budget:0.11
+2011-05-12 21:18:51,620:INFO    gpu 766 GPU LKmax 0,25.9574474447:[ 12.  15.]:[  4.07234299e-03   3.27501175e-05]
+2011-05-12 21:18:51,953:INFO    osb 104 Missed power budget:linepower:0.269,lastdrop:55%,budget:0.11
+2011-05-12 21:18:51,955:INFO    gpu 766 GPU LKmax 0,24.9586650802:[ 11.  15.]:[  2.03379336e-03   3.27184451e-05]
+2011-05-12 21:18:52,220:ERROR   gpu 513 Suicide Error: Results tainted, quitting incase
+2011-05-12 21:19:21,385:INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far_GPU_1.log
+2011-05-12 21:19:21,388:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-12 21:19:21,389:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-12 21:19:23,609:INFO    gpu 355 Asked:1,Have:4,Got:1
+2011-05-12 21:19:23,751:INFO    gpu 399 Spawning 1 GPU Threads
+2011-05-12 21:19:23,821:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-12 21:19:23,823:INFO    gpu 587 Initialising CUDA device 0:(98.69% Free)
+2011-05-12 21:19:23,883:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-12 21:19:23,892:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-12 21:19:23,935:INFO    algorithm 48 Starting Spectrum Balancing using OSB
+2011-05-12 21:19:23,935:INFO    osb 70 Bisection
+2011-05-12 21:19:23,936:INFO    osb 82 Beginning Bisection
+2011-05-12 21:19:23,936:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-12 21:19:24,242:INFO    osb 104 Missed power budget:linepower:103.573,lastdrop:100%,budget:0.11
+2011-05-12 21:19:24,543:INFO    osb 104 Missed power budget:linepower:50.772,lastdrop:51%,budget:0.11
+2011-05-12 21:19:24,865:INFO    osb 104 Missed power budget:linepower:24.441,lastdrop:52%,budget:0.11
+2011-05-12 21:19:25,131:INFO    osb 104 Missed power budget:linepower:11.897,lastdrop:51%,budget:0.11
+2011-05-12 21:19:25,397:INFO    osb 104 Missed power budget:linepower:5.727,lastdrop:52%,budget:0.11
+2011-05-12 21:19:25,744:INFO    osb 104 Missed power budget:linepower:2.777,lastdrop:52%,budget:0.11
+2011-05-12 21:19:26,009:INFO    osb 104 Missed power budget:linepower:1.316,lastdrop:53%,budget:0.11
+2011-05-12 21:19:26,275:INFO    osb 104 Missed power budget:linepower:0.598,lastdrop:55%,budget:0.11
+2011-05-12 21:19:26,582:INFO    osb 104 Missed power budget:linepower:0.269,lastdrop:55%,budget:0.11
+2011-05-12 21:19:26,909:INFO    osb 104 Missed power budget:linepower:0.121,lastdrop:55%,budget:0.11
+2011-05-12 21:19:27,175:INFO    osb 111 Satisfied power budget:linepower:0.05397,budget:0.11
+2011-05-12 21:19:27,175:INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+2011-05-12 21:19:27,175:INFO    osb 122 Beginning optimisation run;line:0
+2011-05-12 21:19:27,789:INFO    osb 134 Completed optimisation run;line:0, l:640.000000
+2011-05-12 21:19:27,789:INFO    osb 98 Beginning l-range hunt;line:1
+2011-05-12 21:19:28,067:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:100%,budget:0.11
+2011-05-12 21:19:28,333:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:0%,budget:0.11
+2011-05-12 21:19:28,671:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:0%,budget:0.11
+2011-05-12 21:19:28,937:INFO    osb 104 Missed power budget:linepower:8.539,lastdrop:10%,budget:0.11
+2011-05-12 21:19:29,203:INFO    osb 104 Missed power budget:linepower:6.069,lastdrop:29%,budget:0.11
+2011-05-12 21:19:29,485:INFO    osb 104 Missed power budget:linepower:3.891,lastdrop:36%,budget:0.11
+2011-05-12 21:19:29,823:INFO    osb 104 Missed power budget:linepower:2.354,lastdrop:40%,budget:0.11
+2011-05-12 21:19:30,089:INFO    osb 104 Missed power budget:linepower:1.372,lastdrop:42%,budget:0.11
+2011-05-12 21:19:30,355:INFO    osb 104 Missed power budget:linepower:0.779,lastdrop:43%,budget:0.11
+2011-05-12 21:19:30,697:INFO    osb 104 Missed power budget:linepower:0.434,lastdrop:44%,budget:0.11
+2011-05-12 21:19:30,963:INFO    osb 104 Missed power budget:linepower:0.236,lastdrop:46%,budget:0.11
+2011-05-12 21:19:31,229:INFO    osb 104 Missed power budget:linepower:0.124,lastdrop:47%,budget:0.11
+2011-05-12 21:19:31,528:INFO    osb 111 Satisfied power budget:linepower:0.06135,budget:0.11
+2011-05-12 21:19:31,528:INFO    osb 117 Completed l-range hunt; max:4096.000000,min:2048.000000
+2011-05-12 21:19:31,528:INFO    osb 122 Beginning optimisation run;line:1
+2011-05-12 21:19:32,113:INFO    osb 134 Completed optimisation run;line:1, l:2560.000000
+2011-05-12 21:19:32,310:INFO    bundle 305 Cache Hits:0
+2011-05-12 21:19:32,310:INFO    bundle 306 Cache Mises:0
+2011-05-12 21:19:32,327:INFO    bundle 325 Line:0,Power:966.106mW,Rate:358bpf
+2011-05-12 21:19:32,345:INFO    bundle 325 Line:1,Power:966.099mW,Rate:2439bpf
+2011-05-12 21:19:32,345:INFO    bundle 331 Bundle Rate:2797bpf
+2011-05-12 21:19:32,355:INFO    algorithm 84 All Done Here, took 8.410223, hit ratio of 0.0000
+2011-05-17 12:20:39,420:INFO    multiuserdsm 46 Starting Up... logging to OSB_2-3k_5k-near_far_GPU_1.log
+2011-05-17 12:20:39,449:INFO    bundle 67 Reading fresh Network File networks/2-3k_5k-near_far.net
+2011-05-17 12:20:39,450:INFO    bundle 89 Successfully read 2 lines from networks/2-3k_5k-near_far.net
+2011-05-17 12:20:41,578:INFO    gpu 418 Asked:1,Have:4,Got:1
+2011-05-17 12:20:41,709:INFO    gpu 462 Spawning 1 GPU Threads
+2011-05-17 12:20:41,777:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-17 12:20:41,840:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-17 12:20:41,777:INFO    gpu 655 Initialising CUDA device 0:(98.69% Free)
+2011-05-17 12:20:41,847:INFO    bundle 176 Total:448,%Yes:1.375000%
+2011-05-17 12:20:41,926:INFO    algorithm 65 Starting Spectrum Balancing using OSB
+2011-05-17 12:20:41,928:INFO    osb 69 Bisection
+2011-05-17 12:20:41,928:INFO    osb 82 Beginning Bisection
+2011-05-17 12:20:41,929:INFO    osb 98 Beginning l-range hunt;line:0
+2011-05-17 12:20:46,137:INFO    osb 104 Missed power budget:linepower:109.699,lastdrop:100%,budget:0.11
+2011-05-17 12:20:46,444:INFO    osb 104 Missed power budget:linepower:53.764,lastdrop:51%,budget:0.11
+2011-05-17 12:20:46,810:INFO    osb 104 Missed power budget:linepower:25.872,lastdrop:52%,budget:0.11
+2011-05-17 12:20:47,100:INFO    osb 104 Missed power budget:linepower:12.554,lastdrop:51%,budget:0.11
+2011-05-17 12:20:47,390:INFO    osb 104 Missed power budget:linepower:6.004,lastdrop:52%,budget:0.11
+2011-05-17 12:20:47,764:INFO    osb 104 Missed power budget:linepower:2.867,lastdrop:52%,budget:0.11
+2011-05-17 12:20:48,054:INFO    osb 104 Missed power budget:linepower:1.316,lastdrop:54%,budget:0.11
+2011-05-17 12:20:48,344:INFO    osb 104 Missed power budget:linepower:0.598,lastdrop:55%,budget:0.11
+2011-05-17 12:20:48,717:INFO    osb 104 Missed power budget:linepower:0.269,lastdrop:55%,budget:0.11
+2011-05-17 12:20:49,006:INFO    osb 104 Missed power budget:linepower:0.121,lastdrop:55%,budget:0.11
+2011-05-17 12:20:49,296:INFO    osb 111 Satisfied power budget:linepower:0.05397,budget:0.11
+2011-05-17 12:20:49,296:INFO    osb 117 Completed l-range hunt; max:1024.000000,min:512.000000
+2011-05-17 12:20:49,296:INFO    osb 122 Beginning optimisation run;line:0
+2011-05-17 12:20:49,953:INFO    osb 134 Completed optimisation run;line:0, l:640.000000
+2011-05-17 12:20:49,953:INFO    osb 98 Beginning l-range hunt;line:1
+2011-05-17 12:20:50,243:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:100%,budget:0.11
+2011-05-17 12:20:50,601:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:0%,budget:0.11
+2011-05-17 12:20:50,891:INFO    osb 104 Missed power budget:linepower:9.515,lastdrop:0%,budget:0.11
+2011-05-17 12:20:51,181:INFO    osb 104 Missed power budget:linepower:8.539,lastdrop:10%,budget:0.11
+2011-05-17 12:20:51,507:INFO    osb 104 Missed power budget:linepower:6.069,lastdrop:29%,budget:0.11
+2011-05-17 12:20:51,857:INFO    osb 104 Missed power budget:linepower:3.891,lastdrop:36%,budget:0.11
+2011-05-17 12:20:52,147:INFO    osb 104 Missed power budget:linepower:2.354,lastdrop:40%,budget:0.11
+2011-05-17 12:20:52,456:INFO    osb 104 Missed power budget:linepower:1.372,lastdrop:42%,budget:0.11
+2011-05-17 12:20:52,813:INFO    osb 104 Missed power budget:linepower:0.779,lastdrop:43%,budget:0.11
+2011-05-17 12:20:53,103:INFO    osb 104 Missed power budget:linepower:0.434,lastdrop:44%,budget:0.11
+2011-05-17 12:20:53,393:INFO    osb 104 Missed power budget:linepower:0.236,lastdrop:46%,budget:0.11
+2011-05-17 12:20:53,769:INFO    osb 104 Missed power budget:linepower:0.124,lastdrop:47%,budget:0.11
+2011-05-17 12:20:54,060:INFO    osb 111 Satisfied power budget:linepower:0.06135,budget:0.11
+2011-05-17 12:20:54,060:INFO    osb 117 Completed l-range hunt; max:4096.000000,min:2048.000000
+2011-05-17 12:20:54,060:INFO    osb 122 Beginning optimisation run;line:1
+2011-05-17 12:20:54,726:INFO    osb 134 Completed optimisation run;line:1, l:2560.000000
+2011-05-17 12:20:54,922:INFO    bundle 302 Cache Hits:0
+2011-05-17 12:20:54,922:INFO    bundle 303 Cache Mises:0
+2011-05-17 12:20:54,939:INFO    bundle 321 Line:0,Power:966.106mW,Rate:358bpf
+2011-05-17 12:20:54,957:INFO    bundle 321 Line:1,Power:966.099mW,Rate:2439bpf
+2011-05-17 12:20:54,957:INFO    bundle 327 Bundle Rate:2797bpf
+2011-05-17 12:20:54,967:INFO    algorithm 101 All Done Here, took 13.029689, hit ratio of 0.0000

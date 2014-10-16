@@ -1,0 +1,44 @@
+diff -r 8d7cf103baf2 bundle.py
+--- a/bundle.py	Fri Mar 18 03:12:26 2011 +0000
++++ b/bundle.py	Sat Mar 19 19:03:02 2011 +0000
+@@ -31,6 +31,8 @@
+         self.xtalk_gain = []    # XT Matrix (NB Must be FULLY instantiated before operating)
+         #Assuming that each bundle is going to be one medium
+         self.K = int(K)                # the number of DMT channels
++
++        self._psd_cache = {}
+         
+ 
+ 
+@@ -291,7 +293,16 @@
+     Generate PSD vector matrix between lines and return matrix
+     :from psd_vector.c
+     """
++    
+     def calc_psd(self,bitload,gamma,k,power):
++        key = str(bitload)+str(k)
++        try:
++            ret = self._psd_cache[key]
++            #print key + " Got from cache"
++            return ret
++        except:
++            #print key + " not in cache"
++            pass
+         #Generate Matrices (See Intro.pdf 2.23)
+         A=numpy.asmatrix(numpy.zeros((self.N,self.N)))
+         B=numpy.asmatrix(numpy.zeros(self.N))
+@@ -337,6 +348,7 @@
+             if (abs(P[i]) < 4.31e-14):
+                 P[i]=0
+         
++        self._psd_cache[key] = P
+         return P 
+ 
+ 
+@@ -395,4 +407,4 @@
+             print("")
+             for v in range(self.N):
+                 print("%e"%self.xtalk_gain[x][v][tone]), 
+-        
+\ No newline at end of file
++        

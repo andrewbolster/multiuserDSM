@@ -1,0 +1,45 @@
+No implementation found for style `afterpage'
+No implementation found for style `algorithmic'
+No implementation found for style `appendix'
+No implementation found for style `booktabs'
+No implementation found for style `caption'
+No implementation found for style `chngcntr'
+No implementation found for style `fancyhdr'
+No implementation found for style `fixltx2e'
+No implementation found for style `flafter'
+No implementation found for style `layout'
+No implementation found for style `listings'
+No implementation found for style `mdwlist'
+No implementation found for style `multirow'
+No implementation found for style `nag'
+No implementation found for style `nomencl'
+No implementation found for style `numprint'
+No implementation found for style `pdfpages'
+No implementation found for style `graphicx'
+No implementation found for style `epstopdf'
+No implementation found for style `hyperref'
+No implementation found for style `helvet'
+No implementation found for style `subfig'
+No implementation found for style `ucs'
+No implementation found for style `ulem'
+No implementation found for style `varioref'
+
+*** wrap_cmd_ not defined, cannot wrap \ 
+
+redefining command \bibname 
+
+redefining command \figurename 
+
+Substitution of arg to newlabelxx delayed.
+
+? brace missing for \
+
+redefining command \ 
+
+solution.tex is newer than solution.aux: Please rerun latex.
+
+evaluation.tex is newer than evaluation.aux: Please rerun latex.
+
+counter lstlisting not defined
+
+counter figure not defined

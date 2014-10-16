@@ -1,0 +1,265 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>CUDA Memory architecture</TITLE>
+<META NAME="description" CONTENT="CUDA Memory architecture">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node27.html">
+<LINK REL="up" HREF="node20.html">
+<LINK REL="next" HREF="node29.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html619"
+  HREF="node29.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html615"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html611"
+  HREF="node27.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html617"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html620"
+  HREF="node29.html">Opportunities for Parallel Decomposition</A>
+<B> Up:</B> <A NAME="tex2html616"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html612"
+  HREF="node27.html">CUDA Execution architecture</A>
+ &nbsp; <B>  <A NAME="tex2html618"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00325000000000000000">
+CUDA Memory architecture</A>
+</H2><SMALL CLASS="SMALL">
+Utilising the levels of parallelism demonstrated previously, one would expect massive performance improvements to be a given. This is not the case, and 'lazily parallelised' applications generally achieve only a small fraction of the potential speed of the underlying hardware, and most of the time, the limiting factor is memory latency. To understand why this is the case, it is important to investigate the CUDA memory architecture.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">CUDA devices have three major levels of memory; Thread local, Block Shared, or Grid Global. This architecture is displayed diagrammatically in Figure&nbsp;<A HREF="#fig:CUDAMemArch">26</A>, and summarised in Table&nbsp;<A HREF="#tab:CUDAMemTable">2.2</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:CUDAMemArch"></A><A NAME="1070"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 26:</STRONG>
+Diagram showing CUDA memory access architecture</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="300" HEIGHT="340" ALIGN="BOTTOM" BORDER="0"
+ SRC="./cuda_mem_arch.png"
+ ALT="Image cuda_mem_arch"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<BR><P></P>
+<DIV ALIGN="CENTER"><A NAME="tab:CUDAMemTable"></A><A NAME="1078"></A>
+<TABLE>
+<CAPTION><STRONG>Table 2.2:</STRONG>
+Table of CUDA Memories and some characteristics</CAPTION>
+<TR><TD></TD></TR>
+</TABLE>
+</DIV><P></P>
+<BR>
+<P>
+<SMALL CLASS="SMALL">In order to get data to and from the device, Global, Constant and Texture memory is read-write accessible from the host; any other memory allocation is done on a per-thread basis.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Texture memory is a particular area of constantly declared memory that is logically represented as a 2D array, and is augmented with a distributed cache of 2D localised values from last access and as such is significantly faster than Global memory. This behaviour is particularly useful for applications such as linear algebra and CFD.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Due to their scientific ubiquity, parallelisation of linear algebra systems is a heavily researched field, leading to highly customised libraries available, such as BLAS (Basic Linear Algebra Subprograms) and MKL (Math Kernel Library). cuBLAS is a CUDA library specifically optimised for most Level 1, 2, and 3 BLAS functions running on GPU, and this library and others like is is heavily used within the research community<A
+ HREF="node65.html#MF08">M&nbsp;Fatica (2008)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">This competitive optimisation in all linear algebra systems means that defined linear algebra functions are a natural benchmark for cross-comparison between parallel CPU and GPU implementations; each candidate library doing the best they can do with the hardware. And frankly, GPU wipes the floor with CPU, as in Figure&nbsp;<A HREF="#fig:BLASComp">27</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:BLASComp"></A><A NAME="1085"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 27:</STRONG>
+Image Courtesy of NVidia Corp. Showing CPU/GPU comparison of highly optimised BLAS libraries</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>    <IMG
+  WIDTH="672" HEIGHT="371" ALIGN="BOTTOM" BORDER="0"
+ SRC="./NVDA_BLAS_C1060_vs_CPU_675.png"
+ ALT="Image NVDA_BLAS_C1060_vs_CPU_675"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">In <A
+ HREF="node65.html#DBK10">David B.&nbsp;Kirk (2010)</A>, a variety of matrix multiplication kernels designed for matrices of many thousands of elements are shown with a variety of optimisations. A Naive implementation is shown, as in Figure&nbsp;<A HREF="#fig:MatMulNaive">28</A> that performs at (only) 17.2 GFLOPS<A NAME="tex2html77"
+  HREF="footnode.html#foot1090"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">40</SPAN></SUP></A>. With a few modifications, a similar kernel (Figure&nbsp;<A HREF="#fig:MatMulShare">30</A>) can perform at 47.5 GFLOPS; nearly 280% faster. The major modification is the use of what is called 'shared' memory, i.e memory that is common to a thread-block.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In Figure&nbsp;<A HREF="#fig:MatMulNaive">28</A>; matrix pointers <SPAN CLASS="MATH"><IMG
+ WIDTH="53" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img114.png"
+ ALT="$ A, B, C$"></SPAN> point to the two input and one output matrix respectively, where global memory has been allocated and moved onto the device by the host application, and the kernel is invoked with the width of the matrix to stay in memory bounds. Each block of threads will calculate a section of the output matrix, as shown in Figure&nbsp;<A HREF="#fig:MatMulNaiveDiag">29</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:MatMulNaive"></A><A NAME="1098"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 28:</STRONG>
+Example CUDA kernel, showing Naive parallel matrix multiplication with Global memory access</CAPTION>
+<TR><TD><IMG
+ WIDTH="661" HEIGHT="12" BORDER="0"
+ SRC="img115.png"
+ ALT="\begin{figure}\centering
+\begin{lstlisting}[numbers=left, language=C, numbersty...
+...+= 1;
+idxB += WIDTH;
+}
+\par
+C[idxC] = Csub;
+}
+\end{lstlisting}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:MatMulNaiveDiag"></A><A NAME="1103"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 29:</STRONG>
+Naive matrix calculation with memory access by a single block highlighted</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="400" HEIGHT="401" ALIGN="BOTTOM" BORDER="0"
+ SRC="./naive_matrix.png"
+ ALT="Image naive_matrix"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">In this example, every access to A, B, or C (lines 15 and 20) is from/to Global memory. This access is orders of magnitude slower than the access to thread-local variables such as the A and B indexes. One improvement that can be made initially is to use block-shared memory. This is demonstrated in Figure&nbsp;<A HREF="#fig:MatMulShare">30</A>. In this case, each thread retrieves one element from each input array, and stores it in block-shared memory, i.e the threads collaboratively copy the data required for whole-block execution. Note the __syncthreads() in lines 19 and 22; this CUDA call instructs each thread in the block to wait for all other threads in the block to come to the same execution point before continuing. In this case this is to ensure that all of the relevant elements have been copied by all of the block-warps before trying to do any actual calculations. The operation is similar to previous, as shown in Figure&nbsp;<A HREF="#fig:MatMulNaiveDiag">29</A>, except that the outer while loop makes each thread 'step' across the input matrices. This has the effect of greatly reducing the number of Global memory accesses, and has the added benefit of increasing what is called coalesced memory access.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:MatMulShare"></A><A NAME="1112"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 30:</STRONG>
+Example CUDA kernel, showing Naive parallel matrix multiplication with Shared memory access</CAPTION>
+<TR><TD><IMG
+ WIDTH="807" HEIGHT="33" BORDER="0"
+ SRC="img116.png"
+ ALT="\begin{figure}\centering
+\begin{lstlisting}[numbers=left, language=C, numbersty...
+...[i][Tx];
+__syncthreads();
+}
+}
+C[idxC] = Csub
+\end{lstlisting}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">Coalesced memory accesses are simply batching of memory reads and writes, where all (or most) threads in a warp access a linearly contiguous data space, i.e the <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="18" ALIGN="BOTTOM" BORDER="0"
+ SRC="img117.png"
+ ALT="$ k^{th}$"></SPAN> thread in a given warp accesses the <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="18" ALIGN="BOTTOM" BORDER="0"
+ SRC="img117.png"
+ ALT="$ k^{th}$"></SPAN> element of an array. This way, the 'block' SP can perform these reads or writes as one instruction, instead of each individual thread accessing individually. In this case, matrix A accesses are largely coalesced, as each thread is grabbing its own element within a row of A, but B accesses are uncoalesced. One solution, that will not be investigated here, is performing an transpose on B and then performing the more complex multiplication; this operation would only be useful for fairly large Matrices.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Looking beyond shared memory and memory coalescing schemes schemes, CUDA exposes many memory access interfaces for handling different arrangements of data, and for more detailed information refer to <A
+ HREF="node65.html#NC11">NVidia Corporation (2011)</A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In summary, the performance of CUDA, and generally any, parallel application is dependant on many factors; from efficient runtime resource allocation; memory types and access techniques; and most importantly, input data dimensions. This is demonstrated when matrix multiplication algorithms are used applied to 'smaller' matrices; Figure&nbsp;<A HREF="#fig:CPU_GPU_MATMUL_SMALL">31</A> shows that for small matrices, <SPAN CLASS="MATH"><IMG
+ WIDTH="40" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img118.png"
+ ALT="$ N~180$"></SPAN>, CPU-bound calculation is significantly more performant than GPU-bound solutions. From this section it is clear why this is so; memory latency, kernel processing overheads, and a minimal workload all work against a parallelised GPU implementation. Where the problem set is large, for instance, warp-swapping is used to continue to efficiently provision resources to queued warps while other warps are waiting on memory retrievals.
+This economy of scale is an important design heuristic when developing for GPU and will significantly influence the allocation of work in this project.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:CPU_GPU_MATMUL_SMALL"></A><A NAME="1121"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 31:</STRONG>
+Image Courtesy of AccelerEyes  Showing lower order CPU/GPU comparison of MATLAB Matrix Multiplication using the Jacket framework</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>    <IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FlopsMx2_Asus_G51J_02.png"
+ ALT="Image FlopsMx2_Asus_G51J_02"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html619"
+  HREF="node29.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html615"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html611"
+  HREF="node27.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html617"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html620"
+  HREF="node29.html">Opportunities for Parallel Decomposition</A>
+<B> Up:</B> <A NAME="tex2html616"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html612"
+  HREF="node27.html">CUDA Execution architecture</A>
+ &nbsp; <B>  <A NAME="tex2html618"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

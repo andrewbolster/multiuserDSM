@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Simulation Framework Architecture</TITLE>
+<META NAME="description" CONTENT="Simulation Framework Architecture">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node36.html">
+<LINK REL="previous" HREF="node34.html">
+<LINK REL="up" HREF="node33.html">
+<LINK REL="next" HREF="node36.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html719"
+  HREF="node36.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html715"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html709"
+  HREF="node34.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html717"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html720"
+  HREF="node36.html">CPU-bound Algorithm Development and</A>
+<B> Up:</B> <A NAME="tex2html716"
+  HREF="node33.html">Development and Solution</A>
+<B> Previous:</B> <A NAME="tex2html710"
+  HREF="node34.html">Solution Development Task list</A>
+ &nbsp; <B>  <A NAME="tex2html718"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00420000000000000000"></A>
+<A NAME="sec:arch"></A>
+<BR>
+Simulation Framework Architecture
+</H1><SMALL CLASS="SMALL">
+The architecture of the solution will consist of a simulation framework, emulating the gain-characteristics of an arbitrary DSL bundle structure, with software hooks exposed to any algorithms implemented. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The fundamental datum required for DSM algorithms is a matrix of crosstalk gains between all lines. This matrix must be generated incorporating the physical relationship of different lines to each other, as well as simulating the material characteristics of the lines themselves in order to calculate the direct gains (i.e the 'cross talk gain' between line <SPAN CLASS="MATH"><IMG
+ WIDTH="11" HEIGHT="11" ALIGN="BOTTOM" BORDER="0"
+ SRC="img60.png"
+ ALT="$ n$"></SPAN> and itself, or the matrix diagonal).
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Once generated, this matrix would describe the bundle of lines, and this inherent value led to the decision to develop the Simulation Framework as an Object Oriented model; the bundle object contains line objects that have individual values, such as their line and network termination locations, noise characteristics, computed SNR, preferential line rates, etc... Additional to these values, each line object exposes internal functions that perform operations on 'itself', such as calculating the far end crosstalk experienced by that line on a particular channel, and the RLCG transfer function over its length. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The bundle object itself defines the system configuration, and is created from a list of line values read from a file; initially it is planned that this file would contain the LN/NT distances of the line, and if required, the desired rate for that line, but the same theory could be applied to allow mixed material bundles, per line noise characteristics, and other pertinent values. The bundle object's main aims are to initially generate the cross-talk matrix, and subsequently act as an abstraction layer between the DSM algorithm and the individual line values; i.e. the bundle keeps internal arrays to store the power and bit ratings for each line for each channel, which can be operated upon by an external algorithm, and subsequently updated by the bundle itself.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The initialisation of the bundle object (i.e. the generation of the cross-talk gain matrix) can be thought of as a triply nested loop of transfer function calculations, and can be summed up in one sentence: On each sub-channel, for each line (the victim) calculate all the inter-line transfer functions between the victim and every line in the bundle (including itself, but that’s slightly different).
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Calculating the direct gain (i.e. the transfer function between the line and itself), the line object simply returns its own transfer function across its length. However, for inter-line (FEXT only, in this project) transfer function calculation, the situation is more complex since lines don't necessarily have the same run length and location; there are nine possible combinations of over-lay between two given lines (plus the case where they don't share any length, hence no FEXT). These are detailed in <A
+ HREF="node65.html#RB03">Robert&nbsp;Baldemair (2003)</A> and indicated in Figure&nbsp;<A HREF="#fig:FEXT-xtalk-gain">32</A>, and this structure was the basis for McKinley's work in this area, but an improved, 'case-less' implementation was generated to segment the line lengths into head length (i.e where one line goes further than the other towards the CO end of the bundle), shared length (where both lines occupy the same sector of the bundle), and tail length( where one line goes further towards the CP end). Each length subsequently has a sector insertion loss (transfer function) and these are multiplied to give the final line transfer function which, incorporating a NICC<A NAME="tex2html86"
+  HREF="footnode.html#foot2238"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">5</SPAN></SUP></A> FEXT model function, provides the full length gain response between the two lines on a particular channel.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The operation of segmenting these lengths and producing the cumulative transfer function is numerically subtle but conceptually simple, and with the transfer function configured to return 1 for invalid length values (i.e non-positive lengths), the cumulative transfer function product is effectively self selecting which (if any) sector length values to 'ignore' given different theoretical cases. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Mathematically,the generation of the inter-line transfer function proceeds thus; 
+</SMALL>
+<P>
+<P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><!-- MATH
+ \begin{equation}
+\begin{array}{l}
+  L_h=(V_{lt}-X_{lt})\\
+  L_s=\text{abs}(\max(V_{lt},X_{lt})-\min(V_{nt},X_{nt}))\\
+  L_t=(V_{nt}-X_{nt})\\
+  \end{array}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="278" HEIGHT="48" BORDER="0"
+ SRC="img121.png"
+ ALT="\begin{displaymath}\begin{array}{l} L_h=(V_{lt}-X_{lt})\\ L_s=\text{abs}(\max(V_...
+..._{lt})-\min(V_{nt},X_{nt}))\\ L_t=(V_{nt}-X_{nt})\\ \end{array}\end{displaymath}"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">1</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P><SMALL CLASS="SMALL"><A NAME="eq:sectorisation"></A></SMALL><P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><!-- MATH
+ \begin{equation}
+\text{insertion loss}(L,F)=\left\{
+    \begin{array}{l l}
+      \text{transfer function}(L,F) & \quad \text{if}\ L>0\\
+      1 & \quad \text{if} L\le 0\\
+    \end{array} \right.
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH">insertion loss<IMG
+ WIDTH="303" HEIGHT="43" ALIGN="MIDDLE" BORDER="0"
+ SRC="img122.png"
+ ALT="$\displaystyle (L,F)=\left\{ \begin{array}{l l} \text{transfer function}(L,F) &amp; \quad \text{if}\ L&gt;0\\ 1 &amp; \quad \text{if} L\le 0\\ \end{array} \right.$"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">2</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P><SMALL CLASS="SMALL"><A NAME="eq:insertionloss"></A></SMALL><P></P>
+<DIV ALIGN="CENTER" CLASS="mathdisplay"><A NAME="eq:transferproduct"></A><!-- MATH
+ \begin{equation}
+\begin{array}{l}
+  H_h=\text{insertion loss}(L_h,f_k)\\
+  H_s=\text{insertion loss}(L_s,f_k)\\
+  H_t=\text{insertion loss}(L_t,f_k)\\
+  H_{\text{total}}=(H_h \times H_s \times H_t)\\
+  \end{array}
+\end{equation}
+ -->
+<TABLE CLASS="equation" CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE">
+<TD NOWRAP ALIGN="CENTER"><SPAN CLASS="MATH"><IMG
+ WIDTH="190" HEIGHT="64" BORDER="0"
+ SRC="img123.png"
+ ALT="\begin{displaymath}\begin{array}{l} H_h=\text{insertion loss}(L_h,f_k)\\ H_s=\te...
+...k)\\ H_{\text{total}}=(H_h \times H_s \times H_t)\\ \end{array}\end{displaymath}"></SPAN></TD>
+<TD NOWRAP CLASS="eqno" WIDTH="10" ALIGN="RIGHT">
+(<SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">3</SPAN>)</TD></TR>
+</TABLE></DIV>
+<BR CLEAR="ALL"><P></P>
+<P>
+<SMALL CLASS="SMALL">This is explained diagrammatically in Figure <A HREF="#fig:FEXT-xtalk-gain">32</A>, and the source code for this function as used is in Appendix&nbsp;<A HREF="#apx:fext-xtalk-gain">A</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:FEXT-xtalk-gain"></A><A NAME="2287"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 32:</STRONG>
+Case-based explanation of improved FEXT modelling algorithm. Note, Case numbering rearranged to highlight upstream/downstream FEXT case inversion</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV> [Case 1]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_1.png"
+ ALT="Image FEXT_case_1">
+ [Case 9]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_9.png"
+ ALT="Image FEXT_case_9">
+<BR> [Case 2]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_2.png"
+ ALT="Image FEXT_case_2">
+ [Case 6]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_6.png"
+ ALT="Image FEXT_case_6">
+<BR> [Case 3]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_3.png"
+ ALT="Image FEXT_case_3">
+ [Case 7]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_7.png"
+ ALT="Image FEXT_case_7">
+<BR> [Case 4]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_4.png"
+ ALT="Image FEXT_case_4">
+ [Case 8]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_8.png"
+ ALT="Image FEXT_case_8">
+<BR> [Case 5]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_5.png"
+ ALT="Image FEXT_case_5">
+ [Case 10]<IMG
+  WIDTH="380" HEIGHT="250" ALIGN="BOTTOM" BORDER="0"
+ SRC="./FEXT_case_10.png"
+ ALT="Image FEXT_case_10">
+<BR> </TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">As noted previously, incorporation of a Beta probability distribution sample data offsetting can be used to more accurately model the stochastic relationship in inter-line gains based on the locations of those lines in the bundle. This is accomplished by scalar multiplication of the per-channel cross-talk gain matrix with a <SPAN CLASS="MATH"><IMG
+ WIDTH="50" HEIGHT="26" ALIGN="MIDDLE" BORDER="0"
+ SRC="img124.png"
+ ALT="$ N\times N$"></SPAN> sub-matrix of static gains measured from a 'real' bundle (See Equation&nbsp;<A HREF="node10.html#eq:ATTFEXT">2.8</A>). One advantageous side effect of this appears in bit-loading of bundles with some 'identical' lines; due to the numerical instability of some bit-loading algorithms and specifically the generation of line power spectral densities, assigned bit-loads can  fluctuate violently between identical lines, producing very impulsive spectra. The relatively tiny gain adjustments applied to different identical lines in the simulated bundle present enough of a 'difference' to overcome this behaviour.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Following from the general Object Oriented architecture, and the bundle object effectively being the fundamental core of the simulation system, this object also maintains control of GPU-based algorithm specific functions, and in the case of multiple GPU operation, maintains persistent thread-pool and task queuing references within a GPU object.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The Initial stage of verification for the system was the comparison of generated Channel Matrices to those found in <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>. Due to the different math libraries utilised between McKinley's implementation and this, direct comparison on numerical results is not reliable as a verification method, but test results obtained match those from McKinley to within IEEE floating point specifications. A better comparison is a visual one (Figure&nbsp;<A HREF="#fig:cmComparison">33</A>).
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:cmComparison"></A><A NAME="2296"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 33:</STRONG>
+Visual comparison of known-good channel matrix (McKinley) and Python implementation show that they are identical</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [McKinley]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2_line_channel_matrix_AMK.png"
+ ALT="Image 2_line_channel_matrix_AMK">
+  [Implementation Results]<IMG
+  WIDTH="800" HEIGHT="600" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2_line_channel_matrix_MINE.png"
+ ALT="Image 2_line_channel_matrix_MINE"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html719"
+  HREF="node36.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html715"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html709"
+  HREF="node34.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html717"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html720"
+  HREF="node36.html">CPU-bound Algorithm Development and</A>
+<B> Up:</B> <A NAME="tex2html716"
+  HREF="node33.html">Development and Solution</A>
+<B> Previous:</B> <A NAME="tex2html710"
+  HREF="node34.html">Solution Development Task list</A>
+ &nbsp; <B>  <A NAME="tex2html718"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

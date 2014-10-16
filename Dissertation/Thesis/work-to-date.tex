@@ -1,0 +1,96 @@
+\chapter{Development}
+
+With our problem solution mapped out, the next task is to begin development. The development tasks are as follows:
+\begin{itemize*}
+\item Create a monitor and detection script in Click
+\item Install Click and OpenWRT on the AP
+\item Create a server to facilitate transmission of log files from AP to server
+\item Create a more extensive analysis program run on the server with the ability to alert the user if an attack is detected
+\item Create a web user interface where results can be viewed and reports can be generated.
+\end{itemize*}
+
+\section{OpenWRT \& Click: Installation and Configuration}
+OpenWRT is essentially consists of a set of Makefiles that download, configure and compile software with the correct options for use on its system. There is one Makefile per piece of software and it is placed in one of three subdirectories of the OpenWRT directory, dependant on where the software will run. To include Click with our OpenWRT build we will create a Makefile for it and include it in the appropriate location. Click will run in user-space on the router so its Makefile will be placed in a new subdirectory of the packages directory, \texttt{packages/click}. An additional file, 'Config.in', is required to create a description of the software for use in the configuration tool\cite{openwrt}. Another subdirectory 'files' is also created here to hold our click scripts. 
+
+Once all the files to include click are in place it is time to configure the OpenWRT image. To do this the \texttt{make menuconfig} command is issued in the OpenWRT root directory. This brings up the curses screen as can be seen in figure \ref{fig:menuconfig}. The correct configuration was then selected for the picostation with click, which involved selecting the Atheros chipset, the click package and madwifi driver package. This configuration file is then saved and used in the \texttt{make} process, which is the next task to be run.
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=314px, height=306px]{./images/make-menuconfig.png}
+ % make-menuconfig.png: 785x765 pixel, 72dpi, 27.69x26.99 cm, bb=0 0 785 765
+  \caption{\texttt{make menuconfig} curses screen} 
+  \label{fig:menuconfig} 
+\end{figure}
+
+Barring any errors in the \texttt{make} process, at this stage the firmware image is complete and ready for installation on our access point. The firmware images can be found in the \texttt{/bin} subdirectory of the OpenWRT root. There are a number of images created to comply with the different memory and processer specifications available. The image \texttt{openwrt-atheros-ubnt2-pico2-squashfs.bin} is used in conjunction with the hardware used for this project.
+
+Installing the firmware to the access point is a case of rewriting or 'flashing' the devices entire firmware. It is achieved by transferring the generated image via TFTP\nomenclature{TFPT}{Trivial File Transfer Protocol} to the access point. Once the transfer of data and flashing of the firware have completed the AP reboots and it is possible to telnet in to the OpenWRT AP. The click installation can be tested by running the click executable located at \texttt{/usr/share/click} with the detection script, located now in \texttt{/packages/click/files}, as the argument.
+
+\section{Click Script Delevopment}
+
+Development of a click detection script is initially carried out on a local linux distribution. The goal is that this script will be developed locally, then the OpenWRT Click installation will be size-optimised around the scripts requirements and dependancies.
+
+An up-to-date git version of the click source code is first downloaded, compiled and installed. This is a fairly painless process, but it is important to remember to configure Click with the \texttt{--enable-wifi} and \texttt{--enable-local} arguments appended in order to both include the wifi elements and enable the inclusion of local elements. Enabling these local elements is very important, as after a search through the packaged elements there is no indication of one which will perform the tasks necessary for this project. Thus it is required that an element which will perform the folloeing necessary tasks be created:
+
+\begin{itemize*}
+ \item Analyze each packet and parse the following information:
+  \begin{itemize*}
+   \item RSSI (Received Strength Signal Index)
+   \item MAC address
+   \item Beacon Rate
+  \end{itemize*}
+ \item Create a log of average per station statistics
+ \item Encapsulate the log information in a clearly defined structure for parsing on the server
+\end{itemize*}
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=10cm,keepaspectratio=true]{./images/click-script.pdf}
+ % click-script.pdf: 555x495 pixel, 72dpi, 19.58x17.46 cm, bb=0 0 555 495
+ \caption{Flowchart detailing requirements of click element}
+ \label{fig:click-flow-chart}
+\end{figure}
+
+Figure \ref{fig:click-flow-chart} shows the basic logic behind what is required from the AP. As mentioned before, the idea of a distributed system is to move the heavy processing away from the remote clients into a centralised server. For this reason the AP is only collecting data and packaging it for easy parsing at the server end. 
+\label{sec:discuss-minimal-tx}
+The element that has been developed can been seen as listing \ref{app:element1} and \ref{app:element2} in the appendix. At this stage it will run on the AP, collect data from all the stations within it's vicinity, log the data and create a packet from this data. This element will require further development however, as currently the script is configured to transmit a log of 'plain text'. This is not the ideal choice as it provides the server with no convenient data 'tags' to easily parse from. For example, if the server wanted to get all the RSSI values for a certain MAC address, it would have for do a string compare on each line and count the delimiters (tab characters in this case) until it arrived at the RSSI field. Clearly this is an area which must be developed upon. The 'plain text' output on the server side can be seen in figure \ref{fig:server-output}, displaying the values of client MAC address, timestamp, type (0 if beacon, 1 otherwise) and RSSI respectively.
+
+\begin{figure}[h!]
+ \centering
+ \includegraphics[width=6cm, keepaspectratio=true]{./images/server-output.pdf}
+ % server-output.pdf: 361x438 pixel, 72dpi, 12.74x15.45 cm, bb=0 0 361 438
+ \caption{TCP server plain text output}
+ \label{fig:server-output}
+\end{figure}
+
+The actual click script that is run must take a packet from the network device, strip the radiotap header, enter our script where it is formatted to a minimal, logical structure and finally get encapsulated as a TCP packet and transferred to the server. The click file that is being used during development for this purpose is shown in figure \ref{fig:click-dev}.
+
+\begin{figure}[h!]
+  \lstinputlisting{./files/test.click}
+  \caption{Click File Contents}    
+  \label{fig:click-dev}  
+\end{figure}
+
+\section{Writing the server}
+
+One of key decisions that had to be made in this design was whether to use a UDP or TCP server. Both protocols have their benefits, UDP generally being used for time sensitive applications like VoIP and TCP generally used where the transmission of all packets was a priority. TCP was decided upon due to its reliability of transmission. While the analysis of packet data will be a time sensitive issue, it will be time sensitive on the AP side. From here relevant data can be packaged with a timestamp or sequence number so the server knows what order the AP received the packets in. This will be especially important for computing values like moving averages, variance over time etc. In addition to this, it is important to ensure that all the data sent from the AP gets to the server to ensure accurate analysis, which is not necessarily the case with UDP.
+
+While considering how to create a TCP server a number of options were considered. A C++ server could be created, but this would require programming sockets, not a particularly easy task and requires manually dealing with the \texttt{bind()}, \texttt{socket()}, \texttt{listen()}, \texttt{connect()}, etc commands manually. Ultimately Python, using the Twisted engine, was selected as the best option for creating the server interface mainly due to the fact it's high level abstraction makes meeting our requirements very easy. The TCP server script that was used to connect with the click script in figure \ref{fig:click-dev}, which provides the output in figure \ref{fig:server-output}, is shown in figure \ref{fig:twistd-tcp-server}. This is a fully functional TCP server operating on port 8007. The functions defined in this code are self-explanatory, connecitionMade is run when a client connects to the server, connectionLost is run when a client disconnects and dataRecieved is run when a piece of data is transferred from client to the server. This simple example is convienent for testing communications between the click script and server, but it will require much more work to develop as an analysis server.
+
+\begin{figure}[H]
+ \lstset{language=python}
+ \lstinputlisting{./files/tcpserver-pretty.py}
+\caption{Twisted python simple TCP server}
+\label{fig:twistd-tcp-server}
+\end{figure}
+
+\section{Summary of work to date}
+\begin{itemize}
+ \item MAC Layer Vulnerability research
+ \item Identification of attack detection metrics
+ \item Installation of the Click Modular Router on OpenWRT
+ \item Developed of a Click data collection element
+ \item Developed a Click file to facilitate the element and transmit its output over TCP
+ \item Developed a basic TCP server in Twisted Python and connected with Click file successfully
+\end{itemize}
+

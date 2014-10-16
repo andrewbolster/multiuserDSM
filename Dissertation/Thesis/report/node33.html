@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Development and Solution</TITLE>
+<META NAME="description" CONTENT="Development and Solution">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node51.html">
+<LINK REL="previous" HREF="node5.html">
+<LINK REL="up" HREF="report.html">
+<LINK REL="next" HREF="node34.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html678"
+  HREF="node34.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html674"
+  HREF="report.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html668"
+  HREF="node32.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html676"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html679"
+  HREF="node34.html">Solution Development Task list</A>
+<B> Up:</B> <A NAME="tex2html675"
+  HREF="report.html">report</A>
+<B> Previous:</B> <A NAME="tex2html669"
+  HREF="node32.html">Parallel MIPB</A>
+ &nbsp; <B>  <A NAME="tex2html677"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00400000000000000000"></A>
+<A NAME="sec:solution"></A>
+<BR>
+Development and Solution
+</H1>
+<P>
+<SMALL CLASS="SMALL">After performing research into the problem we now have a better understanding of exactly what needs to be done, and some of the theoretical and implementation based conditions that must be adhered to. It is clear that current implementations of DSM algorithms cannot be put to practical use due to computational intractability with standard sequential hardware, and that a move towards parallelisation has significant potential benefits. But in order to approach the algorithmic problem, first a DSL simulation framework must be created within which to experiment, and this is no small undertaking.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">To start with, a stable software base must be selected, that incorporates rapid development due to the expansive scale of this project without sacrificing too much in the way of performance, as well as interoperability with the CUDA API, and is supported by a strong community that can be leveraged to ensure that development is not halted by 'silly' problems.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In <A
+ HREF="node65.html#AM09">Alastair McKinley (2009)</A>, McKinley had the same task on his hands, and due to its close-to-the-hardware speed, selected the C programming language. While this was indeed a very fast <A NAME="tex2html82"
+  HREF="footnode.html#foot2214"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">1</SPAN></SUP></A>, C can often be prohibitively obtuse, with many arcane design patterns and structures that do not aid in rapid prototyping. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Instead, the Python programming language was selected (in agreement with Dr McKinley) as the base of this project. Python is an interpreted, high-level language, originally created by Guido van Rossum in the 1980's. Two of the biggest draws to Python as a general-purpose language are its flexibility<A NAME="tex2html83"
+  HREF="footnode.html#foot2215"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">2</SPAN></SUP></A> and its extension interface; a significant amount of Python's standard module library is built in C/C++, such that these modules are effectively as fast as straight-C implementations. This is of particular importance with the most popular scientific math library in Python, called Numpy, which is entirely C based and operates very close to the metal, including transparent C-variable assignments and other functionality that preserves the speed of C and the higher level functionality of Python. Additionally, the wealth of Python Profiling<A NAME="tex2html84"
+  HREF="footnode.html#foot2216"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">3</SPAN></SUP></A> tools available means that iterative optimisation (at least of the Python section of the framework) would be painless and fast.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">So far, it has been established and justified that Python satisfies the first of the conditions for a stable project base; performance rapid development. To satisfy the second, a Python project called PyCUDA should be noted. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">PyCUDA is a complete CUDA API wrapper for Python, incorporating advantages such as automatic device selection and initialisation, dynamic memory management, kernel templating and direct variable passing, Just In Time (JIT) kernel compilation and invocation, and run-time access to device characteristics and status for dynamic block and grid dimensioning. Unfortunately PyCUDA is lacking in some areas, particularly debugging support, Python Profiling integration (i.e CUDA code will have to be profiled and analyses separately from any other functionality), and automatic multiple device allocation.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Considering these together, the Pros of Python + PyCUDA greatly outweigh their disadvantages. That said, the largest disadvantage is the lack of truly automatic multi-device provisioning, and this is not a major obstacle. Consider this scenario; A single CUDA kernel execution outside of PyCUDAPyCUDACUDA wrapper for the Python programming language could execute on multiple devices <A NAME="tex2html85"
+  HREF="footnode.html#foot2219"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">4</SPAN></SUP></A>, for the planned problem complexities and  data structures, host-to-device memory transactions would eat up any added performance incurred from this style of execution. It is much simpler (and most likely faster) to partition the problem space across the number of available devices, and with the flexibility of Python, this is workable with only a few lines of additional code.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Outside of the programming language itself, utilising a free and open source Distributed Revision Control (DRC) called Mercurial allows for tracking changes and activity in the project, as well as serving as an automatic backup system, through a service called BitBucket, which also provides and issue tracker and on-site wiki for development related notes and tasks.
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html680"
+  HREF="node34.html">Solution Development Task list</A>
+<LI><A NAME="tex2html681"
+  HREF="node35.html">Simulation Framework Architecture</A>
+<LI><A NAME="tex2html682"
+  HREF="node36.html">CPU-bound Algorithm Development and Verification</A>
+<LI><A NAME="tex2html683"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+<UL>
+<LI><A NAME="tex2html684"
+  HREF="node38.html">Retrospective analysis of CPU bound applications</A>
+<UL>
+<LI><A NAME="tex2html685"
+  HREF="node39.html">Conclusions</A>
+</UL>
+<LI><A NAME="tex2html686"
+  HREF="node40.html">OSB: Avenues of parallelisation and problem decomposition schemes</A>
+<LI><A NAME="tex2html687"
+  HREF="node41.html">Greedy: Avenues of parallelisation and problem decomposition schemes</A>
+<UL>
+<LI><A NAME="tex2html688"
+  HREF="node42.html">ISB: Avenues of parallelisation and problem decomposition schemes</A>
+<LI><A NAME="tex2html689"
+  HREF="node43.html">Development of generalised GPU workload sharing model</A>
+<LI><A NAME="tex2html690"
+  HREF="node44.html">Development of generalised multi-device function queue</A>
+</UL>
+</UL>
+<BR>
+<LI><A NAME="tex2html691"
+  HREF="node45.html">GPU Solutions and Verification</A>
+<UL>
+<LI><A NAME="tex2html692"
+  HREF="node46.html">OSB GPU</A>
+<UL>
+<LI><A NAME="tex2html693"
+  HREF="node47.html">Verification</A>
+</UL>
+<LI><A NAME="tex2html694"
+  HREF="node48.html">ISB GPU</A>
+<UL>
+<LI><A NAME="tex2html695"
+  HREF="node49.html">Verification</A>
+</UL>
+<LI><A NAME="tex2html696"
+  HREF="node50.html">MIPB GPU</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html678"
+  HREF="node34.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html674"
+  HREF="report.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html668"
+  HREF="node32.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html676"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html679"
+  HREF="node34.html">Solution Development Task list</A>
+<B> Up:</B> <A NAME="tex2html675"
+  HREF="report.html">report</A>
+<B> Previous:</B> <A NAME="tex2html669"
+  HREF="node32.html">Parallel MIPB</A>
+ &nbsp; <B>  <A NAME="tex2html677"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

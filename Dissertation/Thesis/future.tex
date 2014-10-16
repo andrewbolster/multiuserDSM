@@ -1,0 +1,120 @@
+\chapter{Plans for future}
+
+A number of tasks still require completion for this project to achieve its goals. To date good progress has been made with the AP side of the distributed link. What remains to be done is to build upon the communications link between the AP and server, expand the basic TCP server seen in figure \ref{fig:twistd-tcp-server} to perform analysis of the information gathered, and develop a the WebUI to retain the information gathered. In tandem with this the click capture script will undoubtedly need further refinement. Additional information on the methods planned to perform these tasks are listed below.
+
+\section{Client/Server Communications}
+
+To perform efficient client/server communications we must carry out a number of tasks. Two of the main task required for efficient communication are to:
+\begin{itemize*}
+ \item Minimise data sent
+ \item Arrange it simply and logically to aid parsing at the server
+\end{itemize*}
+
+The first point, minimising the data transmitted, will take place in the click script on our AP. It will do a small bit of analysis on the data to parse the relevant data from the irrelevant (for our purposes). Next this data must be transferred. As discussed in section \ref{sec:discuss-minimal-tx}, the data must be given a structure and 'tagged' so that the amount of data transferred can be kept to a minimum and to simplify parsing on  the server side. The solution to this that is currently being implemented is to incorporate Google's 'Protocol Buffers'. As the Google code home page explains, \textit{``Protocol Buffers are a way of encoding structured data is an efficient yet extensible format''}\cite{Goo}. They are essentially a replacement for XML, but as the Google project pages explains, have many advantages over this markup language:
+\begin{itemize*}
+ \item simpler
+ \item 3 to 10 times smaller
+ \item 20 to 100 times faster
+ \item less ambiguous
+ \item generate data access classes that are easier to use programmatically
+\end{itemize*}
+
+The documentation goes on to give an example, explaining the comparison further.
+\begin{quote}
+\textit{``For example, let's say you want to model a person with a name and an email. In XML, you need to do:}
+\begin{lstlisting}[language=XML]
+  <person>
+    <name>John Doe</name>
+    <email>jdoe@example.com</email>
+  </person>
+\end{lstlisting}
+\textit{while the corresponding protocol buffer message (in protocol buffer text format) is:}
+\begin{lstlisting}[language=Python]
+# Textual representation of a protocol buffer.
+# This is *not* the binary format used on the wire.
+person {
+  name: "John Doe"
+  email: "jdoe@example.com"
+}
+\end{lstlisting}
+\textit{
+When this message is encoded to the protocol buffer binary format (the text format above is just a convenient human-readable representation for debugging and editing), it would probably be 28 bytes long and take around 100-200 nanoseconds to parse. The XML version is at least 69 bytes if you remove whitespace, and would take around 5,000-10,000 nanoseconds to parse.''}
+\end{quote}
+
+The performance boost highlighted above, along with the ease of accessing and altering data make protocol buffers ideal for this project. In addition to this, Google have well documented API's for implementing the protocol buffers on both C++ and Python platforms. For all of these reasons, Google protocol buffers should be implemented for this project.
+
+\section{Expansion of Analysis Metrics}
+
+The metrics discussed in this document are a good starting point for the detection of attacks, but are by no means all encompassing. Further metrics will require investigation and importantly, the Click element required to collect the statistics will have to be well written so that new metrics can be easily added. The metrics that have been highlighted for further investigation are:
+\begin{itemize}
+ \item Beacon Jitter
+ \item MAC Sequence Numbers 
+\end{itemize}
+
+\section{Analysis Server}
+
+The analysis server will need to be expanded upon in order to function as detailed in the project specification. The eventual goals for this server are:
+
+\begin{itemize*}
+ \item To link up with a large number of AP's easily
+ \item To analyse data and detect 802.11 WLAN attacks
+ \item To store data and produce reports
+\end{itemize*}
+
+The analysis section will be where the majority of the remaining project time is dedicated to. This section is wide open to creative and innovative methods of analysing the data patterns, and is potentially where this project will attain most of its credit. Therefore, it will be important to spend time and effort on developing the analysis server. 
+
+\section{Web User Interface}
+
+As all the data is to be stored on a centralised server, it is important implement a user interface for system admins to access the data and generate reports. Nevow\cite{Divb} is a web application toolkit written in Python and built on the twisted engine, and should make it simple to implement a high capacity, stable WebUI for the project. An example of Nevow Python code for a web page can be seen in figure \ref{fig:nevow-python}. This example uses Stan, Nevow's document object model (DOM\nomenclature{DOM}{Document Object Model}). This enables the creation of HTML tags in a very Python-like format and keeps nesting them simple and clear. The HTML output from the Python code in figure \ref{fig:nevow-python} is shown in figure \ref{fig:nevow-html}.
+  
+\begin{figure}[h!]
+  \lstset{language=python}
+  \begin{lstlisting}
+  from twisted.application import internet, service
+
+  from nevow import appserver
+  from nevow import loaders
+  from nevow import rend
+  from nevow import tags as T
+
+
+  class Page(rend.Page):
+      """Example of using stan to render a page.
+      """
+      addSlash = True
+      docFactory = loaders.stan(
+	  T.html[
+	      T.head[
+		  T.title['Hello'],
+		  ],
+	      T.body[
+		  T.p(id="body")['Welcome to the wonderful world of Nevow!'],
+		  ],
+	      ]
+	  )
+
+  application = service.Application('hellostan')
+  webServer = internet.TCPServer(8080, appserver.NevowSite(Page()))
+  webServer.setServiceParent(application)
+  \end{lstlisting}
+  \caption{Nevow Python Code\cite{Divb}}
+  \label{fig:nevow-python}
+\end{figure}
+
+\begin{figure}[h!]
+  \lstset{language=html}
+  \begin{lstlisting}
+  <html>
+    <head>
+      <title>Hello</title>
+    </head>
+    <body>
+      <p id="body">Welcome to the wonderful world of Nevow!</p>
+    </body>
+  </html>
+  \end{lstlisting}
+  \label{fig:nevow-html}
+  \caption{Generated Nevow HTML}
+\end{figure} 
+
+This setup will use a yet-to-be-decided-upon database to archive the data. Keeping a record of the data is important as many analysis methods will refine as they analyse more results, and additionally this will help to identify any location or time-slot 'hot-spots' for attacks.  

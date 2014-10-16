@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Parallel Computing</TITLE>
+<META NAME="description" CONTENT="Parallel Computing">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node29.html">
+<LINK REL="previous" HREF="node6.html">
+<LINK REL="up" HREF="node5.html">
+<LINK REL="next" HREF="node21.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html518"
+  HREF="node21.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html514"
+  HREF="node5.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html508"
+  HREF="node19.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html516"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html519"
+  HREF="node21.html">Forms Of Parallelism, aka,</A>
+<B> Up:</B> <A NAME="tex2html515"
+  HREF="node5.html">Research &amp; Background</A>
+<B> Previous:</B> <A NAME="tex2html509"
+  HREF="node19.html">DSM Level 3</A>
+ &nbsp; <B>  <A NAME="tex2html517"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00320000000000000000"></A><A NAME="sec:ParallelComputing"></A>
+<BR>
+Parallel Computing
+</H1><SMALL CLASS="SMALL">
+Today, most (hopefully all) engineering and computer science students are educated in programming, in one form or another. The current languages of choice;C,C++, Java, and Python, all (classically) conform to what is known as procedural, or imperative, programming, where by instructions are written to be serially fed into a processor, and data flow is dictated by run-time conditional redirection. Ever since the computing innovations of Turning in the 1940's<A
+ HREF="node65.html#Tur36">Turing (1936)</A> and the later codification of the Von Neumann Architecture (VNA) after his work on EDVAC <A NAME="tex2html35"
+  HREF="footnode.html#foot879"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">16</SPAN></SUP></A><A
+ HREF="node65.html#VN45">Von&nbsp;Neumann (1945)</A>, the concept of a serially operated computers dominated the field of computer science for decades.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Parallel computing, on the other hand, which simultaneously uses many processing units to solve a problem by breaking the problem (or data) set up and distributing this split workload to different processing units<A NAME="tex2html36"
+  HREF="footnode.html#foot881"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">17</SPAN></SUP></A>, has been a niche interest. Parallel computing was for a long time the reserve of a few highly specialised machines created over the years, generally in the fields of medicine, energy or warfare.<A NAME="tex2html37"
+  HREF="footnode.html#foot1183"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">18</SPAN></SUP></A></SMALL>
+<P>
+<SMALL CLASS="SMALL">The reason for this 'edging out' of parallel computation was simple; Moore's Law<A
+ HREF="node65.html#Moo65">Moore (1965)</A>. In 1965, Moore, then at the newly formed Fairchild Semiconductor, posited that computational density doubles more-or-less every 18 months. This pattern has held for about four decades. This continuous, explosive, growth drove programmers with computationally intense problems simply to wait 18 months for their applications to run twice as fast on newer hardware, instead of using problem decomposition to solve the current problem in a more distributed way. This period of exponential processing growth in respect to hardware has, in recent years, come up against major blocks; quantum physics<A NAME="tex2html38"
+  HREF="footnode.html#foot1184"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">19</SPAN></SUP></A>, the infamous 'power wall'<A NAME="tex2html39"
+  HREF="footnode.html#foot1185"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">20</SPAN></SUP></A>, and a general consumer and industrial drive towards low power devices (including 'supercomputers').
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Since the early 2000's, the semiconductor industry has settled on two main paths to stave-off the demise of Moore's Law (in its current form<A NAME="tex2html40"
+  HREF="footnode.html#foot887"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">21</SPAN></SUP></A>); multi-core and many-core. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Multi-core processing involves the use of a relatively small number of monolithic processing units, very akin to traditional single CPU's, placed on a single die, maintaining the execution speed of existing sequential programs while allowing for direct execution concurrency at lower clock-rates (and hence power) than a similarly scaled single core processor. The latest 'state of the art' in this field is the Intel i7 Sandy Bridge 32nm architecture, with 8 processing cores<A
+ HREF="node65.html#Var11">Various (2011)</A>, each of which is a hyper-threaded<A NAME="tex2html41"
+  HREF="footnode.html#foot889"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">22</SPAN></SUP></A> x86 instruction set processor, giving, in theory, 16 hardware threads of parallelism. The trend in these types of devices has actually almost matched Moore's Law in its simplest form; the number of cores in multi-core chipsets has been roughly doubling every two years.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Many-core computing, on the other hand, involves the use of a relatively large number of 'dumb' cores. While many many-core architectures exist<A NAME="tex2html42"
+  HREF="footnode.html#foot890"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">23</SPAN></SUP></A> the area in which parallel computing research and applications has been recently most focused is the development and adaptation of consumer graphics hardware to application acceleration and scientific computing, termed General Purpose computing on GPU's (GPGPU).
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:CPUvsGPU"></A><A NAME="893"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 14:</STRONG>
+Multicore CPU's and Manycore GPU's have fundamentally different design philosophies</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="800" HEIGHT="400" ALIGN="BOTTOM" BORDER="0"
+ SRC="./cpu_vs_gpu.png"
+ ALT="Image cpu_vs_gpu"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">The real difference between multi-core and many-core computing can be seen in Figure&nbsp;<A HREF="#fig:CPUvsGPU">14</A>, whereby a multi-core CPU, such as the Intel Core i5, has a number of large distinct Processing Units (PUsPUProcessing Unit), whereas an NVidia GPU<A NAME="tex2html44"
+  HREF="footnode.html#foot899"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">24</SPAN></SUP></A> consists of an array of many smaller Streaming Multiprocessors (SM) that themselves contain an array of Streaming Processors (SPSPStreaming Processor)<A NAME="tex2html45"
+  HREF="footnode.html#foot1186"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">25</SPAN></SUP></A>, each of which can be considered an individual PU.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">While it is not directly relevant to this document, outside of the semiconductor industry, the drive towards massively distributed clusters of not-necessarily-co-located machines <A NAME="tex2html46"
+  HREF="footnode.html#foot903"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">26</SPAN></SUP></A> has become such a major feature of the scientific computing landscape, that it is currently being used at CERN. Data processing for CERN's LHC project is handled by a worldwide grid of over 200,000 processing cores, with 150 PB of storage, and a theoretical capacity to handle the 27TB of raw data per day coming out of the LHC. This grid system is inter-connect agnostic, communicating across a mixture of dedicated fibre connections and the public internet backbone. On a smaller scale, programming paradigms such as Message Passing, and Parallel Virtual Machines, allow applications to be executed against an arbitrary number of computing nodes in a local or distributed cluster.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Before looking back at GPGPU and Parallel Programming in detail, it is important to establish the 'families' of parallelism; namely 'Flynn's Taxonomy'
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html520"
+  HREF="node21.html">Forms Of Parallelism, aka, Flynn's Taxonomy</A>
+<UL>
+<LI><A NAME="tex2html521"
+  HREF="node22.html">Pipe-lining</A>
+<LI><A NAME="tex2html522"
+  HREF="node23.html">Single Program Multiple Data</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html523"
+  HREF="node24.html">Principles of Parallel Programming</A>
+<UL>
+<LI><A NAME="tex2html524"
+  HREF="node25.html">Gustafson and Amdahl's laws</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html525"
+  HREF="node26.html">General Purpose computing on Graphics Processing Units</A>
+<LI><A NAME="tex2html526"
+  HREF="node27.html">CUDA Execution architecture</A>
+<LI><A NAME="tex2html527"
+  HREF="node28.html">CUDA Memory architecture</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html518"
+  HREF="node21.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html514"
+  HREF="node5.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html508"
+  HREF="node19.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html516"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html519"
+  HREF="node21.html">Forms Of Parallelism, aka,</A>
+<B> Up:</B> <A NAME="tex2html515"
+  HREF="node5.html">Research &amp; Background</A>
+<B> Previous:</B> <A NAME="tex2html509"
+  HREF="node19.html">DSM Level 3</A>
+ &nbsp; <B>  <A NAME="tex2html517"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

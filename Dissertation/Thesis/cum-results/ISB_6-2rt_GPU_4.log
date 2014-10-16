@@ -1,0 +1,88 @@
+2011-05-17 13:19:19,502:INFO    multiuserdsm 46 Starting Up... logging to ISB_6-2rt_GPU_4.log
+2011-05-17 13:19:19,504:INFO    bundle 67 Reading fresh Network File networks/6-2rt.net
+2011-05-17 13:19:19,504:INFO    bundle 89 Successfully read 6 lines from networks/6-2rt.net
+2011-05-17 13:19:21,551:INFO    gpu 418 Asked:4,Have:4,Got:4
+2011-05-17 13:19:21,682:INFO    gpu 462 Spawning 4 GPU Threads
+2011-05-17 13:19:21,754:INFO    gpu 654 Initialising CUDA device 0:(98.69% Free)
+2011-05-17 13:19:21,910:INFO    gpu 654 Initialising CUDA device 2:(98.69% Free)
+2011-05-17 13:19:21,830:INFO    gpu 654 Initialising CUDA device 1:(98.69% Free)
+2011-05-17 13:19:21,989:INFO    bundle 95 Calculating the channel matrix for 224 channels
+2011-05-17 13:19:21,989:INFO    gpu 654 Initialising CUDA device 3:(98.69% Free)
+2011-05-17 13:19:22,696:INFO    bundle 166 Lines are different, xtalk should not be symmetric
+2011-05-17 13:19:22,700:INFO    bundle 176 Total:1344,%Yes:1.000000%
+2011-05-17 13:19:22,745:INFO    algorithm 65 Starting Spectrum Balancing using ISB
+2011-05-17 13:19:22,745:INFO    isb 70 Bisection
+2011-05-17 13:19:22,745:INFO    isb 82 Beginning Bisection
+2011-05-17 13:19:22,745:INFO    isb 97 Beginning l-range hunt;line:0
+2011-05-17 13:19:22,776:INFO    isb 105 Overshot power budget:linepower:87.266,lastdrop:100%,budget:0.11
+2011-05-17 13:19:22,790:INFO    isb 105 Overshot power budget:linepower:61.114,lastdrop:30%,budget:0.11
+2011-05-17 13:19:22,803:INFO    isb 105 Overshot power budget:linepower:45.363,lastdrop:26%,budget:0.11
+2011-05-17 13:19:22,818:INFO    isb 105 Overshot power budget:linepower:33.197,lastdrop:27%,budget:0.11
+2011-05-17 13:19:22,833:INFO    isb 105 Overshot power budget:linepower:20.174,lastdrop:39%,budget:0.11
+2011-05-17 13:19:22,849:INFO    isb 105 Overshot power budget:linepower:12.032,lastdrop:40%,budget:0.11
+2011-05-17 13:19:22,863:INFO    isb 105 Overshot power budget:linepower:6.994,lastdrop:42%,budget:0.11
+2011-05-17 13:19:22,878:INFO    isb 105 Overshot power budget:linepower:3.974,lastdrop:43%,budget:0.11
+2011-05-17 13:19:22,893:INFO    isb 105 Overshot power budget:linepower:2.157,lastdrop:46%,budget:0.11
+2011-05-17 13:19:22,910:INFO    isb 105 Overshot power budget:linepower:1.218,lastdrop:44%,budget:0.11
+2011-05-17 13:19:22,924:INFO    isb 105 Overshot power budget:linepower:0.649,lastdrop:47%,budget:0.11
+2011-05-17 13:19:22,940:INFO    isb 105 Overshot power budget:linepower:0.341,lastdrop:47%,budget:0.11
+2011-05-17 13:19:22,955:INFO    isb 105 Overshot power budget:linepower:0.182,lastdrop:46%,budget:0.11
+2011-05-17 13:19:22,969:INFO    isb 112 Satisfied power budget:linepower:0.09488,budget:0.11
+2011-05-17 13:19:22,969:INFO    isb 133 Completed l-range hunt; max:8192.000000,min:4096.000000
+2011-05-17 13:19:22,970:INFO    isb 137 Beginning optimisation run;line:0
+2011-05-17 13:19:22,999:INFO    isb 148 Completed optimisation run;line:0, l:7168.000000
+2011-05-17 13:19:22,999:INFO    isb 97 Beginning l-range hunt;line:1
+2011-05-17 13:19:23,027:INFO    isb 105 Overshot power budget:linepower:1.343,lastdrop:100%,budget:0.11
+2011-05-17 13:19:23,042:INFO    isb 105 Overshot power budget:linepower:1.276,lastdrop:5%,budget:0.11
+2011-05-17 13:19:23,057:INFO    isb 105 Overshot power budget:linepower:1.073,lastdrop:16%,budget:0.11
+2011-05-17 13:19:23,072:INFO    isb 105 Overshot power budget:linepower:0.738,lastdrop:31%,budget:0.11
+2011-05-17 13:19:23,088:INFO    isb 105 Overshot power budget:linepower:0.701,lastdrop:5%,budget:0.11
+2011-05-17 13:19:23,102:INFO    isb 105 Overshot power budget:linepower:0.533,lastdrop:24%,budget:0.11
+2011-05-17 13:19:23,116:INFO    isb 105 Overshot power budget:linepower:0.394,lastdrop:26%,budget:0.11
+2011-05-17 13:19:23,130:INFO    isb 105 Overshot power budget:linepower:0.312,lastdrop:21%,budget:0.11
+2011-05-17 13:19:23,146:INFO    isb 105 Overshot power budget:linepower:0.164,lastdrop:47%,budget:0.11
+2011-05-17 13:19:23,162:INFO    isb 112 Satisfied power budget:linepower:0.10751,budget:0.11
+2011-05-17 13:19:23,162:INFO    isb 133 Completed l-range hunt; max:512.000000,min:256.000000
+2011-05-17 13:19:23,162:INFO    isb 137 Beginning optimisation run;line:1
+2011-05-17 13:19:23,192:INFO    isb 148 Completed optimisation run;line:1, l:448.000000
+2011-05-17 13:19:23,192:INFO    isb 97 Beginning l-range hunt;line:2
+2011-05-17 13:19:23,236:INFO    isb 124 Zeroed lambda on 2:linepower:0.08769,budget:0.11
+2011-05-17 13:19:23,236:INFO    isb 133 Completed l-range hunt; max:1.000000,min:0.500000
+2011-05-17 13:19:23,236:INFO    isb 137 Beginning optimisation run;line:2
+2011-05-17 13:19:23,251:INFO    isb 148 Completed optimisation run;line:2, l:0.750000
+2011-05-17 13:19:23,251:INFO    isb 97 Beginning l-range hunt;line:3
+2011-05-17 13:19:23,295:INFO    isb 124 Zeroed lambda on 3:linepower:0.00722,budget:0.11
+2011-05-17 13:19:23,295:INFO    isb 133 Completed l-range hunt; max:1.000000,min:0.500000
+2011-05-17 13:19:23,295:INFO    isb 137 Beginning optimisation run;line:3
+2011-05-17 13:19:23,309:INFO    isb 148 Completed optimisation run;line:3, l:0.750000
+2011-05-17 13:19:23,309:INFO    isb 97 Beginning l-range hunt;line:4
+2011-05-17 13:19:23,338:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:100%,budget:0.11
+2011-05-17 13:19:23,354:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,368:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,395:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,412:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,428:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,455:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,470:INFO    isb 105 Overshot power budget:linepower:0.219,lastdrop:0%,budget:0.11
+2011-05-17 13:19:23,485:INFO    isb 105 Overshot power budget:linepower:0.209,lastdrop:5%,budget:0.11
+2011-05-17 13:19:23,500:INFO    isb 105 Overshot power budget:linepower:0.216,lastdrop:-3%,budget:0.11
+2011-05-17 13:19:23,514:INFO    isb 105 Overshot power budget:linepower:0.194,lastdrop:10%,budget:0.11
+2011-05-17 13:19:23,553:INFO    isb 112 Satisfied power budget:linepower:0.07363,budget:0.11
+2011-05-17 13:19:23,553:INFO    isb 133 Completed l-range hunt; max:2048.000000,min:1024.000000
+2011-05-17 13:19:23,554:INFO    isb 137 Beginning optimisation run;line:4
+2011-05-17 13:19:23,581:INFO    isb 148 Completed optimisation run;line:4, l:1792.000000
+2011-05-17 13:19:23,581:INFO    isb 97 Beginning l-range hunt;line:5
+2011-05-17 13:19:23,624:INFO    isb 124 Zeroed lambda on 5:linepower:0.00055,budget:0.11
+2011-05-17 13:19:23,624:INFO    isb 133 Completed l-range hunt; max:1.000000,min:0.500000
+2011-05-17 13:19:23,624:INFO    isb 137 Beginning optimisation run;line:5
+2011-05-17 13:19:23,639:INFO    isb 148 Completed optimisation run;line:5, l:0.750000
+2011-05-17 13:19:23,899:INFO    bundle 302 Cache Hits:0
+2011-05-17 13:19:23,899:INFO    bundle 303 Cache Mises:0
+2011-05-17 13:19:23,919:INFO    bundle 321 Line:0,Power:966.095mW,Rate:2264bpf
+2011-05-17 13:19:23,939:INFO    bundle 321 Line:1,Power:966.154mW,Rate:2809bpf
+2011-05-17 13:19:23,960:INFO    bundle 321 Line:2,Power:966.126mW,Rate:3131bpf
+2011-05-17 13:19:23,980:INFO    bundle 321 Line:3,Power:966.034mW,Rate:2959bpf
+2011-05-17 13:19:24,000:INFO    bundle 321 Line:4,Power:966.106mW,Rate:3249bpf
+2011-05-17 13:19:24,020:INFO    bundle 321 Line:5,Power:966.001mW,Rate:1819bpf
+2011-05-17 13:19:24,020:INFO    bundle 327 Bundle Rate:16231bpf
+2011-05-17 13:19:24,045:INFO    algorithm 101 All Done Here, took 1.275613, hit ratio of 0.0000

@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Forms Of Parallelism, aka, Flynn's Taxonomy</TITLE>
+<META NAME="description" CONTENT="Forms Of Parallelism, aka, Flynn's Taxonomy">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node24.html">
+<LINK REL="previous" HREF="node20.html">
+<LINK REL="up" HREF="node20.html">
+<LINK REL="next" HREF="node22.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html538"
+  HREF="node22.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html534"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html528"
+  HREF="node20.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html536"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html539"
+  HREF="node22.html">Pipe-lining</A>
+<B> Up:</B> <A NAME="tex2html535"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html529"
+  HREF="node20.html">Parallel Computing</A>
+ &nbsp; <B>  <A NAME="tex2html537"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00321000000000000000">
+Forms Of Parallelism, aka, Flynn's Taxonomy</A>
+</H2><SMALL CLASS="SMALL">
+Based on the interactions between instructions and data, Flynn <A
+ HREF="node65.html#Fly72">Flynn (1972)</A> classified computation systems in terms of how Processing Units (PU)<A NAME="tex2html47"
+  HREF="footnode.html#foot906"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">27</SPAN></SUP></A> process instructions and data.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:FlynnsTaxonomy"></A><A NAME="912"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 15:</STRONG>
+Flynn's Taxonomy of Parallel Computing Systems</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [SISD]<IMG
+  WIDTH="400" HEIGHT="400" ALIGN="BOTTOM" BORDER="0"
+ SRC="./SISD.png"
+ ALT="Image SISD">
+  [SIMD]<IMG
+  WIDTH="400" HEIGHT="400" ALIGN="BOTTOM" BORDER="0"
+ SRC="./SIMD.png"
+ ALT="Image SIMD">
+  
+<BR>  [MISD]<IMG
+  WIDTH="400" HEIGHT="400" ALIGN="BOTTOM" BORDER="0"
+ SRC="./MISD.png"
+ ALT="Image MISD">
+  [MIMD]<IMG
+  WIDTH="400" HEIGHT="400" ALIGN="BOTTOM" BORDER="0"
+ SRC="./MIMD.png"
+ ALT="Image MIMD"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+
+<DIV ALIGN="CENTER">
+
+<P><A NAME="tab:flynn"></A></P>  <TABLE  WIDTH="100%"><CAPTION ALIGN="BOTTOM"><STRONG>Appendix 16:</STRONG>
+Flynn's Taxonomy of Parallel Computation</CAPTION>
+<TR><TD>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER" WIDTH="100%">
+<TR><TD ALIGN="CENTER">Class</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=213>Description</TD>
+<TD ALIGN="LEFT">Example</TD>
+</TR>
+<TR><TD ALIGN="CENTER">SISD</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=213>Single Instruction, Single Data Stream</TD>
+<TD ALIGN="LEFT">Traditional Serial ProcessingSISDSingle Instruction, Single Data Stream</TD>
+</TR>
+<TR><TD ALIGN="CENTER">SIMD</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=213>Single Instruction, Multiple Data Stream</TD>
+<TD ALIGN="LEFT">GPGPU<A NAME="tex2html50"
+  HREF="#footmp923"><SUP><SPAN CLASS="arabic">1</SPAN></SUP></A>/Many-coreSIMDSingle Instruction, Multiple Data Stream</TD>
+</TR>
+<TR><TD ALIGN="CENTER">MISD</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=213>Multiple Instruction, Single Data Stream</TD>
+<TD ALIGN="LEFT">(Rare<A NAME="tex2html51"
+  HREF="#footmp926"><SUP><SPAN CLASS="arabic">2</SPAN></SUP></A>)MISDMultiple Instruction, Single Data Stream</TD>
+</TR>
+<TR><TD ALIGN="CENTER">MIMD</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=213>Multiple Instruction, Multiple Data Stream</TD>
+<TD ALIGN="LEFT">Cluster/Grid systems (e.g. LHCGrid)MIMDMultiple Instruction, Multiple Data Stream</TD>
+</TR>
+</TABLE></TD></TR>
+<TR ALIGN="LEFT">
+<TD><DL>
+<DD><A NAME="footmp923"><SUP><SPAN CLASS="arabic">1</SPAN></SUP></A> Not really any more, but we're getting to that
+</DD>
+
+<DD><A NAME="footmp926"><SUP><SPAN CLASS="arabic">2</SPAN></SUP></A> This architecture is generally only applied where redundancy is critical, and the 'Multiple Instructions' operate on the signal data stream and must agree. One prominent example is the Space Shuttle Flight Control systems
+</DD>
+</DL></TD></TR>
+</TABLE>
+</DIV>
+<P>
+<SMALL CLASS="SMALL">Intuitively, this breakdown is a matrix of data and instruction parallelism. Taking SISD and SIMD separately (as they are the most familiar and relevant), SISD performs a single operation on a single piece of data. It can only process that one piece of data at a time, and can only execute one instruction at a time<A NAME="tex2html52"
+  HREF="footnode.html#foot936"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">28</SPAN></SUP></A>. SIMD on the other hand takes that one execution instruction, and can operate on many pieces of data, producing many results in parallel. This behaviour is augmented in MIMD, where data and instructions are processed in parallel; this could be within a single device (Such as the Cell Broadband Engine) or distributed across the globe.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Flynn created a very clear and simple map of parallelism. Unfortunately the real world got in the way and complicated things. Two major 'complications' will be addressed that have muddied the taxonomic water; SISD Instruction Pipe-lining, and Single Program Multiple Data (SPMDSPMDSingle Program Multiple Data Stream) execution.
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html540"
+  HREF="node22.html">Pipe-lining</A>
+<LI><A NAME="tex2html541"
+  HREF="node23.html">Single Program Multiple Data</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html538"
+  HREF="node22.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html534"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html528"
+  HREF="node20.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html536"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html539"
+  HREF="node22.html">Pipe-lining</A>
+<B> Up:</B> <A NAME="tex2html535"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html529"
+  HREF="node20.html">Parallel Computing</A>
+ &nbsp; <B>  <A NAME="tex2html537"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

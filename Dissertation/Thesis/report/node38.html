@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Retrospective analysis of CPU bound applications</TITLE>
+<META NAME="description" CONTENT="Retrospective analysis of CPU bound applications">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node40.html">
+<LINK REL="previous" HREF="node37.html">
+<LINK REL="up" HREF="node37.html">
+<LINK REL="next" HREF="node39.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html762"
+  HREF="node39.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html758"
+  HREF="node37.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html752"
+  HREF="node37.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html760"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html763"
+  HREF="node39.html">Conclusions</A>
+<B> Up:</B> <A NAME="tex2html759"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+<B> Previous:</B> <A NAME="tex2html753"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+ &nbsp; <B>  <A NAME="tex2html761"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00441000000000000000">
+Retrospective analysis of CPU bound applications</A>
+</H2><SMALL CLASS="SMALL">
+Python's profiling architecture allows for detailed analysis of 'hot-zones' within applications, i.e. the areas within a program where most time and resources are spent over the course of execution. In order to see a 'practical' workload, for the following analysis, a four line near-far bundle was used<A HREF="node8.html#fig:4-3k5k-nearfar">3b</A>.
+In order to visualise the profiled-executions, the RunSnakeRun application was used to generate squaremap representations of time spent in different functions; larger areas represent a greater total time spent in that area of computation (Figure <A HREF="#fig:cpuprofileComparison">39</A>). 
+</SMALL>
+<DIV ALIGN="CENTER"><A NAME="fig:cpuprofileOSB"></A><A NAME="fig:cpuprofileISB"></A><A NAME="fig:cpuprofileMIPB"></A><A NAME="fig:cpuprofileComparison"></A><A NAME="2379"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 39:</STRONG>
+SquareMap output from RunSnake showing percentage execution time for a four line bundle scenario</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  [OSB Profile SquareMap]<IMG
+  WIDTH="852" HEIGHT="505" ALIGN="BOTTOM" BORDER="0"
+ SRC="./OSB_4_profile_CPU.png"
+ ALT="Image OSB_4_profile_CPU">
+<BR>  [ISB Profile SquareMap]<IMG
+  WIDTH="848" HEIGHT="388" ALIGN="BOTTOM" BORDER="0"
+ SRC="./ISB_4_profile_CPU.png"
+ ALT="Image ISB_4_profile_CPU">
+<BR>  [MIPB Profile SquareMap]<IMG
+  WIDTH="663" HEIGHT="443" ALIGN="BOTTOM" BORDER="0"
+ SRC="./MIPB_4_profile_CPU.png"
+ ALT="Image MIPB_4_profile_CPU"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html764"
+  HREF="node39.html">Conclusions</A>
+</UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

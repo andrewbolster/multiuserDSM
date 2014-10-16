@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Introduction</TITLE>
+<META NAME="description" CONTENT="Introduction">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node5.html">
+<LINK REL="previous" HREF="node1.html">
+<LINK REL="up" HREF="report.html">
+<LINK REL="next" HREF="node3.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html263"
+  HREF="node3.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html259"
+  HREF="report.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html253"
+  HREF="node1.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html261"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html264"
+  HREF="node3.html">Project Specification</A>
+<B> Up:</B> <A NAME="tex2html260"
+  HREF="report.html">report</A>
+<B> Previous:</B> <A NAME="tex2html254"
+  HREF="node1.html">Contents</A>
+ &nbsp; <B>  <A NAME="tex2html262"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00200000000000000000">
+Introduction</A>
+</H1><SMALL CLASS="SMALL">
+If there are two characteristics the internet has shown over the past 30 years, it's spacial growth, and an insatiable demand for bandwidth.
+By December 2010, almost 30% of the world's population was connected to the Internet. In the developing world, much of this can be accredited to the growth of mobile connectivity, but even for DSL, a technology that dates back to 1984, growth continues. In Q3 2010, BT announced that it had added nearly 200,000 DSL lines in the UK, bringing their total market share to 53%.<A
+ HREF="node65.html#BP11">BT PLC. (2011)</A>
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The rise of applications including  live-video streaming such as BBC iPlayer, distributed content systems such as BitTorrent, and real-time gaming platforms such as XBox Live, continuously pressure Internet Service Providers (ISPISPInternet Service Provider's) to improve backbone and last-mile infrastructure to satisfy customer expectations.
+Technologies are coming to market, such as Fibre to the Home/Building/Cabinet (FTTxFTTxFibre-to-the Home/Building/Cabinet) which involves the replacement of copper lines with optical fibres, but in many cases, this is expensive and will not be done outside of dense municipal areas.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:bt-dsl-stats"></A><A NAME="183"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 1:</STRONG>
+Growth in Broadband connections in the UK</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV> <IMG
+  WIDTH="670" HEIGHT="332" ALIGN="BOTTOM" BORDER="0"
+ SRC="./BT-DSL-growth.png"
+ ALT="Image BT-DSL-growth"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">For other users, Digital Subscriber Lines (DSL) built on top of the existing plain old telephone system (POTSPOTSPlain Old Telephone Service) are often the only option for anything approaching high-speed internet access. As such, DSL has been a focus of research and development, leading to significant growth in achievable data rates, from 8MBits Downstream for Asymmetric DSL (ADSLADSLAsymmetric Digital Subscriber Lines) , through 24 MBits Downstream for ADSL2/2+, and more recently, up to 100MBits symmetrically on short loop lengths (less than 250m) for Very high bit-rate DSL (VDSLVDSLVery high bit-rate Digital Subscriber Lines).
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">FTTx and xDSL are both evolving together; as FTTx reduces the last-mile length, xDSL frequency use expands to provide the maximum bandwidth on that short-loop. While in some urban areas, FTTH will become the prevalent form of broadband internet access, xDSL will still be needed for a long time to come for the vast majority of the populace.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">But existing methods of managing the bandwidth allocations for bundles of xDSL lines are either computationally simple, but sub-optimal, or computationally intractable and near-optimal. Much work and research has gone into developing advanced and intelligent Dynamic Spectrum Management (DSM) algorithms, but little attention has been applied to the practical implications of these algorithms and the real-world effect that different forms of that implementation make to performance and tractability.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Massively parallel computing, in the form of GPGPU, is becoming a popular paradigm in computational research, with classically linear algorithms being distributed across these Single Instruction Multiple Data (SIMD) devices giving general speed-ups in the range of 5-500x. The most popular and developed form of GPGPU architecture is NVidia's Compute Unified Device Architecture (CUDACUDACompute Unified Device Architecture), which leverages the streaming multiprocessor (SMSMStreaming Multiprocessor) and high speed memories of their GPU's (usually used for gaming) for use as scientific computation devices. 
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">In this report, the viability of GPGPU accelerated DSM algorithms is investigated, 
+
+</SMALL>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html265"
+  HREF="node3.html">Project Specification</A>
+<LI><A NAME="tex2html266"
+  HREF="node4.html">Overview and Objectives</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html263"
+  HREF="node3.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html259"
+  HREF="report.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html253"
+  HREF="node1.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html261"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html264"
+  HREF="node3.html">Project Specification</A>
+<B> Up:</B> <A NAME="tex2html260"
+  HREF="report.html">report</A>
+<B> Previous:</B> <A NAME="tex2html254"
+  HREF="node1.html">Contents</A>
+ &nbsp; <B>  <A NAME="tex2html262"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

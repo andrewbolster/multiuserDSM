@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>GPU Solutions and Verification</TITLE>
+<META NAME="description" CONTENT="GPU Solutions and Verification">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node37.html">
+<LINK REL="up" HREF="node33.html">
+<LINK REL="next" HREF="node46.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html842"
+  HREF="node46.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html838"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html834"
+  HREF="node44.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html840"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html843"
+  HREF="node46.html">OSB GPU</A>
+<B> Up:</B> <A NAME="tex2html839"
+  HREF="node33.html">Development and Solution</A>
+<B> Previous:</B> <A NAME="tex2html835"
+  HREF="node44.html">Development of generalised multi-device</A>
+ &nbsp; <B>  <A NAME="tex2html841"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00450000000000000000">
+GPU Solutions and Verification</A>
+</H1><SMALL CLASS="SMALL">
+The solutions arrived at for GPU consist of a series of C-sourced CUDA kernels, along with a collection of device-side functions. While PyCUDA exposes some high-level GPU abstraction capabilities, such as parallel per-element array manipulations, this avenue of work could not be applied cleanly to the problem set, mainly due to the need for intra-element operations such as PSD solving.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Before diving into details; the OSB solution consists of three separate per-channel kernels that replicate the operation of 'optimise_p' in the serial implementation (Bit-load/AB generation, PSD Solving, LK calculation), executing for all bit-load permutations simultaneously; while ISB consists of a single kernel that performs per iterative optimisation across a range of channels simultaneously, with the kernel being iteratively executed until bit-load convergence<A NAME="tex2html113"
+  HREF="footnode.html#foot2417"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">23</SPAN></SUP></A>.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Additionally, a secondary function was generated for global verification of 'optimal' bit-load PSD's, used during final recalculation of per-line power ratings.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">These kernels and device functions are shown in detail in Appendix <A HREF="#apx:GPU-code">E</A>
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html844"
+  HREF="node46.html">OSB GPU</A>
+<UL>
+<LI><A NAME="tex2html845"
+  HREF="node47.html">Verification</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html846"
+  HREF="node48.html">ISB GPU</A>
+<UL>
+<LI><A NAME="tex2html847"
+  HREF="node49.html">Verification</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html848"
+  HREF="node50.html">MIPB GPU</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html842"
+  HREF="node46.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html838"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html834"
+  HREF="node44.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html840"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html843"
+  HREF="node46.html">OSB GPU</A>
+<B> Up:</B> <A NAME="tex2html839"
+  HREF="node33.html">Development and Solution</A>
+<B> Previous:</B> <A NAME="tex2html835"
+  HREF="node44.html">Development of generalised multi-device</A>
+ &nbsp; <B>  <A NAME="tex2html841"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

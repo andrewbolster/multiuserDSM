@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Project Specification</TITLE>
+<META NAME="description" CONTENT="Project Specification">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node4.html">
+<LINK REL="previous" HREF="node2.html">
+<LINK REL="up" HREF="node2.html">
+<LINK REL="next" HREF="node4.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html277"
+  HREF="node4.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html273"
+  HREF="node2.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html267"
+  HREF="node2.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html275"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html278"
+  HREF="node4.html">Overview and Objectives</A>
+<B> Up:</B> <A NAME="tex2html274"
+  HREF="node2.html">Introduction</A>
+<B> Previous:</B> <A NAME="tex2html268"
+  HREF="node2.html">Introduction</A>
+ &nbsp; <B>  <A NAME="tex2html276"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00210000000000000000"></A>
+<A NAME="sec:proj-spec"></A>
+<BR>
+Project Specification
+</H1>
+<DIV ALIGN="CENTER">
+<SPAN  CLASS="textbf">School of Electrical and Electronic Engineering and Computer Science
+<BR>
+FINAL YEAR PROJECT 2010/2011
+<BR></SPAN>
+
+</DIV>
+<P>
+<TABLE CELLPADDING=3>
+<TR><TD ALIGN="RIGHT"><SMALL CLASS="SMALL"> Title:</SMALL></TD>
+<TD ALIGN="LEFT"><SMALL CLASS="SMALL">High-Speed bit-loading algorithms for Dynamic Spectrum Management in ADSL</SMALL></TD>
+</TR>
+<TR><TD ALIGN="RIGHT"><SMALL CLASS="SMALL">
+Student:</SMALL></TD>
+<TD ALIGN="LEFT"><SMALL CLASS="SMALL">Andrew Bolster</SMALL></TD>
+</TR>
+<TR><TD ALIGN="RIGHT"><SMALL CLASS="SMALL">
+Supervisor:</SMALL></TD>
+<TD ALIGN="LEFT"><SMALL CLASS="SMALL">Prof A Marshall</SMALL></TD>
+</TR>
+<TR><TD ALIGN="RIGHT"><SMALL CLASS="SMALL">
+Moderator:</SMALL></TD>
+<TD ALIGN="LEFT"><SMALL CLASS="SMALL">Dr J McAllister</SMALL></TD>
+</TR>
+<TR><TD ALIGN="RIGHT"><SMALL CLASS="SMALL">
+Area:</SMALL></TD>
+<TD ALIGN="LEFT"><SMALL CLASS="SMALL">Digital Comms</SMALL></TD>
+</TR>
+<TR><TD ALIGN="RIGHT"><SMALL CLASS="SMALL">
+Research Cluster:</SMALL></TD>
+<TD ALIGN="LEFT"><SMALL CLASS="SMALL">Digital Comms</SMALL></TD>
+</TR>
+<TR><TD></TD>
+<TD></TD>
+</TR>
+</TABLE>
+<P>
+<SMALL CLASS="SMALL">Digital subscriber lines need to employ bit-loading techniques to improve their throughput; this is known as “Dynamic Spectrum Management” (DSM). Currently all implementations of DSM use level 1 whereby individual lines use a “water-filling” algorithm to adjust the power allocated to each tone in the spectrum, and a central management station adjusts the water-filling parameters for each line in the subscriber bundle. However this approach is sub-optimal whenever the capacity of the overall bundle is considered, hence more recent research has proposed (level 2) more intelligent methods to allocate the power for each bit in each tone, considering both near and far end crosstalk in the bundle.
+A major problem with the level 2 techniques is their computational complexity which currently renders them practically infeasible, e.g. ISB typically takes more than 1 week to compute the tones for a 10-line bundle. Graphic Processing Units (GPUs) represent a new approach to massively parallel floating-point computations. Moreover the Compute Unified Device Architecture (CUDA) developed by NVidia,represents a framework whereby new highly parallel algorithms can be developed. The main aim of this project is to apply this approach to level 2 DSM algorithms, many of which are highly parallel in their operation.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL"><SPAN  CLASS="textbf">The objectives of the project are:</SPAN>
+<BR>
+
+<BR>
+</SMALL>
+<P>
+<SMALL CLASS="SMALL"><SPAN  CLASS="textbf">M.Eng. Extensions</SPAN>
+<BR>
+
+<BR>
+</SMALL>
+<P>
+<SMALL CLASS="SMALL"><SPAN  CLASS="textbf">Learning Outcomes</SPAN>
+<BR>
+
+<BR>
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html277"
+  HREF="node4.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html273"
+  HREF="node2.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html267"
+  HREF="node2.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html275"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html278"
+  HREF="node4.html">Overview and Objectives</A>
+<B> Up:</B> <A NAME="tex2html274"
+  HREF="node2.html">Introduction</A>
+<B> Previous:</B> <A NAME="tex2html268"
+  HREF="node2.html">Introduction</A>
+ &nbsp; <B>  <A NAME="tex2html276"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

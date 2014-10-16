@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>CUDA Execution architecture</TITLE>
+<META NAME="description" CONTENT="CUDA Execution architecture">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node28.html">
+<LINK REL="previous" HREF="node26.html">
+<LINK REL="up" HREF="node20.html">
+<LINK REL="next" HREF="node28.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html609"
+  HREF="node28.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html605"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html599"
+  HREF="node26.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html607"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html610"
+  HREF="node28.html">CUDA Memory architecture</A>
+<B> Up:</B> <A NAME="tex2html606"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html600"
+  HREF="node26.html">General Purpose computing on</A>
+ &nbsp; <B>  <A NAME="tex2html608"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00324000000000000000"></A><A NAME="fig:CUDAExecArch"></A>
+<BR>
+CUDA Execution architecture
+</H2><SMALL CLASS="SMALL">
+A CUDA execution consists of both host (CPU) and device (GPU) phases. The device phases, called kernels, are written in C/C++<A NAME="tex2html62"
+  HREF="footnode.html#foot1005"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">34</SPAN></SUP></A>. Since these kernels reside only on the device, access to main host memory is impossible, and data sets to be worked on, as well as areas of memory to store results, must be set-up by the host on the device before invocation. The amount of parallelism used by the kernel is decided per-kernel invocation, but the kernels themselves must be written with this level of parallelism in mind; there are no magic tricks in CUDA. To understand this, the low level architecture of the GPU must be investigated. 
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:CUDAHostDevExec"></A><A NAME="1008"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 21:</STRONG>
+Diagram showing levels of execution between host and CUDA device operations</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="378" HEIGHT="438" ALIGN="BOTTOM" BORDER="0"
+ SRC="./CUDA_host_dev_threads.png"
+ ALT="Image CUDA_host_dev_threads"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">Starting from the top down, a host machine can have multiple GPU devices, which can all be individually addressed for asynchronous execution in parallel. Below this level, and as shown in Figure&nbsp;<A HREF="#fig:CUDAHostDevExec">21</A>, there are logical 'Grids', which contain logical 'Blocks' of threads. These Grids and Blocks are the fundamental form of execution parallelism. As shown in Figure&nbsp;<A HREF="#fig:CUDAHostDevExec">21</A>, Grids can be thought of as two dimensional arrays of Blocks, and Blocks are thought of as three dimensional arrays of Threads. It is these threads that actually execute any particular workload.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:KernelInvocation"></A><A NAME="1016"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 22:</STRONG>
+Example CUDA host code segment, showing kernel invocation</CAPTION>
+<TR><TD></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">As stated, the level of parallelism is defined at the kernel invocation stage and (until very recently<A NAME="tex2html65"
+  HREF="footnode.html#foot1019"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">35</SPAN></SUP></A>) only one kernel can run on a single device at a time. Following the SIMD model, parallelism is attained by per-thread self-indexing. In the case of CUDA, each thread could generate a unique 1D execution index using a combination of runtime variables that are pro grammatically exposed through the CUDA Driver API, as shown in Figure&nbsp;<A HREF="#fig:GridBlockThread1D">23</A>. In this particular example, it assumed that both Grid and Block dimensions are 1D. This is useful in this case for scalar multiplication of linear arrays, and could process input data containing <!-- MATH
+ $2^{16}\times 2^{10} = 2^{27}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="107" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+ SRC="img107.png"
+ ALT="$ 2^{16}\times 2^{10} = 2^{27}$"></SPAN>, or over 67 million values<A NAME="tex2html66"
+  HREF="footnode.html#foot1024"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">36</SPAN></SUP></A>. CUDA introduces several additional keywords to the C language, in this case "__global__", which indicates that the function is executed on the device, but can be called from the host. A summary of these function declaration keywords is shown in Table&nbsp;<A HREF="#tab:CUDAFuncDecTable">2.1</A>
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:GridBlockThread1D"></A><A NAME="1030"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 23:</STRONG>
+Example CUDA kernel, showing 1D index identification</CAPTION>
+<TR><TD><IMG
+ WIDTH="755" HEIGHT="12" BORDER="0"
+ SRC="img108.png"
+ ALT="\begin{figure}\centering
+\begin{lstlisting}[numbers=left, language=C, numbersty...
+...x;
+array[1Dindex]=array[1Dindex]*multiplier;
+}
+\end{lstlisting}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<BR><P></P>
+<DIV ALIGN="CENTER"><A NAME="tab:CUDAFuncDecTable"></A><A NAME="1038"></A>
+<TABLE>
+<CAPTION><STRONG>Table 2.1:</STRONG>
+Table of CUDA Function Declaration Keywords and their use</CAPTION>
+<TR><TD></TD></TR>
+</TABLE>
+</DIV><P></P>
+<BR>
+<P>
+<SMALL CLASS="SMALL">For more parallelism, and more context relevance, consider scalar multiplication of large matrices. The previously stated indexing scheme could be used sequentially, i.e taking each row of the matrix in turn and farming the computation of that row to the GPU, but as stated, CUDA allows (actually encourages) multi-dimensional indexing, so each thread execution could be tasked with modifying multiplying one matrix element by 2D addressing, as shown in Figure&nbsp;<A HREF="#fig:GridBlockThread2D">24</A>. This form of parallelism theoretically allows for up to <!-- MATH
+ $2^{16}*2^{16}*2^{10}*2^{10}=2^{52}$
+ -->
+<SPAN CLASS="MATH"><IMG
+ WIDTH="175" HEIGHT="18" ALIGN="BOTTOM" BORDER="0"
+ SRC="img110.png"
+ ALT="$ 2^{16}*2^{16}*2^{10}*2^{10}=2^{52}$"></SPAN> or about 4.5 quadrillion threads, (i.e operating on a square matrix of side <SPAN CLASS="MATH"><IMG
+ WIDTH="23" HEIGHT="18" ALIGN="BOTTOM" BORDER="0"
+ SRC="img111.png"
+ ALT="$ 2^{27}$"></SPAN>)<A NAME="tex2html69"
+  HREF="footnode.html#foot1048"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">37</SPAN></SUP></A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:GridBlockThread2D"></A><A NAME="1053"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 24:</STRONG>
+Example CUDA kernel, showing 2D index identification</CAPTION>
+<TR><TD><IMG
+ WIDTH="1105" HEIGHT="12" BORDER="0"
+ SRC="img112.png"
+ ALT="\begin{figure}\centering
+\begin{lstlisting}[numbers=left, language=C, numbersty...
+...y_index]=matrix[x_index][y_index]*multiplier;
+}
+\end{lstlisting}
+\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">Moving into the practical realm, once a kernel is launched, the CUDA runtime system generates the corresponding logical grid of threads. These threads are assigned to execution resources such as shared memories and thread registers<A NAME="tex2html71"
+  HREF="footnode.html#foot1196"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">38</SPAN></SUP></A> on a block-by-block basis<A NAME="tex2html72"
+  HREF="footnode.html#foot1057"><SUP><SPAN CLASS="arabic">2</SPAN>.<SPAN CLASS="arabic">39</SPAN></SUP></A>. These resources are organised into streaming multiprocessors (SMs), the number of which vary depending on the particular hardware, but usually around 15 are active. These SMs can each be assigned up to 32 thread-blocks, each of which is executed on a separate Streaming Processor (SP) core. These cores can handle up to 48 threads in parallel. In the case of the Tesla C2050, this means that over 20,000 threads can be 'simultaneously' executed.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Note that this does not limit the grid and block dimensions; groups of threads, termed warps, are swapped in and out of the SM's regularly, making execution tolerant of long-latency operations such as global memory access. This warping of threads is also an important concept for thread-divergence; when runtime-dependant conditional statements in kernel execution have different branching behaviours in threads that are in the same 'warp', the warp is actually executed twice; once for the major condition, and once for the minor condition. Between these two executions, the results obtained from the 'minor' path are discarded and during the minor execution, the results from the major path are also discarded. It is for this reason that conditional behaviour should be avoided in a GPU environment (Figure&nbsp;<A HREF="#fig:thread-divergence">25</A> demonstrates this. Adapted from <A
+ HREF="node65.html#KF08">Kayvon Fatahalian (2008)</A>). 
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER"><A NAME="fig:thread-divergence"></A><A NAME="1062"></A>
+<TABLE>
+<CAPTION ALIGN="BOTTOM"><STRONG>Appendix 25:</STRONG>
+Diagram showing thread divergence operation under CUDA, adapted from SIGGRAPH 2008 proceedings</CAPTION>
+<TR><TD>
+<DIV ALIGN="CENTER">
+
+</DIV>  <IMG
+  WIDTH="926" HEIGHT="555" ALIGN="BOTTOM" BORDER="0"
+ SRC="./thread_divergence.png"
+ ALT="Image thread_divergence"></TD></TR>
+</TABLE>
+</DIV>
+
+<P>
+<SMALL CLASS="SMALL">As mentioned, resource allocation is partially decided upon the memory requirements of a particular kernel. These and other memory related concepts are covered in the following section.
+</SMALL>
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html609"
+  HREF="node28.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html605"
+  HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html599"
+  HREF="node26.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html607"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html610"
+  HREF="node28.html">CUDA Memory architecture</A>
+<B> Up:</B> <A NAME="tex2html606"
+  HREF="node20.html">Parallel Computing</A>
+<B> Previous:</B> <A NAME="tex2html600"
+  HREF="node26.html">General Purpose computing on</A>
+ &nbsp; <B>  <A NAME="tex2html608"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

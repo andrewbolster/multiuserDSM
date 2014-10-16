@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Greedy: Avenues of parallelisation and problem decomposition schemes</TITLE>
+<META NAME="description" CONTENT="Greedy: Avenues of parallelisation and problem decomposition schemes">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="previous" HREF="node40.html">
+<LINK REL="up" HREF="node37.html">
+<LINK REL="next" HREF="node42.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html795"
+  HREF="node42.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html791"
+  HREF="node37.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html787"
+  HREF="node40.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html793"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html796"
+  HREF="node42.html">ISB: Avenues of parallelisation</A>
+<B> Up:</B> <A NAME="tex2html792"
+  HREF="node37.html">GPU-bound Algorithm Development</A>
+<B> Previous:</B> <A NAME="tex2html788"
+  HREF="node40.html">OSB: Avenues of parallelisation</A>
+ &nbsp; <B>  <A NAME="tex2html794"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00443000000000000000">
+Greedy: Avenues of parallelisation and problem decomposition schemes</A>
+</H2><SMALL CLASS="SMALL">
+Due to the incremental step-wise operation of Greedy bit-loading, and after thorough consultation with Dr McKinley, there is no efficient way to parallelise Greedy without fundamentally changing the operation of the algorithm. To demonstrate this, a 'best-attempt' parallelisation was made, focusing on the updating of tonal costs. After the first step in the algorithm, this is exclusively done on a per-tone basis, meaning that at most, <SPAN CLASS="MATH"><IMG
+ WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+ SRC="img6.png"
+ ALT="$ N$"></SPAN> values are being generated at once. This produced a slow-down of 23% when compared to the CPU-bound algorithm against a 6-line bundle, predominantly due to memory transfers between the host and the device.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">As such, Greedy must be disregarded from this project, but will be used as a comparison to answer the question 'Can Massive Parallelism compete with algorithmic improvement?'<A NAME="tex2html105"
+  HREF="footnode.html#foot2396"><SUP><SPAN CLASS="arabic">3</SPAN>.<SPAN CLASS="arabic">16</SPAN></SUP></A>.
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html797"
+  HREF="node42.html">ISB: Avenues of parallelisation and problem decomposition schemes</A>
+<LI><A NAME="tex2html798"
+  HREF="node43.html">Development of generalised GPU workload sharing model</A>
+<LI><A NAME="tex2html799"
+  HREF="node44.html">Development of generalised multi-device function queue</A>
+</UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

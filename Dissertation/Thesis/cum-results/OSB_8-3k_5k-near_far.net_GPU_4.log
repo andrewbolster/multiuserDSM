@@ -1,0 +1,78 @@
+INFO    multiuserdsm 46 Starting Up... logging to OSB_8-3k_5k-near_far.net_GPU_4.log
+INFO    bundle 67 Reading fresh Network File networks/8-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 8 lines from networks/8-3k_5k-near_far.net
+INFO    gpu 435 Spawning 4 GPU Threads
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    gpu 616 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:1792,%Yes:2.262277%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+ERROR   gpu 787 Failed on Prepare,Tone 2: XTG:[  1.60005746e-05   1.05348855e-15   6.51550595e-12   1.36930383e-15
+   1.07514774e-11   9.53146861e-14   1.08489609e-11   1.60786589e-15
+   1.85640606e-09   7.64474705e-04   1.82857584e-08   2.36590302e-11
+   2.88990108e-09   9.50817000e-10   6.87421288e-10   3.06553965e-10
+   7.28028106e-12   7.69130125e-15   1.60005746e-05   3.31986040e-15
+   1.36939313e-11   1.33939854e-14   5.88393879e-11   8.58005006e-16
+   2.80416121e-09   1.92183872e-11   4.11105207e-09   7.64474705e-04
+   2.64693318e-09   1.05822237e-12   5.10191217e-08   5.79918466e-10
+   9.21357437e-12   1.77039356e-15   1.87106186e-11   1.19203724e-15
+   1.60005746e-05   2.04258351e-15   3.45770666e-11   9.97125498e-16
+   2.08580151e-07   7.54096523e-10   2.42394621e-08   7.77440101e-13
+   4.34713350e-09   7.64474705e-04   1.83515596e-10   5.37102208e-11
+   1.03965237e-11   3.09520788e-16   5.87703322e-11   2.42019200e-14
+   4.12903102e-11   1.38203748e-16   1.60005746e-05   7.81753477e-16
+   3.52227271e-09   2.86580699e-10   1.05546291e-09   7.77511709e-10
+   1.84545295e-09   7.37848057e-11   1.42282988e-09   7.64474705e-04]
+GridDim:(245760, 1),BlockDim:(8, 1, 1)
+ERROR   gpu 787 Failed on Prepare,Tone 0: XTG:[  1.91812317e-05   1.20560492e-15   6.93134619e-12   1.56702171e-15
+   1.14376708e-11   1.09077459e-13   1.15413760e-11   1.84003046e-15
+   1.70821104e-09   8.52693132e-04   1.68260248e-08   2.34182865e-11
+   2.65920320e-09   9.41141913e-10   6.32545142e-10   3.03434610e-10
+   7.74493167e-12   8.80187128e-15   1.91812317e-05   3.79922499e-15
+   1.45679214e-11   1.53279831e-14   6.25947041e-11   9.81894919e-16
+   2.58030786e-09   1.90228295e-11   3.78287094e-09   8.52693132e-04
+   2.43563118e-09   1.04745437e-12   4.69463168e-08   5.74017476e-10
+   9.80161389e-12   2.02602599e-15   1.99047896e-11   1.36415906e-15
+   1.91812317e-05   2.33751826e-15   3.67838845e-11   1.14110344e-15
+   1.91929408e-07   7.46423175e-10   2.23044503e-08   7.69529219e-13
+   4.00010623e-09   8.52693132e-04   1.68865731e-10   5.31636897e-11
+   1.10600627e-11   3.54213421e-16   6.25212411e-11   2.76965078e-14
+   4.39255887e-11   1.58159401e-16   1.91812317e-05   8.94633204e-16
+   3.24109324e-09   2.83664583e-10   9.71206376e-10   7.69600099e-10
+   1.69813231e-09   7.30340046e-11   1.30924681e-09   8.52693132e-04]
+GridDim:(245760, 1),BlockDim:(8, 1, 1)
+INFO    multiuserdsm 46 Starting Up... logging to OSB_8-3k_5k-near_far.net_GPU_4.log
+INFO    bundle 67 Reading fresh Network File networks/8-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 8 lines from networks/8-3k_5k-near_far.net
+INFO    gpu 395 Asked:4,Have:4,Got:4
+INFO    gpu 436 Spawning 4 GPU Threads
+INFO    gpu 617 Initialising CUDA device
+INFO    gpu 617 Initialising CUDA device
+INFO    gpu 617 Initialising CUDA device
+INFO    gpu 617 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:1792,%Yes:2.262277%
+INFO    algorithm 48 Starting Spectrum Balancing using OSB
+INFO    osb 70 Bisection
+ERROR   gpu 788 Failed on Prepare,Tone 1: XTG:[  1.75191661e-05   1.12806675e-15   6.72631841e-12   1.46623911e-15
+   1.10993468e-11   1.02062170e-13   1.11999845e-11   1.72168937e-15
+   1.78261028e-09   8.07396176e-04   1.75588636e-08   2.35598179e-11
+   2.77502184e-09   9.46829826e-10   6.60094943e-10   3.05268456e-10
+   7.51583819e-12   8.23578118e-15   1.75191661e-05   3.55487881e-15
+   1.41370053e-11   1.43421678e-14   6.07431657e-11   9.18744599e-16
+   2.69269030e-09   1.91377964e-11   3.94762968e-09   8.07396176e-04
+   2.54171239e-09   1.05378480e-12   4.89910115e-08   5.77486625e-10
+   9.51168418e-12   1.89572265e-15   1.93160100e-11   1.27642352e-15
+   1.75191661e-05   2.18718138e-15   3.56958248e-11   1.06771366e-15
+   2.00288681e-07   7.50934280e-10   2.32758959e-08   7.74179969e-13
+   4.17432641e-09   8.07396176e-04   1.76220491e-10   5.34849914e-11
+   1.07329084e-11   3.31432276e-16   6.06718757e-11   2.59152140e-14
+   4.26262789e-11   1.47987420e-16   1.75191661e-05   8.37095099e-16
+   3.38225545e-09   2.85378946e-10   1.01350619e-09   7.74251277e-10
+   1.77209257e-09   7.34753951e-11   1.36626960e-09   8.07396176e-04]
+GridDim:(245760, 1),BlockDim:(8, 1, 1)

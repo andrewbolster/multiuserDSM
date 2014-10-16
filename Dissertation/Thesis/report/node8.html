@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>DSL System Architecture</TITLE>
+<META NAME="description" CONTENT="DSL System Architecture">
+<META NAME="keywords" CONTENT="report">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="report.css">
+
+<LINK REL="next" HREF="node11.html">
+<LINK REL="previous" HREF="node7.html">
+<LINK REL="up" HREF="node6.html">
+<LINK REL="next" HREF="node9.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html375"
+  HREF="node9.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html371"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html365"
+  HREF="node7.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html373"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html376"
+  HREF="node9.html">DSL System Modelling</A>
+<B> Up:</B> <A NAME="tex2html372"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html366"
+  HREF="node7.html">DSL Modulation and Signal</A>
+ &nbsp; <B>  <A NAME="tex2html374"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00312000000000000000">
+DSL System Architecture</A>
+</H2><SMALL CLASS="SMALL">
+A classical DSL local loop architecture involves a Central Office (COCOCentral Office), with many Line Termination (LTLTLine Termination, at CO side) modems,  each connected to a Network Termination (NTNTNetwork Termination, at CP side) modem at the Customer Premises (CPCPCustomer Premises). Each LT/NT pair has a separate line between them, and for local loops, these lines are wrapped together in bundles of up to fifty individual lines. This bundle then runs from the CO to the CPs, with intermediate CP lines 'peeling off' the bundle. Additionally, along the length of the bundle, additional lines can 'peel in' to the bundle. Some of the wide variety of possible situations are shown diagrammatically in figures <A HREF="#fig:2-3k5k-nearfar">3a</A>,<A HREF="#fig:4-3k5k-nearfar">3b</A>.
+</SMALL>
+<P>
+
+<DIV ALIGN="CENTER">
+
+<P><A NAME="fig:2-3k5k-nearfar"></A><A NAME="fig:4-3k5k-nearfar"></A></P>  <DIV ALIGN="CENTER">
+
+</DIV>  [Possible two line configuration]<IMG
+  WIDTH="572" HEIGHT="213" ALIGN="BOTTOM" BORDER="0"
+ SRC="./2-3k5k-nearfar.png"
+ ALT="Image 2-3k5k-nearfar">
+<BR>  [Possible four line configuration]<IMG
+  WIDTH="469" HEIGHT="385" ALIGN="BOTTOM" BORDER="0"
+ SRC="./4-3k5k-nearfar.png"
+ ALT="Image 4-3k5k-nearfar">
+
+</DIV>
+<P>
+<SMALL CLASS="SMALL">These bundles make for a highly noisy RFRFRadio Frequency environment; with signals from each line interfering with every other line in the bundle through electromagnetic induction of leaked signal power. This phenomenon is termed cross-talk and is the major limiting factor on the achievable data rates of DSL roll-outs, with no current practical solution.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Crosstalk reduces the SNR on DMT sub-channels on a 'victim' line, reducing the amount of bits-per-symbol that can be transmitted on that sub-channel at a pre-defined constant error rate. The level of SNR reduction is often in the 10-20dB range and as such, is the most dominant noise source experienced within the bundle.<A
+ HREF="node65.html#RC04">R.&nbsp;Cendrillon (2004)</A>
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">This phenomenon comes in two major forms; 
+</SMALL>
+<UL>
+<LI>Near-End Crosstalk (NEXTNEXTNear End Cross-Talk): signal leakage from LT-LT or NT-NT
+</LI>
+<LI>Far-End Crosstalk (FEXTFEXTFar End Cross-Talk): signal leakage from LT-NT or LT-NT
+</LI>
+</UL>
+<P>
+<SMALL CLASS="SMALL">In the vast majority of current DSL roll-outs, NEXT is effectively eliminated through the use of Frequency Division Duplexing(FDDFDDFrequency Division Duplexing); i.e the upstream data (NT to LT) is sent on a very different frequency than the downstream (LT to NT), and as such does not cause direct interference with a 'neighbouring' termination point.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">The amount of cross-talk (XTXTCross-Talk) is generally time-constant (excluding severe temperature and humidity changes) and as such can be computationally 'accommodated for' a-priori, but direct vectorisation (we'll find out about that later) and even in-direct cross talk elimination is computationally difficult, if not intractable.
+</SMALL>
+<P>
+<SMALL CLASS="SMALL">Before one can understand the effects of XT on a DSL system, and especially before one can experiment with different cross talk 'avoidance' algorithms, a realistic dynamic simulation of a functional DSL system must be generated. 
+</SMALL>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html377"
+  HREF="node9.html">DSL System Modelling</A>
+<LI><A NAME="tex2html378"
+  HREF="node10.html">Crosstalk Modelling</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html375"
+  HREF="node9.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html371"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html365"
+  HREF="node7.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html373"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html376"
+  HREF="node9.html">DSL System Modelling</A>
+<B> Up:</B> <A NAME="tex2html372"
+  HREF="node6.html">DSL</A>
+<B> Previous:</B> <A NAME="tex2html366"
+  HREF="node7.html">DSL Modulation and Signal</A>
+ &nbsp; <B>  <A NAME="tex2html374"
+  HREF="node1.html">Contents</A></B> </DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Andrew Bolster
+2011-05-22
+</ADDRESS>
+</BODY>
+</HTML>

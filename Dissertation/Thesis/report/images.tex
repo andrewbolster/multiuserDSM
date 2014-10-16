@@ -1,0 +1,1368 @@
+\batchmode
+
+
+\usepackage[dvips]{color}
+
+
+\pagecolor[gray]{.7}
+
+\usepackage[latin1]{inputenc}
+
+
+
+\makeatletter
+
+\makeatletter
+\count@=\the\catcode`\_ \catcode`\_=8 
+\newenvironment{tex2html_wrap}{}{}%
+\catcode`\<=12\catcode`\_=\count@
+\newcommand{\providedcommand}[1]{\expandafter\providecommand\csname #1\endcsname}%
+\newcommand{\renewedcommand}[1]{\expandafter\providecommand\csname #1\endcsname{}%
+  \expandafter\renewcommand\csname #1\endcsname}%
+\newcommand{\newedenvironment}[1]{\newenvironment{#1}{}{}\renewenvironment{#1}}%
+\let\newedcommand\renewedcommand
+\let\renewedenvironment\newedenvironment
+\makeatother
+\let\mathon=$
+\let\mathoff=$
+\ifx\AtBeginDocument\undefined \newcommand{\AtBeginDocument}[1]{}\fi
+\newbox\sizebox
+\setlength{\hoffset}{0pt}\setlength{\voffset}{0pt}
+\addtolength{\textheight}{\footskip}\setlength{\footskip}{0pt}
+\addtolength{\textheight}{\topmargin}\setlength{\topmargin}{0pt}
+\addtolength{\textheight}{\headheight}\setlength{\headheight}{0pt}
+\addtolength{\textheight}{\headsep}\setlength{\headsep}{0pt}
+\setlength{\textwidth}{349pt}
+\newwrite\lthtmlwrite
+\makeatletter
+\let\realnormalsize=\normalsize
+\global\topskip=2sp
+\def\preveqno{}\let\real@float=\@float \let\realend@float=\end@float
+\def\@float{\let\@savefreelist\@freelist\real@float}
+\def\liih@math{\ifmmode$\else\bad@math\fi}
+\def\end@float{\realend@float\global\let\@freelist\@savefreelist}
+\let\real@dbflt=\@dbflt \let\end@dblfloat=\end@float
+\let\@largefloatcheck=\relax
+\let\if@boxedmulticols=\iftrue
+\def\@dbflt{\let\@savefreelist\@freelist\real@dbflt}
+\def\adjustnormalsize{\def\normalsize{\mathsurround=0pt \realnormalsize
+ \parindent=0pt\abovedisplayskip=0pt\belowdisplayskip=0pt}%
+ \def\phantompar{\csname par\endcsname}\normalsize}%
+\def\lthtmltypeout#1{{\let\protect\string \immediate\write\lthtmlwrite{#1}}}%
+\newcommand\lthtmlhboxmathA{\adjustnormalsize\setbox\sizebox=\hbox\bgroup\kern.05em }%
+\newcommand\lthtmlhboxmathB{\adjustnormalsize\setbox\sizebox=\hbox to\hsize\bgroup\hfill }%
+\newcommand\lthtmlvboxmathA{\adjustnormalsize\setbox\sizebox=\vbox\bgroup %
+ \let\ifinner=\iffalse \let\)\liih@math }%
+\newcommand\lthtmlboxmathZ{\@next\next\@currlist{}{\def\next{\voidb@x}}%
+ \expandafter\box\next\egroup}%
+\newcommand\lthtmlmathtype[1]{\gdef\lthtmlmathenv{#1}}%
+\newcommand\lthtmllogmath{\dimen0\ht\sizebox \advance\dimen0\dp\sizebox
+  \ifdim\dimen0>.95\vsize
+   \lthtmltypeout{%
+*** image for \lthtmlmathenv\space is too tall at \the\dimen0, reducing to .95 vsize ***}%
+   \ht\sizebox.95\vsize \dp\sizebox\z@ \fi
+  \lthtmltypeout{l2hSize %
+:\lthtmlmathenv:\the\ht\sizebox::\the\dp\sizebox::\the\wd\sizebox.\preveqno}}%
+\newcommand\lthtmlfigureA[1]{\let\@savefreelist\@freelist
+       \lthtmlmathtype{#1}\lthtmlvboxmathA}%
+\newcommand\lthtmlpictureA{\bgroup\catcode`\_=8 \lthtmlpictureB}%
+\newcommand\lthtmlpictureB[1]{\lthtmlmathtype{#1}\egroup
+       \let\@savefreelist\@freelist \lthtmlhboxmathB}%
+\newcommand\lthtmlpictureZ[1]{\hfill\lthtmlfigureZ}%
+\newcommand\lthtmlfigureZ{\lthtmlboxmathZ\lthtmllogmath\copy\sizebox
+       \global\let\@freelist\@savefreelist}%
+\newcommand\lthtmldisplayA{\bgroup\catcode`\_=8 \lthtmldisplayAi}%
+\newcommand\lthtmldisplayAi[1]{\lthtmlmathtype{#1}\egroup\lthtmlvboxmathA}%
+\newcommand\lthtmldisplayB[1]{\edef\preveqno{(\theequation)}%
+  \lthtmldisplayA{#1}\let\@eqnnum\relax}%
+\newcommand\lthtmldisplayZ{\lthtmlboxmathZ\lthtmllogmath\lthtmlsetmath}%
+\newcommand\lthtmlinlinemathA{\bgroup\catcode`\_=8 \lthtmlinlinemathB}
+\newcommand\lthtmlinlinemathB[1]{\lthtmlmathtype{#1}\egroup\lthtmlhboxmathA
+  \vrule height1.5ex width0pt }%
+\newcommand\lthtmlinlineA{\bgroup\catcode`\_=8 \lthtmlinlineB}%
+\newcommand\lthtmlinlineB[1]{\lthtmlmathtype{#1}\egroup\lthtmlhboxmathA}%
+\newcommand\lthtmlinlineZ{\egroup\expandafter\ifdim\dp\sizebox>0pt %
+  \expandafter\centerinlinemath\fi\lthtmllogmath\lthtmlsetinline}
+\newcommand\lthtmlinlinemathZ{\egroup\expandafter\ifdim\dp\sizebox>0pt %
+  \expandafter\centerinlinemath\fi\lthtmllogmath\lthtmlsetmath}
+\newcommand\lthtmlindisplaymathZ{\egroup %
+  \centerinlinemath\lthtmllogmath\lthtmlsetmath}
+\def\lthtmlsetinline{\hbox{\vrule width.1em \vtop{\vbox{%
+  \kern.1em\copy\sizebox}\ifdim\dp\sizebox>0pt\kern.1em\else\kern.3pt\fi
+  \ifdim\hsize>\wd\sizebox \hrule depth1pt\fi}}}
+\def\lthtmlsetmath{\hbox{\vrule width.1em\kern-.05em\vtop{\vbox{%
+  \kern.1em\kern0.8 pt\hbox{\hglue.17em\copy\sizebox\hglue0.8 pt}}\kern.3pt%
+  \ifdim\dp\sizebox>0pt\kern.1em\fi \kern0.8 pt%
+  \ifdim\hsize>\wd\sizebox \hrule depth1pt\fi}}}
+\def\centerinlinemath{%
+  \dimen1=\ifdim\ht\sizebox<\dp\sizebox \dp\sizebox\else\ht\sizebox\fi
+  \advance\dimen1by.5pt \vrule width0pt height\dimen1 depth\dimen1 
+ \dp\sizebox=\dimen1\ht\sizebox=\dimen1\relax}
+
+\def\lthtmlcheckvsize{\ifdim\ht\sizebox<\vsize 
+  \ifdim\wd\sizebox<\hsize\expandafter\hfill\fi \expandafter\vfill
+  \else\expandafter\vss\fi}%
+\providecommand{\selectlanguage}[1]{}%
+\makeatletter \tracingstats = 1 
+\providecommand{\Beta}{\textrm{B}}
+\providecommand{\Mu}{\textrm{M}}
+\providecommand{\Kappa}{\textrm{K}}
+\providecommand{\Rho}{\textrm{R}}
+\providecommand{\Epsilon}{\textrm{E}}
+\providecommand{\Chi}{\textrm{X}}
+\providecommand{\Iota}{\textrm{J}}
+\providecommand{\omicron}{\textrm{o}}
+\providecommand{\Zeta}{\textrm{Z}}
+\providecommand{\Eta}{\textrm{H}}
+\providecommand{\Nu}{\textrm{N}}
+\providecommand{\Omicron}{\textrm{O}}
+\providecommand{\Tau}{\textrm{T}}
+\providecommand{\Alpha}{\textrm{A}}
+
+
+\begin{document}
+\pagestyle{empty}\thispagestyle{empty}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength hsize=\the\hsize}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength vsize=\the\vsize}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength hoffset=\the\hoffset}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength voffset=\the\voffset}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength topmargin=\the\topmargin}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength topskip=\the\topskip}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength headheight=\the\headheight}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength headsep=\the\headsep}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength parskip=\the\parskip}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength oddsidemargin=\the\oddsidemargin}\lthtmltypeout{}%
+\makeatletter
+\if@twoside\lthtmltypeout{latex2htmlLength evensidemargin=\the\evensidemargin}%
+\else\lthtmltypeout{latex2htmlLength evensidemargin=\the\oddsidemargin}\fi%
+\lthtmltypeout{}%
+\makeatother
+\setcounter{page}{1}
+\onecolumn
+
+% !!! IMAGES START HERE !!!
+
+
+
+\setlength{\parindent}{0cm}%
+
+\setlength{\parindent}{0cm}
+
+
+\setlength{\parskip}{2ex}%
+
+\setlength{\parskip}{2ex}
+
+\renewcommand{\}{}
+\stepcounter{chapter}
+\stepcounter{section}
+{\newpage\clearpage
+\lthtmlfigureA{enumeratestar205}%
+\begin{enumerate*}
+ \item Become familiar with DSM techniques for Digital Subscriber Lines.
+ \item Become familiar with the CUDA environment for GPU's and identify a suitable platform.
+ \item Investigate efficient implementations of level 2 DSM.
+ \item Develop an implementation of a level 2 bit-loading algorithm using GPU's.
+\end{enumerate*}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{enumeratestar208}%
+\begin{enumerate*}
+ \item Analyse the performance of your implementation in terms of speed, cost, and scalability (number of lines).
+ \item Compare your design with existing implementations.
+\end{enumerate*}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{enumeratestar211}%
+\begin{enumerate*}
+ \item Understand how to use CUDA to programme GPU's.
+ \item Be able to design bit-loading algorithms for DMT.
+ \item How to analyse the performance of an implementation.
+\end{enumerate*}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{section}
+{\newpage\clearpage
+\lthtmlfigureA{itemizestar215}%
+\begin{itemize*}
+ 
+\setlength{\itemsep}{0.75pt} 
+ 
+\setlength{\parskip}{0pt} 
+ 
+\setlength{\parsep}{0pt} 
+\par
+\item Problem Research
+  \begin{itemize*}   \item How DSL works
+   \item DMT communications
+   \item Dynamic Spectrum Management
+   \item DSM Levels
+   \item Existing/previous DSL simulation systems
+   \item Existing/previous DSM implementations
+  \end{itemize*}
+ \item Solution Research
+  \begin{itemize*}   \item Relevant Programming Environments
+   \item Software Profiling
+   \item Massively Parallel Computing
+   \item Parallel Computing Architectures
+   \item CUDA software considerations
+   \item CUDA hardware considerations
+  \end{itemize*}
+ \item Development
+  \begin{itemize*}   \item Design and implement DSL system model simulator
+   \item Implement Optimal Spectrum Balancing (OSB\nomenclature{OSB}{Optimal Spectrum Balancing}) algorithm
+   \item Implement Greedy bit-loading algorithm (MIPB\nomenclature{MIPB}{Multi-user Incremental Power Balancing, aka Greedy}) algorithm
+   \item Implement Iterative Spectrum Balancing (ISB\nomenclature{ISB}{Iterative Spectrum Balancing}) algorithm
+   \item Evaluate system performance through the use of profilers and workload visualisation
+   \item Develop single-device GPU versions of above algorithms
+   \item Evaluate performance of these algorithms, with respect to CPU\nomenclature{CPU}{Central Processing Unit}-bound versions
+   \item If viable, implement multi-GPU versions of above algorithms
+  \end{itemize*}
+ \item Analysis
+   \begin{itemize*}    \item Compare and contrast performance concerns and resource usage of differing implementations
+    \item Evaluate system cost concerns, and potential future avenues of development.
+   \end{itemize*}
+\end{itemize*}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{chapter}
+\stepcounter{section}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9194}%
+$\displaystyle b=log_2(M)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9200}%
+$ N$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9202}%
+$ K$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9207}%
+$ V_1$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9209}%
+$ V_2$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9211}%
+$ d$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9213}%
+$ Z$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9215}%
+$ R \cdot L$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9217}%
+$ Y$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9219}%
+$ G \cdot C$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9221}%
+$ Z_l$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9223}%
+$ Z_s$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9225}%
+$ Z_0$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9227}%
+$ \sqrt{\frac{Z}{Y}}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9229}%
+$ \gamma$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9231}%
+$ \sqrt{Z \cdot Y}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9233}%
+$\displaystyle H=\frac{Z_0 \cdot \text{sech}(\gamma d)}{Z_s \cdot [\frac{Z_0}{Z_1} +\text{tanh}(\gamma d)]+Z_0 \cdot[1+\frac{Z_0}{Z_1} \cdot \text{tanh}(\gamma d)]}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9237}%
+$\displaystyle R(f) = \frac{1}{\frac{1}{\sqrt[4]{r^4_{0c}+a_c\cdot f^2}} + \frac{1}{\sqrt[4]{r^4_{0s}+a_s\cdot f^2}}}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9239}%
+$ r_{0x}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9241}%
+$ a_x$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9243}%
+$\displaystyle L(f) = \frac{l_0+l_{\infty}(\frac{f}{f_m})^b}{1+(\frac{f}{f_b})^b}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9245}%
+$ l_x$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9247}%
+$ \infty$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9249}%
+$ b$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9251}%
+$ f_m$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9253}%
+$\displaystyle C(f)= c_{\infty} + c_0 \cdot f^{-c_e}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9255}%
+$ C_x$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9259}%
+$ 0,e$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9261}%
+$\displaystyle G(f)=g_0\cdot f^{+g_e}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9263}%
+$ G_x$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure415}%
+\begin{figure}  \centering
+  \begin{tabular}{|c|c|c|c|}\hline
+    \(r_{0c}=174.56 \Omega\)/km&\(r_{0s}=\infty \Omega\)/km&\(a_c=0.0531\)&\(a_s=0.0\)\\\hline
+    \(l_{0}=617.25 \mu H\)/km&\(l_{\infty} = 478.97 \mu H\)/km&\(b=1.1529\)&\(f_m=553.76\)kHz\\\hline
+    \(c_{\infty} = 50 \mu F\)/km&\(c_0=0.0\mu F\)/km&\(c_e=0.0\)&\\\hline
+    \(g_0 = 234.874 fS\)/km&\(g_e=1.38\)&&\\\hline
+  \end{tabular}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9274}%
+$\displaystyle |H_{FEXT}(f)|^2=N^{0.06}K_{FEXT}f^2 |H_{channel}(f,L)|^2$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9278}%
+$\displaystyle |H^{j,k}_{FEXT}(f)|^2=|H^{j,k}_{FEXT}(f)|^2 \times 10^{\frac{X_{dB}}{10}}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9280}%
+$ X$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9282}%
+$\displaystyle C(k)=log_2(1+SNR(k))$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9284}%
+$ C(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9288}%
+$ N_e$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9290}%
+$\displaystyle P_e\approx N_eQ\left(\sqrt{\frac{3}{M-1}SNR}\right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9292}%
+$ Q(x)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9294}%
+$ x$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9296}%
+$ P_e$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9298}%
+$ 1e^{-7}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9300}%
+$\displaystyle Q(x)=\int_x^{\infty}\frac{1}{\sqrt{2\pi}}e^{-u^2/2} du$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9302}%
+$ erf(x)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9304}%
+$\displaystyle Q(x)=\frac{1}{2}\left(1-erf(\frac{x}{\sqrt{2}})\right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9306}%
+$\displaystyle Q^{-1}(x)=\sqrt{2} erf^{-1}(1-2x)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9308}%
+$ M$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9310}%
+$\displaystyle M=1+\frac{SNR}{\frac{1}{3}(Q^{-1}(\frac{P_e}{N_e})^2)}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9312}%
+$\displaystyle b=log_2\left(1+\frac{SNR}{\frac{1}{3}(Q^{-1}(\frac{P_e}{N_e})^2)}\right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9314}%
+$\displaystyle \Gamma_{uncoded}=\frac{1}{3}\left(Q^{-1}(\frac{P_e}{N_e}\right)^2$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9316}%
+$\displaystyle b=log_2\left(1+\frac{SNR}{\Gamma_{uncoded}}\right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9318}%
+$ \Gamma$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9320}%
+$ \gamma_m$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9322}%
+$ \gamma_{eg}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9326}%
+$\displaystyle \Gamma=\Gamma_{uncoded}+\gamma_m+\gamma_{eg}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9328}%
+$ n$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9332}%
+$ k$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9336}%
+$\displaystyle b_n(k)=log_2\left(1+\frac{p_n(k) |h_{nn}(k)|^2}{\Gamma \left( \sigma_n^2(k)+\sum_{j\neq n}^N p_j(k)|h_{jn}(k)|^2 \right)} \right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9338}%
+$ h_{ij}(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9342}%
+$ i$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9344}%
+$ j$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9354}%
+$ p_n(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9366}%
+$ \sigma^2_n(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9382}%
+$ f(b_n(k))=\Gamma(2^{b_n(k)}-1)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9384}%
+$\displaystyle p_n(k)-f(b_n(k))\sum_{j\neq n}^N p_j(k) \frac{|h_{jn}(k)|^2}{|h_{nn}(k)|^2}=f(b_n(k))\frac{\sigma_n^2(k)}{|h_{nn}(k)|^2}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9386}%
+$\displaystyle A(k)P(k)=B(k)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9388}%
+$\displaystyle A(k)_{ij}=\begin{cases} 1, & \mbox{for } i = j \\\frac{-f(b_i(k))|h_{ji}|^2}{|h_{ii}|^2}, & \mbox{for } i \neq j \end{cases}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9390}%
+$\displaystyle P(k)=[p_1(k) \dots p_i(k) \dots p_N(k)]^T$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9392}%
+$\displaystyle B(k)=\left[\frac{f(b_1(k)) \sigma^2_1}{|h_{11}|^2} \dots \frac{f(b_i(k)) \sigma^2_i}{|h_{ii}|^2} \dots \frac{f(b_N(k))\sigma^2_N}{|h_{NN}|^2}\right]^T$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9394}%
+$ B(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9396}%
+$ b(k$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9400}%
+$ P(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9410}%
+$ R_1$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9412}%
+$ R_2)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9417}%
+$\displaystyle \max\limits_{\{p_n\in P_n\}_n} \sum_n w_n R_n$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmldisplayA{displaymath9423}%
+\begin{displaymath}\begin{array}{rc} \sum\limits_{n=1}^N w_n \sum\limits_{k=1}^K & log_2 \left(1+\frac{p_n(k_|h_{nn}(k)|^2}{\Gamma\left(\sigma_n^2(k)+\sum\limits_{m\neq n}^N p_m(k)|h_{jm}(k)|^2\right)}\right)\\&s.t.\sum_{k=1}^Kp_n(k) \leq P_{max,n} \forall n \end{array}\end{displaymath}%
+\lthtmldisplayZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmldisplayA{displaymath9463}%
+\begin{displaymath}\begin{array}{rcl}   max R&=&\sum_{k=1}^Kb(k)\\s.t.&&\sum\limits_{k=1}^Kp(k)\leq P_{budget}   \end{array}\end{displaymath}%
+\lthtmldisplayZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmldisplayA{displaymath9465}%
+\begin{displaymath}\begin{array}{rcl}   min &&\sum\limits_{k=1}^Kp(k)\\s.t.&&\sum\limits_{k=1}^Kb(k)\geq B_{budget}   \end{array}\end{displaymath}%
+\lthtmldisplayZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9469}%
+$ \Delta p(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlfigureA{figure727}%
+\begin{figure}\begin{algorithmic}
+\REPEAT
+\FOR{n=1...N}
+\STATE Execute LC Algorithm with power budget \(P_n\) on line \(n\)
+\IF{\(R_n>R_n^{target}\)}
+\STATE \(P_n=P_n-\gamma\)
+\ELSE
+\STATE \(P_n=P_n+\gamma\)
+\ENDIF
+\ENDFOR
+\UNTIL{convergence}
+\end{algorithmic}
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9483}%
+$ L$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9487}%
+$\displaystyle L=\sum\limits_{n=1}^N w_n \sum\limits_{k=1}^K log_2 \left(1+\frac{p_n(k_|h_{nn}(k)|^2}{\Gamma\left(\sigma_n^2(k)+\sum\limits_{m\neq n}^N p_m(k)|h_{jm}(k)|^2\right)}\right)-\lambda_n\left(\sum\limits_{k=1}^K p_n(k)\right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9489}%
+$ \lambda$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9495}%
+$\displaystyle L(k)\nomenclature{\(L_k\)}{The Lagrangian sum of a bitloaded channel}=\sum\limits_{n=1}^Nw_nb_n(k)-\sum\limits_{n=1}^N\lambda_np_n(k)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9497}%
+$ b_n$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9505}%
+$ b_{max}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9509}%
+$ b_{max}^{N}-1$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure776}%
+\begin{figure}\begin{algorithmic}
+\REPEAT
+\REPEAT
+\FOR{\(k=1\dots K\)}
+\STATE \(\arg\max_{b_(k)}L(k)=\sum_{n=1}^Nw_nb_n(k)-\sum_{n=1}^N\lambda_np_n(k)\)
+\STATE Solve by N-d exhaustive search
+\ENDFOR
+\STATE \(\lambda_n=\lambda_n+\epsilon(\sum_{k=1}^Kp_n(k)-P_n^{max})\)
+\UNTIL{\(\lambda\) convergence}
+\STATE \(w_n=w_n+\epsilon(\sum_{k=1}^Kb_n(k)-R_n^{target})\)
+\UNTIL{\(w\) convergence}
+\end{algorithmic}
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9521}%
+$ O(b_{\text{max}}^N)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9523}%
+$ O(N^2)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure800}%
+\begin{figure}\begin{algorithmic}
+\REPEAT
+\FOR{\(k=1\dots K\)}
+\REPEAT
+\FOR{\(n=1\dots N\)}
+\STATE Fix \(b_m(k)\forall m \neq n\)
+\STATE \(\arg\max_{b_(k)}L(k)=\sum_{n=1}^Nw_nb_n(k)-\sum_{n=1}^N\lambda_np_n(k)\)
+\STATE \(\lambda_n=\lambda_n+\epsilon(\sum_{k=1}^Kp_n(k)-P_n^{max})\)
+\STATE Solve by 1-d exhaustive search
+\ENDFOR
+\UNTIL{\(\lambda\) convergence}
+\ENDFOR
+\STATE \(w_n=w_n+\epsilon(\sum_{k=1}^Kb_n(k)-R_n^{target})\)
+\UNTIL{\(w\) convergence}
+\end{algorithmic}
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9529}%
+$ \Delta p_m(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9531}%
+$ m$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9535}%
+$ \Delta p_n(k)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9537}%
+$\displaystyle C(m,k)=\sum\limits_{n=1}^N\left(\underset{p_n(k)}{b(k)+1} - \underset{p_n(k)}{b(k)}\right)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlfigureA{figure832}%
+\begin{figure}\begin{algorithmic}
+\REPEAT
+\STATE \(\text{argmin}_{n,k} C\)
+\STATE \(b_n{k}=b_n{k}+1\)
+\FOR{\(n=1\dots N\)}
+  \STATE \(\delta p_{n,k}=\left(\underset{p_n(k)}{b(k)+1} - \underset{p_n(k)}{b(k)}\right)\)
+\ENDFOR
+\FOR{\(n=1\dots N\)}
+  \FOR{\(k=1\dots K\)}
+    \STATE \(C_{n,k}=\sum\limits_{n=1}^N \text{wp}(n)\times\delta p_{n,k}\)
+    \STATE Where wp\(n\) is a power penalty function
+  \ENDFOR
+\ENDFOR
+\UNTIL All tones full
+\end{algorithmic}
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure854}%
+\begin{figure}  \begin{tabularx}{1.1\textwidth}{|X|c|c|c|c|c|c|c|c|}\hline
+  &&\multicolumn{7}{|c|}{N-User Runtimes (s/sec,m/min,h/hrs)}\\\hline
+  Algorithm&Complexity&2&3&4&5&6&7&8\\\hline
+  OSB&\(O(K b_{\text{max}}^N N^3)\)&35.65s&3.24h&*&*&*&*&*\\\hline
+  OSB (Cached)&\(K b_{\text{max}}^N N^3)\)&14.6s&2.12h&*&*&*&*&*\\\hline
+  ISB&\(O(K N^2 N^3)\)&32.31s&16.22m&3.93hrs&12.06h&8.69h&28.46h&*\\\hline
+  ISB (Cached)&\(O(K N^2 N^3)\)&2.73s&53.57s&9.35m&30.04m&26.74m&1.42h&*\\\hline
+  BBOSB&\(O(K b_{\text{max}}^N N^3)\)&7.12s&15.73m&13.04h&*&*&*&*\\\hline
+  BBOSB (Cached)&\(O(K b_{\text{max}}^N N^3)\)&2.88s&4.2m&3.12h&*&*&*&*\\\hline
+  MIPB Bisection&\(O(B_{\text{total}} N^2 N^3)\)&0.26s&9.99s&35.6s&3.71m&12.88m&6.36m&51.72m\\\hline
+  MIPB (Cached)&\(O(B_{\text{total}} N^2 N^3)\)&0.19s&3.89s&10.96s&49.97s&*&*&*\\\hline
+\end{tabularx}
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{section}
+\stepcounter{subsection}
+\stepcounter{subsubsection}
+\stepcounter{subsubsection}
+\stepcounter{subsection}
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9615}%
+$ \alpha$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9619}%
+$\displaystyle S=\frac{1}{\alpha}$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9624}%
+$ P$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9626}%
+$\displaystyle S(P)=P-\alpha(P-1)$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlfigureA{figure1013}%
+\begin{figure}  \centering
+    \begin{lstlisting}[numbers=left, language=C, numberstyle=\tiny , numbersep=8pt]
+    //Setup dimensions of grids and blocks
+    dim3 blocksPerGrid(65535,1,1);
+    dim3 threadsPerBlock(64,8,1);
+\par
+//Invoke Kernel
+    kernelfunction<<<blocksPerGrid,threadsPerBlock>>>(*functionarguments);
+    \end{lstlisting}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9652}%
+$ 2^{16}\times 2^{10} = 2^{27}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure1026}%
+\begin{figure}  \centering
+    \begin{lstlisting}[numbers=left, language=C, numberstyle=\tiny , numbersep=8pt]
+    __global__ void multArray(float *array, float multiplier){
+      int 1Dindex = blockIdx.x*blockDim.x+threadIdx.x;
+      array[1Dindex]=array[1Dindex]*multiplier;
+    }
+    \end{lstlisting}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{table1033}%
+\begin{table}\begin{tabularx}{\textwidth}{|X|c|c|}
+Function Declaration&Executed by&Callable From\\\hline
+\_\_device\_\_ void someKernel&device&device\\
+\_\_global\_\_ void someKernel&device&host\\
+\_\_host\_\_ void someKernel&host&host\\
+\end{tabularx}
+\end{table}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9662}%
+$ 2^{16}*2^{16}*2^{10}*2^{10}=2^{52}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9664}%
+$ 2^{27}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure1049}%
+\begin{figure}  \centering
+    \begin{lstlisting}[numbers=left, language=C, numberstyle=\tiny , numbersep=8pt]
+    __global__ void multMatrix(float *matrix, float multiplier){
+      int x_index = blockIdx.x*blockDim.x+threadIdx.x*;
+      int y_index = blockIdx.y*blockDim.y+threadIdx.y*;
+      matrix[x_index][y_index]=matrix[x_index][y_index]*multiplier;
+    }
+    \end{lstlisting}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlfigureA{table1073}%
+\begin{table}\begin{tabularx}{\textwidth}{|c|c|c|c|X|c|}\hline
+Memory&Scope&Lifetime&R/W&Usage&Speed\\\hline
+Register&Thread&Kernel&R/W&Automatic variables other than arrays&Very Fast\\
+Local&Thread&Kernel&R/W&Automatic Array Variables&Very Fast\\\hline
+Shared&Block&Kernel&R/W&\_\_shared\_\_&Fast\\\hline
+Global&Grid&Application&R/W&Default&Very Slow\\
+Constant&Grid&Application&R&\_\_constant\_\_&Slow\\\hline
+\end{tabularx}
+
+\end{table}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9690}%
+$ A, B, C$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure1094}%
+\begin{figure}  \centering
+    \begin{lstlisting}[numbers=left, language=C, numberstyle=\tiny , numbersep=8pt]
+      __global__ void matmulNaive(float *A, float *B, float *C, int WIDTH){
+        Tx = threadIdx.x; Ty = threadIdx.y;
+        Bx = blockIdx.x; By = blockIdx.y;
+\par
+X = Bx * blockDim.x + Tx;
+        Y = By * blockDim.y + Ty;
+\par
+idxA = Y * WIDTH;   
+        idxB = X;
+        idxC = Y * WIDTH + X;
+\par
+Csub = 0.0;
+\par
+for (i=0; I < WIDTH; i++) {
+          Csub += A[idxA] * B[idxB];
+          idxA += 1;
+          idxB += WIDTH;
+        }
+\par
+C[idxC] = Csub;
+      }
+    \end{lstlisting}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure1108}%
+\begin{figure}  \centering
+    \begin{lstlisting}[numbers=left, language=C, numberstyle=\tiny , numbersep=8pt]
+\par
+__shared__ float As[blockDim.x][blockDim.y];
+        __shared__ float Bs[blockDim.y][blockDim.x];
+        Csub = 0.0;
+        Tx = threadIdx.x; Ty = threadIdx.y;
+        Bx = blockIdx.x; By = blockIdx.y;
+\par
+X = Bx * blockDim.x + Tx;
+        Y = By * blockDim.y + Ty;
+\par
+idxA = Y * WIDTH;   
+        idxB = X;
+        idxC = Y * WIDTH + X;
+\par
+while (idxA<WIDTH) {  // iterate across tiles
+          As[Ty][Tx] = A[idxA];
+          Bs[Ty][Tx] = B[idxB];
+          idxA += blockDim.x;  idxB += blockDim.y * WIDTH;
+          __syncthreads();
+          for (i=0; i < 16; i++) {
+            Csub += As[Ty][i] * Bs[i][Tx];
+            __syncthreads();
+          }
+        }
+        C[idxC] = Csub
+    \end{lstlisting}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9701}%
+$ k^{th}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9705}%
+$ N~180$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{section}
+\stepcounter{subsection}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9725}%
+$ O(2^N)$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{chapter}
+\stepcounter{section}
+{\newpage\clearpage
+\lthtmlfigureA{enumeratestar2222}%
+\begin{enumerate*}
+  \item Framework Development and Verification of CPU-bound algorithms
+  \begin{enumerate*}    \item Implementation of Object Oriented DSL bundle simulation framework, with software hooks for algorithm interfacing and standardised result and instrumentation storage formatting.
+    \item \emph{Verify Channel Matrix generation against known dataset}
+    \item Pure-Python implementation of OSB
+    \item \emph{Verify OSB bit-loading against known dataset}
+    \item Pure-Python implementations of MIPB and ISB
+    \item \emph{Verify results against known dataset}
+    \item Refactor algorithm object structure to reduce functional duplication
+  \end{enumerate*}
+  \item Development and Verification of GPU-bound algorithms
+  \begin{enumerate*}    \item Single GPU implementation of OSB
+    \item \emph{Verify results against CPU version}
+    \item Multi-device development and implementation of OSB
+    \item \emph{Verify results against CPU version}
+    \item Single GPU implementation of ISB
+    \item \emph{Verify results against CPU version}
+    \item Refactor algorithm object structure to reduce functional duplication
+  \end{enumerate*}
+\end{enumerate*}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{section}
+{\newpage\clearpage
+\lthtmldisplayA{displaymath9747}%
+\begin{displaymath}\begin{array}{l}   L_h=(V_{lt}-X_{lt})\\L_s=\text{abs}(\max(V_{lt},X_{lt})-\min(V_{nt},X_{nt}))\\L_t=(V_{nt}-X_{nt})\\\end{array}\end{displaymath}%
+\lthtmldisplayZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_indisplay9749}%
+$\displaystyle (L,F)=\left\{     \begin{array}{l l}       \text{transfer function}(L,F) & \quad \text{if}\  L>0\\1 & \quad \text{if} L\le 0\\\end{array} \right.$%
+\lthtmlindisplaymathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmldisplayA{displaymath9751}%
+\begin{displaymath}\begin{array}{l}   H_h=\text{insertion loss}(L_h,f_k)\\H_s=\text{insertion loss}(L_s,f_k)\\H_t=\text{insertion loss}(L_t,f_k)\\H_{\text{total}}=(H_h \times H_s \times H_t)\\\end{array}\end{displaymath}%
+\lthtmldisplayZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9756}%
+$ N\times N$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{section}
+{\newpage\clearpage
+\lthtmlfigureA{figure2321}%
+\begin{figure}  \begin{algorithmic}
+    \FORALL{channels}
+      \REPEAT
+        \FORALL{lines}
+        \STATE{\(\text{argmax}_{b_k}L(k)\)}
+        \STATE{By 1-d exhaustive search}
+        \ENDFOR
+      \UNTIL{Bit-load Convergence}
+    \ENDFOR
+  \end{algorithmic}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlfigureA{figure2333}%
+\begin{figure}  \begin{algorithmic}
+    \REPEAT
+      \FORALL{channels}
+        \FORALL{lines}
+        \STATE{\(\text{argmax}_{b_k}L(k)\)}
+        \STATE{By 1-d exhaustive search}
+        \ENDFOR
+      \ENDFOR
+    \UNTIL{Bit-load Convergence}
+  \end{algorithmic}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{section}
+\stepcounter{subsection}
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9793}%
+$ \Delta p$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9797}%
+$ 4$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9805}%
+$ 2^{16}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{subsection}
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9822}%
+$ =B_{\text{max}}\times K$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+{\newpage\clearpage
+\lthtmlfigureA{figure2407}%
+\begin{figure}  \lstinputlisting[language=Python]{sourcefiles/workload-calc.py}
+  
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+\stepcounter{section}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlfigureA{itemizestar2420}%
+\begin{itemize*}
+\item{'lk\_osb\_prepare\_permutations': Generate A and B matrices for PSD calculation of all bit permutations}
+\item{'osb\_solve': Solve all permutation's PSD's in parallel}
+\item{'lk\_max\_permutations': Solve all permutation's PSD's in parallel}
+\end{itemize*}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9853}%
+$ [K|B_{\text{max}}]$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsubsection}
+\stepcounter{subsection}
+\stepcounter{chapter}
+\stepcounter{section}
+\stepcounter{section}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlfigureA{figure2767}%
+\begin{figure}
+\centering 
+  \begin{tabularx}{0.6\textwidth}{|c|X|c|c|c|c|}
+  \hline
+  &CPU time&\multicolumn{4}{|c|}{GPU Count runtime (s)}\\
+  N&&1&2&3&4\\\hline
+  2&73.881&13.030&9.005&9.224&9.100\\
+  3&651.977&18.737&13.523&12.851&13.100\\
+  4&3118.691&334.820&175.373&122.746&98.096\\
+  5&NA&6320.587&3175.932&2136.499&1605.589\\\hline
+  \end{tabularx}
+
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9873}%
+$ S_p=\frac{T_1}{T_p}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9875}%
+$ T_1$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9877}%
+$ T_p$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9879}%
+$ E_p=\frac{S_p}{P}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+{\newpage\clearpage
+\lthtmlinlinemathA{tex2html_wrap_inline9885}%
+$ E_p=\frac{S_p}{240 \times P}$%
+\lthtmlinlinemathZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{section}
+\stepcounter{subsection}
+{\newpage\clearpage
+\lthtmlfigureA{figure2803}%
+\begin{figure}
+\centering 
+  \begin{tabularx}{0.5\textwidth}{|c|X|c|c|c|c|}
+    \hline
+  &CPU time&\multicolumn{4}{|c|}{GPU Count runtime (s)}\\
+  N&&1&2&3&4\\\hline
+  2&27.625&0.363&0.000&0.000&0.000\\
+  3&76.384&0.528&0.497&0.575&0.625\\
+  4&225.278&0.940&0.863&0.944&1.020\\
+  5&650.274&1.644&1.277&1.266&1.337\\\hline
+  \end{tabularx}
+
+
+\end{figure}%
+\lthtmlfigureZ
+\lthtmlcheckvsize\clearpage}
+
+\stepcounter{subsection}
+\stepcounter{chapter}
+\stepcounter{section}
+\stepcounter{section}
+\stepcounter{section}
+\stepcounter{section}
+\stepcounter{section}
+
+\renewcommand{\bibname}{References}
+
+\renewcommand{\thelstlisting}{\Alph{lstlisting}}
+
+\renewcommand{\figurename}{Appendix}
+
+\renewcommand{\}{}
+\appendix
+
+\end{document}

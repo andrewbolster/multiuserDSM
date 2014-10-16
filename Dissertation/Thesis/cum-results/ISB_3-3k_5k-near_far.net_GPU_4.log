@@ -1,0 +1,20 @@
+INFO    multiuserdsm 46 Starting Up... logging to ISB_3-3k_5k-near_far.net_GPU_4.log
+INFO    bundle 67 Reading fresh Network File networks/3-3k_5k-near_far.net
+INFO    bundle 89 Successfully read 3 lines from networks/3-3k_5k-near_far.net
+INFO    gpu 439 Spawning 4 GPU Threads
+INFO    gpu 620 Initialising CUDA device
+INFO    gpu 620 Initialising CUDA device
+INFO    gpu 620 Initialising CUDA device
+INFO    bundle 95 Calculating the channel matrix for 224 channels
+INFO    gpu 620 Initialising CUDA device
+INFO    bundle 166 Lines are different, xtalk should not be symmetric
+INFO    bundle 176 Total:672,%Yes:1.413690%
+INFO    algorithm 48 Starting Spectrum Balancing using ISB
+INFO    isb 71 Bisection
+INFO    bundle 305 Cache Hits:0
+INFO    bundle 306 Cache Mises:0
+INFO    bundle 325 Line:0,Power:966.098mW,Rate:751bpf
+INFO    bundle 325 Line:1,Power:966.004mW,Rate:738bpf
+INFO    bundle 325 Line:2,Power:966.109mW,Rate:1766bpf
+INFO    bundle 331 Bundle Rate:3255bpf
+INFO    algorithm 84 All Done Here, took 0.535654, hit ratio of 0.0000
